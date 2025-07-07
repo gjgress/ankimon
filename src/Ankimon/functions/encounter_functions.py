@@ -717,7 +717,7 @@ def handle_enemy_faint(
         # Gen IX
         905, 986, 987, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014
         }   
-        event_ids = {52, 53, 133, 134, 135, 136, 196, 197, 215, 431, 432, 461, 470, 471, 677, 678, 700}
+        event_ids = {846, 847, 550, 594, 602, 603, 604, 129, 130, 118, 119, 116, 117, 349, 350, 318, 319, 367, 368, 370, 339, 340, 369}
         eevee_ids = {133, 134, 135, 136, 196, 197, 470, 471, 700}
         # Check cache instead of file
         if enemy_id not in collected_pokemon_ids or enemy_pokemon.shiny or enemy_id in event_ids or enemy_id in eevee_ids or  enemy_id in legendary_and_mythical_ids:
