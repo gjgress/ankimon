@@ -27,6 +27,7 @@ from ..functions.pokedex_functions import (
     search_pokedex,
     search_pokedex_by_id
 )
+from ..pyobj.error_handler import show_warning_with_traceback
 from ..functions.trainer_functions import xp_share_gain_exp
 from ..functions.badges_functions import check_for_badge, receive_badge
 from ..functions.drawing_utils import tooltipWithColour
@@ -165,7 +166,7 @@ def choose_random_pkmn_from_tier():
         id = get_pokemon_id_by_tier(tier)
         return id, tier
     except Exception as e:
-        showWarning(translator.translate("error_occured", error="choose_random_pkmn_from_tier"))
+        show_warning_with_traceback(parent=mw, exception=e, message="Error occurred")
 
 def check_min_generate_level(name):
     evoType = search_pokedex(name.lower(), "evoType")
@@ -587,14 +588,11 @@ def save_caught_pokemon(
             if check is False:
                 achievements = receive_badge(10, achievements)
 
-    if nickname is None:
-        nickname = enemy_pokemon.name.capitalize()
-
     #enemy_pokemon.stats["xp"] = 0
     enemy_pokemon.xp = 0
     caught_pokemon = {
         "name": enemy_pokemon.name.capitalize(),
-        "nickname": nickname,
+        "nickname": "",
         "level": enemy_pokemon.level,
         "gender": enemy_pokemon.gender,
         "id": enemy_pokemon.id,
@@ -665,7 +663,7 @@ def catch_pokemon(
         tooltipWithColour(msg, color)
     except Exception as e:
         if logger is not None:
-            logger.log_and_showinfo("info",f"{e}") # Display a message when the Pokémon is caught
+            show_warning_with_traceback(parent=mw, exception=e, message="Error while catching Pokemon:") # Display a message when the Pokémon is caught
 
 def handle_enemy_faint(
         main_pokemon: PokemonObject,
@@ -689,38 +687,8 @@ def handle_enemy_faint(
 
     if auto_battle_setting == 3:  # Catch if uncollected
         enemy_id = enemy_pokemon.id
-        legendary_and_mythical_ids = {
-    # Gen I
-        144, 145, 146, 150, 151,
-
-        # Gen II
-        243, 244, 245, 249, 250, 251,
-
-        # Gen III
-        377, 378, 379, 380, 381, 382, 383, 384, 385, 386,
-
-        # Gen IV
-        480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 490, 491, 492, 493,
-
-        # Gen V
-        494, 638, 639, 640, 641, 642, 643, 644, 645, 646, 647, 648, 649,
-
-        # Gen VI
-        716, 717, 718, 719, 720, 721,
-
-        # Gen VII
-        772, 773, 785, 786, 787, 788, 789, 790, 791, 792, 800, 801, 802, 803, 804, 805, 806, 807, 808, 809,
-
-        # Gen VIII
-        888, 889, 890, 891, 892, 893, 894, 895, 896, 897, 898,
-
-        # Gen IX
-        905, 986, 987, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014
-        }   
-        event_ids = {846, 847, 550, 594, 602, 603, 604, 129, 130, 118, 119, 116, 117, 349, 350, 318, 319, 367, 368, 370, 339, 340, 369}
-        eevee_ids = {133, 134, 135, 136, 196, 197, 470, 471, 700}
         # Check cache instead of file
-        if enemy_id not in collected_pokemon_ids or enemy_pokemon.shiny or enemy_id in event_ids or enemy_id in eevee_ids or  enemy_id in legendary_and_mythical_ids:
+        if enemy_id not in collected_pokemon_ids or enemy_pokemon.shiny:
             catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements)
         else:
             kill_pokemon(main_pokemon, enemy_pokemon, evo_window, logger , achievements, trainer_card)
