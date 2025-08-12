@@ -82,6 +82,7 @@ class Settings:
                 "trainer.id": 0,
                 "trainer.cash": 0,
                 "trainer.level": 0,
+                "trainer.xp": 0,
                 }
             self.save_config(config)
         return config

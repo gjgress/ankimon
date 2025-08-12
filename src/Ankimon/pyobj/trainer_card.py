@@ -20,16 +20,16 @@ POKEMON_TIERS = {
 }
 
 class TrainerCard:
-    def __init__(self, logger, main_pokemon, settings_obj, trainer_name, badge_count, trainer_id, level=1, xp=0, achievements=None, team="", image_path=trainer_sprites_path, league="unranked"):
+    def __init__(self, logger, main_pokemon, settings_obj, trainer_name, badge_count, trainer_id, achievements=None, team="", image_path=trainer_sprites_path, league="unranked"):
         self.logger = logger
         self.main_pokemon = main_pokemon
-        self.settings_obj = settings_obj,
+        self.settings_obj = settings_obj
         self.trainer_name = trainer_name      # Name of the trainer
         self.badge_count = badge_count        # Number of badges the trainer has earned
         self.favorite_pokemon = main_pokemon.name  # Trainer's favorite Pokémon
         self.trainer_id = trainer_id          # Unique ID for the trainer
         self.level = int(settings_obj.get("trainer.level", 1))                    # Trainer's level
-        self.xp = xp                          # Experience points
+        self.xp = int(settings_obj.get("trainer.xp", 0))                          # Experience points
         self.achievements = achievements if achievements else []  # List of achievements (if any)
         self.team = team   # Team as a simple string
         highest_level = self.get_highest_level_pokemon()
@@ -156,6 +156,7 @@ class TrainerCard:
         if allow_to_choose_move is True:
             xp_gained = xp_gained * 0.5
         self.xp += xp_gained
+        self.settings_obj.set("trainer.xp", self.xp)
         print(f"Gained {xp_gained} XP from defeating a {tier} Pokémon!")
         self.check_level_up()
 
@@ -163,4 +164,5 @@ class TrainerCard:
         """Update level based on XP."""
         while self.xp >= self.xp_for_next_level():
             self.level += 1
+            self.settings_obj.set("trainer.level", self.level)
             self.on_level_up()
