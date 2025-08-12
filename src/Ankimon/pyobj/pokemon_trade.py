@@ -460,11 +460,12 @@ class PokemonTrade:
 
         # --- Ability generation logic (like encounter_functions) ---
         ability = "No Ability"
-        possible_abilities = search_pokedex(details["name"], "abilities")
-        if possible_abilities:
-            numeric_abilities = {k: v for k, v in possible_abilities.items() if k.isdigit()}
-            if numeric_abilities:
-                ability = random.choice(list(numeric_abilities.values()))
+        possible_abilities_dict = search_pokedex(details["name"], "abilities")
+        if possible_abilities_dict:
+            # Get all ability names (values of the dictionary)
+            all_abilities = list(possible_abilities_dict.values())
+            if all_abilities:
+                ability = random.choice(all_abilities)
 
         # --- Move generation logic (like encounter_functions) ---
         # If no valid moves are provided, generate them as in wild encounters
