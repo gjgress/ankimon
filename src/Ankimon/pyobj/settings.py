@@ -97,40 +97,12 @@ class Settings:
         self.save_config(self.config)
         self.load_config()
 
-    def compute_gui_config(self):
-        # Manage conditional GUI settings
-        config = self.config
-        sound_effects = config.get("audio.sound_effects", False)
-        if sound_effects:
-            from .. import playsound
-            
-        view_main_front = config.get("gui.view_main_front", True)
-        reviewer_image_gif = config.get("gui.reviewer_image_gif", False)
-        self.view_main_front = -1 if view_main_front and reviewer_image_gif else 1
-
-        animate_time = config.get("gui.animate_time", False)
-        self.animate_time = 0.8 if animate_time else 0
-
-        xp_bar_location = config.get("gui.xp_bar_location", 0)
-        xp_bar_config = config.get("gui.xp_bar_config", False)
-        if xp_bar_config:
-            if xp_bar_location == 1:
-                self.xp_bar_location = "top"
-                self.xp_bar_spacer = 0
-            elif xp_bar_location == 2:
-                self.xp_bar_location = "bottom"
-                self.xp_bar_spacer = 20
-        else:
-            self.xp_bar_spacer = 0
-
-        hp_bar_config = config.get("gui.hp_bar_config", True)
-        if not hp_bar_config:
-            self.hp_only_spacer = 15
-            self.wild_hp_spacer = 65
-        else:
-            self.hp_only_spacer = 0
-            self.wild_hp_spacer = 0
     
+    
+    def compute_gui_config(self):
+        # This method is now empty as its logic has been moved to compute_special_variable.
+        pass
+
     def compute_special_variable(self, key):
         # Dynamically compute and return the requested GUI variable
         if key == "view_main_front":
@@ -147,21 +119,15 @@ class Settings:
             xp_bar_location = int(self.config.get("gui.xp_bar_location", 2))
 
             if xp_bar_config:
-                if xp_bar_location == 1:
-                    return "top"
-                elif xp_bar_location == 2:
-                    return "bottom"
+                return "top" if xp_bar_location == 1 else "bottom"
             return None  # Default when XP bar is disabled
 
         elif key == "xp_bar_spacer":
             xp_bar_config = self.config.get("gui.xp_bar_config", False)
-            xp_bar_location = self.config.get("gui.xp_bar_location", 0)
+            xp_bar_location = int(self.config.get("gui.xp_bar_location", 2))
 
-            if xp_bar_config:
-                if xp_bar_location == '2': # Bottom
-                    return 20
-                elif xp_bar_location == '1': # Top
-                    return 0
+            if xp_bar_config and xp_bar_location == 2:  # Bottom
+                return 20
             return 0  # Default spacer
 
         elif key == "hp_only_spacer":
