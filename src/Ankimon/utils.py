@@ -434,23 +434,40 @@ def random_fossil():
 
 def count_items_and_rewrite(file_path):
     """
-    Reads the items.json file, groups entries by all keys except 'quantity',
-    sums their quantities, and rewrites the file preserving every other field.
+    Reads the items.json file, which can contain a list of strings or dictionaries.
+    It groups entries by all keys except 'quantity', sums their quantities,
+    and rewrites the file, preserving all other fields.
     """
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             items = json.load(f)
 
-        aggregated = {}  # maps a frozenset of (key,value) pairs to the merged entry
+        aggregated = {}  # Using a dictionary for aggregation
 
-        updated_items = []
-        for item in items:
-            updated_item = dict()
-            for key in item.keys():
-                updated_item[key] = item[key]  # We try to keep any additional field that the item might ahave
-            updated_item["item"] = item["item"]
-            updated_item["quantity"] = item.get("quantity", 1)
-            updated_items.append(updated_item)
+        for item_entry in items:
+            # Standardize the entry to be a dictionary
+            if isinstance(item_entry, str):
+                current_item = {"item": item_entry}
+            elif isinstance(item_entry, dict):
+                current_item = item_entry
+            else:
+                continue # Skip entries that are not strings or dicts
+
+            # Create a hashable key from all fields except 'quantity'
+            agg_key_dict = {k: v for k, v in current_item.items() if k != 'quantity'}
+            agg_key = tuple(sorted(agg_key_dict.items()))
+
+            quantity = current_item.get('quantity', 1)
+
+            if agg_key in aggregated:
+                aggregated[agg_key]['quantity'] += quantity
+            else:
+                # It's a new item (or a new combination of fields)
+                new_item = agg_key_dict.copy() # Start with the non-quantity fields
+                new_item['quantity'] = quantity
+                aggregated[agg_key] = new_item
+
+        updated_items = list(aggregated.values())
 
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(updated_items, f, indent=4, ensure_ascii=False)
