@@ -16,7 +16,7 @@ from aqt.qt import (
 
 from aqt.theme import theme_manager # Check if light / dark mode in Anki
 
-from PyQt6.QtWidgets import QLineEdit, QComboBox, QCheckBox, QMenu, QWidget, QScrollArea, QFrame
+from PyQt6.QtWidgets import QLineEdit, QComboBox, QCheckBox, QMenu, QWidget, QScrollArea, QFrame, QRadioButton, QButtonGroup
 from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QIcon, QFont, QAction, QMovie, QCloseEvent
 
@@ -115,7 +115,9 @@ class PokemonPC(QDialog):
         self.sort_by_id = None
         self.sort_by_name = None
         self.sort_by_level = None
+        self.sort_by_date = None
         self.desc_sort = None  # Sort by descending order
+        self.active_sort_button = "date"
 
         # Subscribe to theme change hook to update UI dynamically
         gui_hooks.theme_did_change.append(self.on_theme_change)
@@ -340,26 +342,51 @@ class PokemonPC(QDialog):
         # Sorting options
         sort_label = QLabel("Sort by:")
         sort_layout = QHBoxLayout()
-        is_checked = self.sort_by_id.isChecked() if self.sort_by_id is not None else False
-        self.sort_by_id = QCheckBox("ID")
-        self.sort_by_id.setChecked(is_checked)
-        self.sort_by_id.stateChanged.connect(lambda: self.go_to_box(0))
-        is_checked = self.sort_by_name.isChecked() if self.sort_by_name is not None else False
-        self.sort_by_name = QCheckBox("Name")
-        self.sort_by_name.setChecked(is_checked)
-        self.sort_by_name.stateChanged.connect(lambda: self.go_to_box(0))
-        is_checked = self.sort_by_level.isChecked() if self.sort_by_level is not None else False
-        self.sort_by_level = QCheckBox("Level")
-        self.sort_by_level.setChecked(is_checked)
-        self.sort_by_level.stateChanged.connect(lambda: self.go_to_box(0))
+
+        # Radio buttons for sorting criteria
+        self.sort_by_id = QRadioButton("ID")
+        self.sort_by_name = QRadioButton("Name")
+        self.sort_by_level = QRadioButton("Level")
+        self.sort_by_date = QRadioButton("Date")
+
+        # Group the radio buttons to make them mutually exclusive
+        self.sort_button_group = QButtonGroup()
+        self.sort_button_group.addButton(self.sort_by_id)
+        self.sort_button_group.addButton(self.sort_by_name)
+        self.sort_button_group.addButton(self.sort_by_level)
+        self.sort_button_group.addButton(self.sort_by_date)
+
+        # Set initial checked state
+        if self.active_sort_button == "id":
+            self.sort_by_id.setChecked(True)
+        elif self.active_sort_button == "name":
+            self.sort_by_name.setChecked(True)
+        elif self.active_sort_button == "level":
+            self.sort_by_level.setChecked(True)
+        elif self.active_sort_button == "date":
+            self.sort_by_date.setChecked(True)
+        else:
+            self.sort_by_id.setChecked(True)  # Default sort by ID
+
+        # Connect signals
+        self.sort_by_id.toggled.connect(lambda checked: self.on_sort_changed("id", checked))
+        self.sort_by_name.toggled.connect(lambda checked: self.on_sort_changed("name", checked))
+        self.sort_by_level.toggled.connect(lambda checked: self.on_sort_changed("level", checked))
+        self.sort_by_date.toggled.connect(lambda checked: self.on_sort_changed("date", checked))
+
+        # Checkbox for descending order
         is_checked = self.desc_sort.isChecked() if self.desc_sort is not None else False
         self.desc_sort = QCheckBox("Descending")
         self.desc_sort.setChecked(is_checked)
         self.desc_sort.stateChanged.connect(lambda: self.go_to_box(0))
+
+        # Add widgets to layout
         sort_layout.addWidget(self.sort_by_id)
         sort_layout.addWidget(self.sort_by_name)
         sort_layout.addWidget(self.sort_by_level)
+        sort_layout.addWidget(self.sort_by_date)
         sort_layout.addWidget(self.desc_sort)
+
         sort_widget = QWidget()
         sort_widget.setLayout(sort_layout)
         # Adding the widgets to the layout
@@ -415,6 +442,11 @@ class PokemonPC(QDialog):
         self.create_gui()
         self.layout().invalidate()
         self.layout().activate()
+
+    def on_sort_changed(self, sort_by: str, checked: bool):
+        if checked:
+            self.active_sort_button = sort_by
+            self.go_to_box(0)
 
     def go_to_box(self, idx: int):
         """
@@ -571,6 +603,13 @@ class PokemonPC(QDialog):
                 If no sorting criteria are selected, returns the original list unchanged.
         """
         reverse = self.desc_sort is not None and self.desc_sort.isChecked()
+
+        if self.sort_by_date is not None and self.sort_by_date.isChecked():
+            if reverse:
+                return pokemon_list[::-1]
+            else:
+                return pokemon_list
+
         filters = []
         if self.sort_by_id is not None and self.sort_by_id.isChecked():
             filters.append("id")
@@ -776,7 +815,7 @@ class PokemonPC(QDialog):
             # Refreshing the PC after giving the item is important in order to update the pokemon information with the new held item
             pokemon_obj.give_held_item(item_name)
             ShowInfoLogger().log_and_showinfo("info", f"{item_name} was given to {pokemon.get('name')}.")
-            self.refresh_gui()
+            self.refresh_.gui()
 
         give_item_window = GiveItemWindow(
             item_list=items_names,
