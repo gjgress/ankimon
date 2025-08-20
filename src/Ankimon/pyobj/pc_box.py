@@ -112,6 +112,7 @@ class PokemonPC(QDialog):
         self.tier_combo = None
         self.filter_favorites = None
         self.filter_is_holding_item = None
+        self.filter_shiny = None
         self.sort_by_id = None
         self.sort_by_name = None
         self.sort_by_level = None
@@ -339,6 +340,11 @@ class PokemonPC(QDialog):
         self.filter_is_holding_item = QCheckBox("Holds item")
         self.filter_is_holding_item.setChecked(is_checked)
         self.filter_is_holding_item.stateChanged.connect(lambda: self.go_to_box(0))
+        # Filter for shiny Pokemon
+        is_checked = self.filter_shiny.isChecked() if self.filter_shiny is not None else False
+        self.filter_shiny = QCheckBox("Shiny")
+        self.filter_shiny.setChecked(is_checked)
+        self.filter_shiny.stateChanged.connect(lambda: self.go_to_box(0))
         # Sorting options
         sort_label = QLabel("Sort by:")
         sort_layout = QHBoxLayout()
@@ -397,6 +403,7 @@ class PokemonPC(QDialog):
         filters_layout.addWidget(self.tier_combo, 1, 2)
         filters_layout.addWidget(self.filter_favorites, 1, 3)
         filters_layout.addWidget(self.filter_is_holding_item, 1, 4)
+        filters_layout.addWidget(self.filter_shiny, 1, 5)
         filters_layout.addWidget(sort_label, 2, 0)
         filters_layout.addWidget(sort_widget, 2, 1, 1, 3)
         collection_layout.addLayout(filters_layout)
@@ -563,6 +570,10 @@ class PokemonPC(QDialog):
 
             if self.filter_is_holding_item is not None:
                 if self.filter_is_holding_item.isChecked() and not pokemon.get("held_item", False):
+                    return False
+
+            if self.filter_shiny is not None:
+                if self.filter_shiny.isChecked() and not pokemon.get("shiny", False):
                     return False
 
             if self.generation_combo is not None:
