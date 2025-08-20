@@ -417,7 +417,7 @@ class PokemonPC(QDialog):
         # Finalizing layout
         collection_widget = QWidget()
         collection_widget.setLayout(collection_layout)
-        collection_widget.setFixedWidth(self.n_cols * (self.slot_size + 20) + 50)
+        collection_widget.setFixedWidth(self.n_cols * (self.slot_size + 20) + 60)
         collection_widget.setFixedHeight(self.n_rows * (self.slot_size + 20) + 100)
 
         self.main_layout.addWidget(collection_widget, 1)
