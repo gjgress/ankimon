@@ -392,20 +392,26 @@ class PokemonPC(QDialog):
         sort_layout.addWidget(self.sort_by_level)
         sort_layout.addWidget(self.sort_by_date)
         sort_layout.addWidget(self.desc_sort)
+        sort_layout.addWidget(self.filter_shiny)
 
         sort_widget = QWidget()
         sort_widget.setLayout(sort_layout)
         # Adding the widgets to the layout
-        filters_layout.addWidget(self.search_edit, 0, 0, 1, 4)
-        filters_layout.addWidget(search_button, 0, 4, 1, 1)
+        search_layout = QHBoxLayout()
+        search_layout.addWidget(self.search_edit)
+        search_layout.addWidget(search_button)
+        filters_layout.addLayout(search_layout, 0, 0, 1, -1)
         filters_layout.addWidget(self.type_combo, 1, 0)
         filters_layout.addWidget(self.generation_combo, 1, 1)
         filters_layout.addWidget(self.tier_combo, 1, 2)
         filters_layout.addWidget(self.filter_favorites, 1, 3)
         filters_layout.addWidget(self.filter_is_holding_item, 1, 4)
-        filters_layout.addWidget(self.filter_shiny, 1, 5)
-        filters_layout.addWidget(sort_label, 2, 0)
-        filters_layout.addWidget(sort_widget, 2, 1, 1, 3)
+        
+        sort_row_layout = QHBoxLayout()
+        sort_row_layout.addWidget(sort_label)
+        sort_row_layout.addWidget(sort_widget)
+        sort_row_layout.addStretch() # Add stretch to push content to the left
+        filters_layout.addLayout(sort_row_layout, 2, 0, 1, -1) # Span all columns
         collection_layout.addLayout(filters_layout)
 
         # Finalizing layout
