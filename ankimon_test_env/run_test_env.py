@@ -132,12 +132,38 @@ if is_headless_file_mode:
     class QImage: pass
     class QPainter: pass
     class QFontDatabase: pass
+    class QMenu: # Improved Mock QMenu
+        def __init__(self, *args, parent=None):
+            self.title = None
+            self.actions = []
+            if len(args) == 1 and isinstance(args[0], QWidget): # QMenu(parent)
+                parent = args[0]
+            elif len(args) == 1 and isinstance(args[0], str): # QMenu(title)
+                self.title = args[0]
+            elif len(args) == 2 and isinstance(args[0], str) and isinstance(args[1], QWidget): # QMenu(title, parent)
+                self.title = args[0]
+                parent = args[1]
+            self.parent = parent
+            logging.debug(f"Mock QMenu initialized: title='{self.title}', parent={parent}")
+
+        def addAction(self, action):
+            self.actions.append(action)
+            logging.debug(f"Mock QMenu '{self.title}' added action: '{action.text}'")
+
+        def addSeparator(self):
+            logging.debug(f"Mock QMenu '{self.title}' added separator.")
+
     class QAction:
-        def __init__(self, text, parent=None): pass
+        def __init__(self, text, parent=None):
+            self.text = text
+            self.parent = parent
+            self._triggered_signal = MockSignal() # Instance of MockSignal
+            logging.debug(f"Mock QAction initialized: '{self.text}'")
+
+        @property
         def triggered(self):
-            class Signal:
-                def connect(self, func): self.func = func
-            return Signal()
+            return self._triggered_signal
+
     class Qt:
         class SizeHint: pass
         AlignLeft = 0
@@ -184,6 +210,60 @@ else:
         def quit(self): pass
         def exec(self): return 0
     app = DummyQApplication() # Assign dummy app for consistent API
+
+# Fallback/Mock Ankimon addon classes for when imports fail or are not needed
+class MockSettings:
+    """Mock for Ankimon.pyobj.settings.Settings"""
+    def __init__(self):
+        # Provide a minimal config structure, possibly loaded from a dummy JSON or hardcoded
+        self.config = load_ankimon_config() # Try loading real config, or use default if that fails
+        if not self.config: # Fallback if config loading failed
+            self.config = {
+                "misc.language": 9,
+                "misc.discord_rich_presence": False,
+                "battle.dmg_in_reviewer": True,
+                "gui.review_hp_bar_thickness": 2,
+                "gui.reviewer_text_message_box_time": 3,
+                "gui.show_mainpkmn_in_reviewer": 1,
+                "gui.xp_bar_location": 2,
+                "misc.show_tip_on_startup": True
+            }
+        logging.debug("MockSettings initialized.")
+
+    def get(self, key, default=None):
+        keys = key.split('.')
+        val = self.config
+        try:
+            for k in keys:
+                val = val[k]
+            return val
+        except (KeyError, TypeError):
+            logging.debug(f"MockSettings: Key '{key}' not found, returning default '{default}'.")
+            return default
+
+    def set(self, key, value):
+        logging.debug(f"MockSettings: Set '{key}' to '{value}'. (Mocked)")
+        # In a real mock, you might store this. For now, just log.
+
+class MockTranslator:
+    """Mock for Ankimon.pyobj.translator.Translator"""
+    def __init__(self, language=9):
+        self.language = language
+        logging.debug(f"MockTranslator initialized with language {language}.")
+
+    def translate(self, key, **kwargs):
+        return f"Translated_{key}"
+
+class MockShowInfoLogger:
+    """Mock for Ankimon.pyobj.InfoLogger.ShowInfoLogger"""
+    def __init__(self):
+        logging.debug("MockShowInfoLogger initialized.")
+    def log(self, *args, **kwargs):
+        logging.info(f"MockLogger.log: {args}, {kwargs}")
+    def log_and_showinfo(self, *args, **kwargs):
+        logging.info(f"MockLogger.log_and_showinfo: {args}, {kwargs}")
+    def toggle_log_window(self):
+        logging.debug("MockLogger.toggle_log_window called")
 
 # Helper to load JSON data from Ankimon's user_files
 def load_ankimon_json(file_name: Path):
@@ -1480,24 +1560,38 @@ elif args.full_anki:
     except Exception as e:
         logging.warning(f"Could not import Ankimon module: {e}")
 
-    # Import required components for create_menu_actions
+    # Import required components for create_menu_actions, using fallback mocks if real imports fail
+    # Define local aliases that will point to either real classes or mocks
+    _Settings = MockSettings
+    _Translator = MockTranslator
+    _ShowInfoLogger = MockShowInfoLogger
+    _PokemonCollectionDialog = MockDialog
+    _ItemWindow = MockDialog
+    _PokemonPC = MockDialog
+
     try:
         from Ankimon.menu_buttons import create_menu_actions, initialize_ankimon_menu
-        from Ankimon.pyobj.settings import Settings
-        from Ankimon.pyobj.translator import Translator
-        from Ankimon.pyobj.InfoLogger import ShowInfoLogger
-        from Ankimon.pyobj.collection_dialog import PokemonCollectionDialog
-        from Ankimon.pyobj.item_window import ItemWindow
-        from Ankimon.pyobj.pc_box import PokemonPC
-        logging.info("Ankimon components imported successfully")
+        from Ankimon.pyobj.settings import Settings as _Settings
+        from Ankimon.pyobj.translator import Translator as _Translator
+        from Ankimon.pyobj.InfoLogger import ShowInfoLogger as _ShowInfoLogger
+        from Ankimon.pyobj.collection_dialog import PokemonCollectionDialog as _PokemonCollectionDialog
+        from Ankimon.pyobj.item_window import ItemWindow as _ItemWindow
+        from Ankimon.pyobj.pc_box import PokemonPC as _PokemonPC
+        logging.info("Ankimon components imported successfully.")
     except Exception as e:
-        logging.error(f"Could not import Ankimon components: {e}")
+        logging.error(f"Could not import Ankimon components: {e}. Using fallback mocks.")
         logging.info("Continuing with basic menu setup...")
 
-    # Instantiate required objects for create_menu_actions
-    settings_obj = Settings()
-    translator_obj = Translator(language=int(settings_obj.get("misc.language", 9)))
-    logger_obj = ShowInfoLogger()
+    # Instantiate required objects for create_menu_actions using the resolved (real or mock) classes
+    settings_obj = _Settings()
+    translator_obj = _Translator(language=int(settings_obj.get("misc.language", 9)))
+    logger_obj = _ShowInfoLogger()
+
+    # Create dialog objects using resolved classes
+    # These also need to be defined before the try/except block if they are to be used as fallbacks
+    # For now, I'm just replacing the instantiation to use the aliases
+    # If _PokemonCollectionDialog etc are actual PyQt6 QDialogs, their constructors need proper args.
+    # Given they are currently MockDialog, this should be fine.
 
     # Initialize Ankimon menu
     pokemenu, game_menu, profile_menu, collection_menu, export_menu, help_menu, debug_menu = initialize_ankimon_menu()
