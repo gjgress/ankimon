@@ -13,6 +13,7 @@ import importlib.util
 app = None  # Global QApplication instance or dummy
 is_headless_env = True  # Flag indicating if we are running without full PyQt6 GUI
 is_headless_file_mode = False # Flag for specific file testing in headless mode
+mw_instance = None # Global instance for MockMainWindow
 
 # --- Argument Parsing ---
 parser = argparse.ArgumentParser(description="Enhanced Ankimon Test Environment")
@@ -662,7 +663,7 @@ def setup_mock_modules(is_headless_mode):
            mock_aqt_gui_hooks_module, mock_aqt_webview_module, mock_aqt_sound_module, \
            mock_aqt_theme_module, mock_anki_hooks_module, mock_anki_collection_module, \
            mock_anki_utils_module, mock_anki_buildinfo_module, mock_aqt_dialogs_module, \
-           mock_aqt_module, is_headless_file_mode
+           mock_aqt_module, is_headless_file_mode, mw_instance
 
     is_headless_file_mode = is_headless_mode # Update global flag
 
@@ -819,7 +820,9 @@ def setup_mock_modules(is_headless_mode):
     # Top-level aqt module
     mock_aqt_module = ModuleType('aqt')
     mock_aqt_module.__path__ = []
-    mock_aqt_module.mw = MockMainWindow() # Create mw instance here
+    # Instantiate MockMainWindow and assign it to mw_instance here
+    mw_instance = MockMainWindow()
+    mock_aqt_module.mw = mw_instance
     mock_aqt_module.gui_hooks = mock_aqt_gui_hooks_module
     mock_aqt_module.utils = mock_aqt_utils_module
     mock_aqt_module.qt = mock_aqt_qt_module
