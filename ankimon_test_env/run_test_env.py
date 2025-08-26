@@ -2,6 +2,33 @@ import sys
 import os
 import argparse
 import json
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Enhanced Ankimon Test Environment")
+parser.add_argument('--file', type=str, help='Path to an individual Python file to test')
+parser.add_argument('--full-anki', action='store_true', help='Run a full Anki-like interface with enhanced Ankimon menu and reviewer')
+parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+parser.add_argument('--selftest', action='store_true', help='Run self-tests and exit')
+parser.add_argument('--log-level', type=str, default='INFO', help='Set logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)')
+args = parser.parse_args()
+
+# Set logging level based on argument
+numeric_level = getattr(logging, args.log_level.upper(), None)
+if not isinstance(numeric_level, int):
+    raise ValueError('Invalid log level: %s' % args.log_level)
+logging.getLogger().setLevel(numeric_level)
+
+# Determine if we are in headless file mode
+is_headless_file_mode = bool(args.file)
+
+# Add the Ankimon addon directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 import tempfile
 from pathlib import Path
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox, QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QSizePolicy, QGridLayout, QFrame, QToolTip, QMenuBar, QMenu, QCheckBox
@@ -10,6 +37,7 @@ from PyQt6.QtCore import Qt, QSize, QFile, QUrl, QTimer
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from types import ModuleType
 import importlib.util
+import io
 
 # Helper to load JSON data from Ankimon's user_files
 def load_ankimon_json(file_name):
@@ -19,10 +47,10 @@ def load_ankimon_json(file_name):
         with open(file_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"[WARNING] JSON file not found: {file_path}")
+        logging.error(f"JSON file not found: {file_path}")
         return {}
     except json.JSONDecodeError:
-        print(f"[WARNING] Error decoding JSON from file: {file_path}")
+        logging.error(f"Error decoding JSON from file: {file_path}")
         return {}
 
 # Helper to load Ankimon's config.json
@@ -32,35 +60,138 @@ def load_ankimon_config():
         with open(config_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"[WARNING] Ankimon config.json not found: {config_path}")
+        logging.error(f"Ankimon config.json not found: {config_path}")
         return {}
     except json.JSONDecodeError:
-        print(f"[WARNING] Error decoding JSON from Ankimon config.json: {config_path}")
+        logging.error(f"Error decoding JSON from Ankimon config.json: {config_path}")
         return {}
 
-class MockAddonManager:
+def run_self_tests():
+    logging.info("Running self-tests...")
+    all_tests_passed = True
+
+    # Test 1: sys.path setup
+    expected_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
+    if expected_path in sys.path:
+        logging.info(f"TEST PASSED: sys.path contains Ankimon source directory: {expected_path}")
+    else:
+        logging.error(f"TEST FAILED: sys.path does not contain Ankimon source directory. Expected: {expected_path}")
+        all_tests_passed = False
+
+    # Test 2: Mocks presence and basic attributes
+    expected_mocks = {
+        'aqt.qt': ['QDialog', 'QApplication'], # QApplication is imported from PyQt6.QtWidgets
+        'aqt.reviewer': ['Reviewer'],
+        'aqt.utils': ['showWarning', 'showInfo'],
+        'aqt.gui_hooks': ['reviewer_did_show_question'],
+        'aqt.webview': ['WebContent'],
+        'aqt.sound': ['SoundOrVideoTag'],
+        'aqt.theme': ['theme_manager'],
+        'anki.hooks': ['addHook'],
+        'anki.collection': ['Collection'],
+        'anki.utils': ['is_win'],
+        'anki.buildinfo': ['version'],
+        'aqt.dialogs': ['open'],
+    }
+
+    for module_name, attributes in expected_mocks.items():
+        if module_name in sys.modules:
+            logging.info(f"TEST PASSED: Mock module '{module_name}' is present in sys.modules.")
+            mock_module = sys.modules[module_name]
+            for attr in attributes:
+                if hasattr(mock_module, attr):
+                    logging.info(f"  TEST PASSED: Attribute '{attr}' found in '{module_name}'.")
+                else:
+                    logging.error(f"  TEST FAILED: Attribute '{attr}' not found in '{module_name}'.")
+                    all_tests_passed = False
+        else:
+            logging.error(f"TEST FAILED: Mock module '{module_name}' is NOT present in sys.modules.")
+            all_tests_passed = False
+
+    # Test 3: Error handling for missing/corrupt configs
+    # This requires mocking file operations or creating temporary files.
+    # I'll add a basic check that calls the functions and expects an error log.
+
+    # Temporarily redirect logging to capture output for this test
+    log_capture_string = io.StringIO()
+    ch = logging.StreamHandler(log_capture_string)
+    ch.setLevel(logging.ERROR)
+    logging.getLogger().addHandler(ch)
+
+    # Test missing JSON file
+    temp_missing_file = Path("non_existent_file.json")
+    load_ankimon_json(temp_missing_file)
+    if "JSON file not found" in log_capture_string.getvalue():
+        logging.info("TEST PASSED: load_ankimon_json logs error for missing file.")
+    else:
+        logging.error("TEST FAILED: load_ankimon_json did NOT log error for missing file.")
+        all_tests_passed = False
+    log_capture_string.truncate(0)
+    log_capture_string.seek(0)
+
+    # Test corrupt JSON file
+    temp_dir = tempfile.gettempdir()
+    temp_corrupt_file = Path(temp_dir) / "corrupt_config.json"
+    with open(temp_corrupt_file, "w") as f:
+        f.write("{invalid json")
+    load_ankimon_json(temp_corrupt_file)
+    if "Error decoding JSON" in log_capture_string.getvalue():
+        logging.info("TEST PASSED: load_ankimon_json logs error for corrupt JSON.")
+    else:
+        logging.error("TEST FAILED: load_ankimon_json did NOT log error for corrupt JSON.")
+        all_tests_passed = False
+    temp_corrupt_file.unlink() # Clean up
+    log_capture_string.truncate(0)
+    log_capture_string.seek(0)
+
+    # Remove the temporary log handler
+    logging.getLogger().removeHandler(ch)
+
+    if all_tests_passed:
+        logging.info("All self-tests PASSED!")
+        return True
+    else:
+        logging.error("Some self-tests FAILED!")
+        return False
+    class MockAddonManager:
+    """Mocks Anki's addonManager object, providing methods for config management.
+    This mock allows Ankimon to load and save its configuration within the test environment.
+    It simulates the behavior of Anki's addon manager for `getConfig` and `writeConfig`.
+    """
     def __init__(self):
-        self._config = load_ankimon_config()
+        # Use a dictionary to store configurations for different addons
+        self._configs = {}
+        # Load Ankimon's default config and store it under its ID
+        ankimon_default_config = load_ankimon_config()
+        self._configs["Ankimon.config_var"] = ankimon_default_config
+        logging.debug(f"MockAddonManager.__init__: Initialized _configs: {self._configs}")
         self.addonsFolder = Path(__file__).parent.parent / "src" / "Ankimon" # Mock addonsFolder
 
     def getConfig(self, name):
-        return self._config
+        logging.debug(f"MockAddonManager.getConfig: Called for {name}. Current _configs: {self._configs}")
+        # Return the config for the specific addon, or an empty dict if not found
+        return self._configs.get(name, {})
 
     def writeConfig(self, name, config):
-        print(f"[DEBUG] writeConfig called for {name}")
-        # In a real scenario, you might want to write this to a temporary file
-        # or update the in-memory config for subsequent getConfig calls.
-        self._config.update(config)
+        logging.debug(f"MockAddonManager.writeConfig: Called for {name} with {config}. Before update _configs: {self._configs}")
+        # Update the config for the specific addon. Merge if existing.
+        current_config = self._configs.get(name, {})
+        current_config.update(config)
+        self._configs[name] = current_config
+        logging.debug(f"MockAddonManager.writeConfig: After update _configs: {self._configs}")
 
     def setWebExports(self, name, pattern):
-        print(f"[DEBUG] setWebExports called: {name}, {pattern}")
+        logging.debug(f"setWebExports called: {name}, {pattern}")
 
     def addonFromModule(self, name):
         return "Ankimon"
 
 
+
 # Mock Card class to simulate Anki cards
 class MockCard:
+    """Mocks an Anki Card object, providing essential attributes and methods for testing reviewer behavior.
+    """
     def __init__(self, card_id, question="Sample Question", answer="Sample Answer", note_type="Basic"):
         self.id = card_id
         self.question = question
@@ -87,16 +218,60 @@ class MockCard:
         """Return answer HTML"""
         return f"<div class='card'><h2>{self.question}</h2><hr><p>{self.answer}</p></div>"
 
+class PureMockQWebEngineSettings:
+    """A pure Python mock for PyQt6.QtWebEngineWidgets.QWebEngineSettings.
+    Used in headless mode to avoid actual QtWebEngine dependency.
+    """
+    def __init__(self):
+        logging.debug("PureMockQWebEngineSettings initialized.")
+    def setFullScreenSupportEnabled(self, enabled):
+        logging.debug(f"PureMockQWebEngineSettings: setFullScreenSupportEnabled({enabled}) called.")
+
+class PureMockQWebEnginePage:
+    """A pure Python mock for PyQt6.QtWebEngineWidgets.QWebEnginePage.
+    Used in headless mode to avoid actual QtWebEngine dependency.
+    """
+    def __init__(self):
+        logging.debug("PureMockQWebEnginePage initialized.")
+        self._settings = PureMockQWebEngineSettings()
+    def settings(self):
+        logging.debug("PureMockQWebEnginePage: settings() called.")
+        return self._settings
+    def eval(self, js_code):
+        logging.debug(f"PureMockQWebEnginePage.eval called with: {js_code[:100]}...") # Print first 100 chars of JS
+
+class PureMockQWebEngineView:
+    """A pure Python mock for PyQt6.QtWebEngineWidgets.QWebEngineView.
+    Used in headless mode to avoid actual QtWebEngine dependency.
+    """
+    def __init__(self):
+        logging.debug("PureMockQWebEngineView initialized.")
+        self._page = PureMockQWebEnginePage()
+    def page(self):
+        logging.debug("PureMockQWebEngineView: page() called.")
+        return self._page
+    def setHtml(self, html_content):
+        logging.debug(f"PureMockQWebEngineView.setHtml called with: {html_content[:100]}...") # Print first 100 chars of HTML
+    def setMinimumHeight(self, height):
+        logging.debug(f"PureMockQWebEngineView.setMinimumHeight({height}) called.")
+
 # Enhanced MockReviewerWindow with QWebEngineView and card simulation
 class MockReviewerWindow(QDialog):
+    """A mock Anki reviewer window, simulating card display and answer functionality.
+    Integrates with QWebEngineView (or PureMockQWebEngineView in headless mode) to render card content.
+    """
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Mock Anki Reviewer")
         self.setGeometry(200, 200, 800, 600)
         self.layout = QVBoxLayout(self)
 
-        # Use QWebEngineView for HTML content rendering
-        self.web = QWebEngineView()
+        # Use QWebEngineView or PureMockQWebEngineView based on mode
+        if is_headless_file_mode:
+            self.web = PureMockQWebEngineView()
+        else:
+            self.web = QWebEngineView()
+
         self.web.setMinimumHeight(400)
         self.layout.addWidget(self.web)
 
@@ -190,12 +365,12 @@ class MockReviewerWindow(QDialog):
             self.hide_answer_buttons()
 
             # Trigger reviewer_did_show_question hook
-            print(f"[DEBUG] Triggering reviewer_did_show_question for card {card.id}")
+            logging.debug(f"Triggering reviewer_did_show_question for card {card.id}")
             for func in mock_aqt_gui_hooks_module.reviewer_did_show_question:
                 try:
                     func(card)
                 except Exception as e:
-                    print(f"[DEBUG] Error in reviewer_did_show_question hook: {e}")
+                    logging.debug(f"Error in reviewer_did_show_question hook: {e}")
 
         else:
             # No more cards
@@ -234,25 +409,25 @@ class MockReviewerWindow(QDialog):
             self.show_answer_buttons()
 
             # Trigger reviewer_did_show_answer hook
-            print(f"[DEBUG] Triggering reviewer_did_show_answer for card {card.id}")
+            logging.debug(f"Triggering reviewer_did_show_answer for card {card.id}")
             for func in mock_aqt_gui_hooks_module.reviewer_did_show_answer:
                 try:
                     func(card)
                 except Exception as e:
-                    print(f"[DEBUG] Error in reviewer_did_show_answer hook: {e}")
+                    logging.debug(f"Error in reviewer_did_show_answer hook: {e}")
 
     def answer_card(self, ease):
         """Answer the current card with the given ease"""
         if hasattr(self, 'current_card'):
             card = self.current_card
-            print(f"[DEBUG] Card {card.id} answered with ease: {ease}")
+            logging.debug(f"Card {card.id} answered with ease: {ease}")
 
             # Trigger reviewer_did_answer_card hook
             for func in mock_aqt_gui_hooks_module.reviewer_did_answer_card:
                 try:
                     func(None, card, ease)  # Pass reviewer, card, ease
                 except Exception as e:
-                    print(f"[DEBUG] Error in reviewer_did_answer_card hook: {e}")
+                    logging.debug(f"Error in reviewer_did_answer_card hook: {e}")
 
             # Move to next card
             self.current_card_index += 1
@@ -262,10 +437,14 @@ class MockReviewerWindow(QDialog):
 
 # Create mock objects
 class MockCollection:
+    """Mocks Anki's Collection object. Currently a placeholder.
+    """
     def __init__(self):
         pass
 
 class MockAnkiHooks:
+    """Mocks Anki's hooks module, allowing add-ons to register and trigger hooks.
+    """
     def addHook(self, *args, **kwargs):
         pass
     def wrap(self, *args, **kwargs):
@@ -274,6 +453,8 @@ class MockAnkiHooks:
         return decorator
 
 class MockGuiHooks:
+    """Mocks Anki's gui_hooks module, providing lists to register hook functions.
+    """
     def __init__(self):
         self.reviewer_will_end = []
         self.reviewer_did_answer_card = []
@@ -289,6 +470,9 @@ class MockGuiHooks:
         pass
 
 class MockQWebEngineSettings:
+    """A basic mock for PyQt6.QtWebEngineWidgets.QWebEngineSettings.
+    Used when a full GUI is present but specific settings are not critical for the test.
+    """
     def __init__(self):
         pass
 
@@ -302,15 +486,15 @@ class MockUtils:
     def downArrow(self, *args, **kwargs):
         pass
     def showWarning(self, *args, **kwargs):
-        print(f"[DEBUG] showWarning called: {args}")
+        logging.debug(f"showWarning called: {args}")
     def showInfo(self, *args, **kwargs):
-        print(f"[DEBUG] showInfo called: {args}")
+        logging.debug(f"showInfo called: {args}")
     def tr(self, *args, **kwargs):
         return args[0] if args else ""
     def tooltip(self, *args, **kwargs):
-        print(f"[DEBUG] tooltip called: {args}")
+        logging.debug(f"tooltip called: {args}")
     def qconnect(self, *args, **kwargs):
-        print(f"[DEBUG] qconnect called: {args}")
+        logging.debug(f"qconnect called: {args}")
     def QWebEngineSettings(self, *args, **kwargs):
         return MockQWebEngineSettings()
     def QWebEnginePage(self, *args, **kwargs):
@@ -323,7 +507,7 @@ class MockQWebEnginePage:
     def __init__(self):
         pass
     def eval(self, js_code):
-        print(f"[DEBUG] MockQWebEnginePage.eval called with: {js_code[:100]}...") # Print first 100 chars of JS
+        logging.debug(f"MockQWebEnginePage.eval called with: {js_code[:100]}...") # Print first 100 chars of JS
 
 class MockQWebEngineView:
     def __init__(self):
@@ -331,7 +515,7 @@ class MockQWebEngineView:
     def page(self):
         return self._page
     def setHtml(self, html_content):
-        print(f"[DEBUG] MockQWebEngineView.setHtml called with: {html_content[:100]}...") # Print first 100 chars of HTML
+        logging.debug(f"MockQWebEngineView.setHtml called with: {html_content[:100]}...") # Print first 100 chars of HTML
     def setMinimumHeight(self, height):
         pass # No-op for mock
 
@@ -347,27 +531,27 @@ class MockReviewer:
 
     def show(self):
         """Show the reviewer window"""
-        print("MockReviewer: show() called.")
+        logging.debug("MockReviewer: show() called.")
         if self.reviewer_window:
             self.reviewer_window.show()
 
     def setCard(self, card):
         """Set the current card"""
         self.card = card
-        print(f"[DEBUG] MockReviewer.setCard called with card: {card}")
+        logging.debug(f"MockReviewer.setCard called with card: {card}")
 
     def showQuestion(self):
-        print("MockReviewer: showQuestion() called.")
+        logging.debug("MockReviewer: showQuestion() called.")
         if self.reviewer_window:
             self.reviewer_window.load_current_card() # This will show the question
 
     def showAnswer(self):
-        print("MockReviewer: showAnswer() called.")
+        logging.debug("MockReviewer: showAnswer() called.")
         if self.reviewer_window:
             self.reviewer_window.show_answer() # This will show the answer
 
     def answerCard(self, ease):
-        print(f"MockReviewer: answerCard({ease}) called.")
+        logging.debug(f"MockReviewer: answerCard({ease}) called.")
         if self.reviewer_window:
             self.reviewer_window.answer_card(ease) # This will answer the card and move to next
 
@@ -407,67 +591,7 @@ class MockThemeManager:
     def __init__(self):
         self.night_mode = False
 
-class MockAddonManager:
-    def __init__(self):
-        pass
-    def getConfig(self, name):
-        # Return realistic Ankimon config
-        return {
-            "battle.dmg_in_reviewer": True,
-            "battle.automatic_battle": 0,
-            "battle.cards_per_round": 2,
-            "battle.daily_average": 100,
-            "battle.card_max_time": 60,
-            "controls.pokemon_buttons": True,
-            "controls.defeat_key": "5",
-            "controls.catch_key": "6",
-            "controls.key_for_opening_closing_ankimon": "Ctrl+N",
-            "controls.allow_to_choose_moves": False,
-            "gui.animate_time": True,
-            "gui.gif_in_collection": True,
-            "gui.styling_in_reviewer": True,
-            "gui.hp_bar_config": True,
-            "gui.pop_up_dialog_message_on_defeat": False,
-            "gui.review_hp_bar_thickness": 2,
-            "gui.reviewer_image_gif": False,
-            "gui.reviewer_text_message_box": True,
-            "gui.reviewer_text_message_box_time": 3,
-            "gui.show_mainpkmn_in_reviewer": 1,
-            "gui.view_main_front": True,
-            "gui.xp_bar_config": True,
-            "gui.xp_bar_location": 2,
-            "audio.sound_effects": False,
-            "audio.sounds": True,
-            "audio.battle_sounds": False,
-            "misc.gen1": True,
-            "misc.gen2": True,
-            "misc.gen3": True,
-            "misc.gen4": True,
-            "misc.gen5": True,
-            "misc.gen6": True,
-            "misc.gen7": False,
-            "misc.gen8": False,
-            "misc.gen9": False,
-            "misc.remove_level_cap": False,
-            "misc.leaderboard": False,
-            "misc.language": 9,
-            "misc.ssh": True,
-            "misc.YouShallNotPass_Ankimon_News": False,
-            "misc.discord_rich_presence": False,
-            "misc.discord_rich_presence_text": 1,
-            "misc.show_tip_on_startup": True,
-            "misc.last_tip_index": 0,
-            "trainer.name": "Ash",
-            "trainer.sprite": "ash",
-            "trainer.id": 0,
-            "trainer.cash": 0
-        }
-    def writeConfig(self, name, config):
-        print(f"[DEBUG] writeConfig called for {name}")
-    def setWebExports(self, name, pattern):
-        print(f"[DEBUG] setWebExports called: {name}, {pattern}")
-    def addonFromModule(self, name):
-        return "Ankimon"
+
 
 # Mock aqt.dialogs for handling dialog opening
 class MockDialogManager:
@@ -475,20 +599,20 @@ class MockDialogManager:
         self.dialogs = {}
 
     def open(self, name, parent, *args, **kwargs):
-        print(f"[DEBUG] aqt.dialogs.open called: {name}, parent: {parent}, args: {args}, kwargs: {kwargs}")
+        logging.debug(f"aqt.dialogs.open called: {name}, parent: {parent}, args: {args}, kwargs: {kwargs}")
         # Return a mock dialog or handle specific dialog types
         return MockDialog(name)
 
 class MockDialog:
     def __init__(self, name):
         self.name = name
-        print(f"[DEBUG] MockDialog created: {name}")
+        logging.debug(f"MockDialog created: {name}")
 
     def show(self):
-        print(f"[DEBUG] MockDialog.show called: {self.name}")
+        logging.debug(f"MockDialog.show called: {self.name}")
 
     def exec(self):
-        print(f"[DEBUG] MockDialog.exec called: {self.name}")
+        logging.debug(f"MockDialog.exec called: {self.name}")
         return 0
 
 class MockMenuBar(QMenuBar):
@@ -513,12 +637,7 @@ class MockMainWindow(QMainWindow):
         self.pm = MockProfileManager()
         self.form = MockForm()
         self.form.setupUi(self)
-        self.app = app # Assign the global QApplication instance
         
-        self.form.setupUi(self)
-        self.app = app # Assign the global QApplication instance
-        
-        self.setWindowTitle("Ankimon Test Environment")
         self.setGeometry(100, 100, 800, 600)
 
         # Create and integrate MockReviewer with MockReviewerWindow
@@ -536,11 +655,11 @@ class MockShowInfoLogger:
     def __init__(self):
         pass
     def log(self, *args, **kwargs): 
-        print(f"[DEBUG] Logger.log: {args}")
+        logging.debug(f"Logger.log: {args}")
     def log_and_showinfo(self, *args, **kwargs): 
-        print(f"[DEBUG] Logger.log_and_showinfo: {args}")
+        logging.debug(f"Logger.log_and_showinfo: {args}")
     def toggle_log_window(self):
-        print("[DEBUG] Logger.toggle_log_window called")
+        logging.debug("Logger.toggle_log_window called")
 
 class MockTranslator:
     def __init__(self, language):
@@ -564,7 +683,7 @@ class MockReviewerManager:
         # It focuses on the eval call that was causing the error
         js_code = "if(window.__ankimonHud) window.__ankimonHud.update('mock_html', 'mock_css');"
         reviewer.web.page().eval(js_code)
-        print("[DEBUG] MockReviewerManager.update_life_bar called and eval simulated.")
+        logging.debug("MockReviewerManager.update_life_bar called and eval simulated.")
 
 class MockTestWindow(QWidget):
     def __init__(self, *args, **kwargs):
@@ -576,7 +695,7 @@ class MockTestWindow(QWidget):
         self.setLayout(layout)
 
     def open_dynamic_window(self):
-        print("[DEBUG] MockTestWindow.open_dynamic_window called")
+        logging.debug("MockTestWindow.open_dynamic_window called")
         self.show()
 
 class MockPokemonObject:
@@ -644,15 +763,15 @@ class MockTrainerCard:
 # Additional simplified mock classes
 class MockDataHandlerWindow:
     def __init__(self, *args, **kwargs): pass
-    def show_window(self): print("[DEBUG] DataHandlerWindow.show_window called")
+    def show_window(self): logging.debug("DataHandlerWindow.show_window called")
 
 class MockSettingsWindow:
     def __init__(self, *args, **kwargs): pass
-    def show_window(self): print("[DEBUG] SettingsWindow.show_window called")
+    def show_window(self): logging.debug("SettingsWindow.show_window called")
 
 class MockPokemonShopManager:
     def __init__(self, *args, **kwargs): pass
-    def toggle_window(self): print("[DEBUG] PokemonShopManager.toggle_window called")
+    def toggle_window(self): logging.debug("PokemonShopManager.toggle_window called")
 
 class MockPokedex(QDialog):
     def __init__(self, *args, **kwargs): 
@@ -664,37 +783,37 @@ class MockPokedex(QDialog):
         self.setLayout(layout)
 
     def show(self):
-        print("[DEBUG] MockPokedex.show called")
+        logging.debug("MockPokedex.show called")
         self.exec()
 
 class MockAchievementWindow:
     def __init__(self):
         pass
-    def show_window(self): print("[DEBUG] AchievementWindow.show_window called")
+    def show_window(self): logging.debug("AchievementWindow.show_window called")
 
 class MockAnkimonTrackerWindow:
     def __init__(self, *args, **kwargs): pass
-    def toggle_window(self): print("[DEBUG] AnkimonTrackerWindow.toggle_window called")
+    def toggle_window(self): logging.debug("AnkimonTrackerWindow.toggle_window called")
 
 class MockLicense:
     def __init__(self, *args, **kwargs): pass
-    def show_window(self): print("[DEBUG] License.show_window called")
+    def show_window(self): logging.debug("License.show_window called")
 
 class MockCredits:
     def __init__(self, *args, **kwargs): pass
-    def show_window(self): print("[DEBUG] Credits.show_window called")
+    def show_window(self): logging.debug("Credits.show_window called")
 
 class MockTableWidget:
     def __init__(self, *args, **kwargs): pass
-    def show_eff_chart(self): print("[DEBUG] TableWidget.show_eff_chart called")
+    def show_eff_chart(self): logging.debug("TableWidget.show_eff_chart called")
 
 class MockIDTableWidget:
     def __init__(self, *args, **kwargs): pass
-    def show_gen_chart(self): print("[DEBUG] IDTableWidget.show_gen_chart called")
+    def show_gen_chart(self): logging.debug("IDTableWidget.show_gen_chart called")
 
 class MockVersionDialog:
     def __init__(self, *args, **kwargs): pass
-    def open(self): print("[DEBUG] VersionDialog.open called")
+    def open(self): logging.debug("VersionDialog.open called")
 
 class MockDataHandler:
     def __init__(self, *args, **kwargs): pass
@@ -715,13 +834,13 @@ class MockStarterWindow:
     def __init__(self):
         pass
     def display_fossil_pokemon(self, *args, **kwargs): 
-        print("[DEBUG] StarterWindow.display_fossil_pokemon called")
+        logging.debug("StarterWindow.display_fossil_pokemon called")
 
 class MockEvoWindow:
     def __init__(self):
         pass
     def display_pokemon_evo(self, *args, **kwargs): 
-        print("[DEBUG] EvoWindow.display_pokemon_evo called")
+        logging.debug("EvoWindow.display_pokemon_evo called")
 
 class MockPokemonPC(QDialog):
     def __init__(self, *args, **kwargs):
@@ -733,11 +852,16 @@ class MockPokemonPC(QDialog):
         self.setLayout(layout)
 
     def show(self):
-        print("[DEBUG] MockPokemonPC.show called")
+        logging.debug("MockPokemonPC.show called")
         self.exec()
 
-# Initialize the QApplication here, after all classes are defined
-app = QApplication(sys.argv)
+
+
+
+
+
+
+
 
 # --- Crucial: Remove existing Anki/Aqt modules from sys.modules ---
 for module_name in ['aqt', 'anki', 'aqt.qt', 'aqt.reviewer', 'aqt.utils', 'aqt.gui_hooks', 'aqt.webview', 'aqt.sound', 'aqt.theme', 'anki.hooks', 'anki.collection', 'anki.utils', 'anki.buildinfo', 'aqt.dialogs']:
@@ -789,7 +913,7 @@ mock_aqt_utils_module.tooltip = mock_aqt_utils_instance.tooltip
 mock_aqt_utils_module.qconnect = mock_aqt_utils_instance.qconnect
 mock_aqt_utils_module.QWebEngineSettings = MockQWebEngineSettings
 mock_aqt_utils_module.QWebEnginePage = MockQWebEnginePage
-mock_aqt_utils_module.QWebEngineView = QWebEngineView
+mock_aqt_utils_module.QWebEngineView = PureMockQWebEngineView if is_headless_file_mode else QWebEngineView
 sys.modules['aqt.utils'] = mock_aqt_utils_module
 
 # Mock aqt.gui_hooks module
@@ -810,7 +934,7 @@ sys.modules['aqt.gui_hooks'] = mock_aqt_gui_hooks_module
 # Mock aqt.webview module
 mock_aqt_webview_module = ModuleType('aqt.webview')
 mock_aqt_webview_module.WebContent = MockWebContent
-mock_aqt_webview_module.AnkiWebView = QWebEngineView
+mock_aqt_webview_module.AnkiWebView = PureMockQWebEngineView if is_headless_file_mode else QWebEngineView
 sys.modules['aqt.webview'] = mock_aqt_webview_module
 
 # Mock aqt.sound module
@@ -887,25 +1011,28 @@ sys.modules['aqt'] = mock_aqt_module
 
 # --- End of proper mocking ---
 
-# Add the Ankimon addon directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description="Enhanced Ankimon Test Environment")
-parser.add_argument('--file', type=str, help='Path to an individual Python file to test')
-parser.add_argument('--full-anki', action='store_true', help='Run a full Anki-like interface with enhanced Ankimon menu and reviewer')
-parser.add_argument('--debug', action='store_true', help='Enable debug logging')
-args = parser.parse_args()
 
-# Enable debug logging if requested
-if args.debug:
-    print("[DEBUG] Debug mode enabled")
+# Initialize QApplication if a GUI is required
+app = None
+if args.file or args.full_anki:
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication(sys.argv)
+
+if args.selftest:
+    if run_self_tests():
+        logging.info("Self-tests completed successfully. Exiting.")
+        sys.exit(0)
+    else:
+        logging.error("Self-tests failed. Exiting with error.")
+        sys.exit(1)
 
 if args.file:
     # Individual file testing environment
+
     file_path = os.path.abspath(args.file)
     if not os.path.exists(file_path):
-        print(f"Error: File not found at {file_path}")
+        logging.error(f"Error: File not found at {file_path}")
         sys.exit(1)
 
     spec = importlib.util.spec_from_file_location("test_module", file_path)
@@ -920,20 +1047,23 @@ if args.file:
             obj.show()
             break
     else:
-        print(f"No QDialog or QWidget found to display in {file_path}")
+        logging.info(f"No QDialog or QWidget found to display in {file_path}")
 
-    sys.exit(app.exec())
+    app.processEvents() # Process any pending events
+    app.quit() # Signal the application to exit
+    sys.exit(0) # Exit with success code
 
 elif args.full_anki:
+
     # Enhanced Full Anki-like interface
-    print("[INFO] Starting enhanced Ankimon test environment...")
+    logging.info("Starting enhanced Ankimon test environment...")
 
     # Import the Ankimon addon's components
     try:
         import Ankimon
-        print("[INFO] Ankimon module imported successfully")
+        logging.info("Ankimon module imported successfully")
     except Exception as e:
-        print(f"[WARNING] Could not import Ankimon module: {e}")
+        logging.warning(f"Could not import Ankimon module: {e}")
 
     # Import required components for create_menu_actions
     try:
@@ -944,10 +1074,10 @@ elif args.full_anki:
         from Ankimon.pyobj.collection_dialog import PokemonCollectionDialog
         from Ankimon.pyobj.item_window import ItemWindow
         from Ankimon.pyobj.pc_box import PokemonPC
-        print("[INFO] Ankimon components imported successfully")
+        logging.info("Ankimon components imported successfully")
     except Exception as e:
-        print(f"[ERROR] Could not import Ankimon components: {e}")
-        print("[INFO] Continuing with basic menu setup...")
+        logging.error(f"Could not import Ankimon components: {e}")
+        logging.info("Continuing with basic menu setup...")
 
     # Instantiate required objects for create_menu_actions
     settings_obj = Settings()
@@ -1004,9 +1134,9 @@ elif args.full_anki:
             main_pokemon=main_pokemon_obj,
             parent=mw_instance
         )
-        print("[INFO] Ankimon dialog objects created successfully")
+        logging.info("Ankimon dialog objects created successfully")
     except Exception as e:
-        print(f"[WARNING] Could not create some dialog objects: {e}")
+        logging.warning(f"Could not create some dialog objects: {e}")
         # Create fallback mock objects
         collection_dialog_obj = MockDialog("PokemonCollection")
         item_window_obj = MockDialog("ItemWindow")
@@ -1029,15 +1159,15 @@ elif args.full_anki:
     pokedex_window_obj = MockPokedex(mw_instance)
 
     # Mock callable functions
-    def mock_open_team_builder(): print("[DEBUG] Mock open_team_builder called")
-    def mock_export_to_pkmn_showdown(): print("[DEBUG] Mock export_to_pkmn_showdown called")
-    def mock_export_all_pkmn_showdown(): print("[DEBUG] Mock export_all_pkmn_showdown called")
-    def mock_flex_pokemon_collection(): print("[DEBUG] Mock flex_pokemon_collection called")
-    def mock_open_help_window(online_connectivity): print(f"[DEBUG] Mock open_help_window called with {online_connectivity}")
-    def mock_report_bug(): print("[DEBUG] Mock report_bug called")
-    def mock_rate_addon_url(): print("[DEBUG] Mock rate_addon_url called")
-    def mock_join_discord_url(): print("[DEBUG] Mock join_discord_url called")
-    def mock_open_leaderboard_url(): print("[DEBUG] Mock open_leaderboard_url called")
+    def mock_open_team_builder(): logging.debug("Mock open_team_builder called")
+    def mock_export_to_pkmn_showdown(): logging.debug("Mock export_to_pkmn_showdown called")
+    def mock_export_all_pkmn_showdown(): logging.debug("Mock export_all_pkmn_showdown called")
+    def mock_flex_pokemon_collection(): logging.debug("Mock flex_pokemon_collection called")
+    def mock_open_help_window(online_connectivity): logging.debug(f"Mock open_help_window called with {online_connectivity}")
+    def mock_report_bug(): logging.debug("Mock report_bug called")
+    def mock_rate_addon_url(): logging.debug("Mock rate_addon_url called")
+    def mock_join_discord_url(): logging.debug("Mock join_discord_url called")
+    def mock_open_leaderboard_url(): logging.debug("Mock open_leaderboard_url called")
 
     # Create additional mock objects
     eff_chart_obj = MockTableWidget(mw_instance)
@@ -1090,9 +1220,9 @@ elif args.full_anki:
             help_menu=help_menu,
             debug_menu=debug_menu,
         )
-        print("[INFO] Ankimon menu actions created successfully")
+        logging.info("Ankimon menu actions created successfully")
     except Exception as e:
-        print(f"[WARNING] Could not create menu actions: {e}")
+        logging.warning(f"Could not create menu actions: {e}")
 
     # Add enhanced menu items
     # Separator
@@ -1107,7 +1237,7 @@ elif args.full_anki:
     # Test Hooks action
     test_hooks_action = QAction("🔧 Test Ankimon Hooks", mw_instance)
     def test_hooks():
-        print("[DEBUG] Testing Ankimon hooks...")
+        logging.debug("Testing Ankimon hooks...")
         # Simulate some hooks
         test_card = MockCard(999, "Test Question", "Test Answer")
 
@@ -1116,16 +1246,16 @@ elif args.full_anki:
             try:
                 func(test_card)
             except Exception as e:
-                print(f"[DEBUG] Error in reviewer_did_show_question: {e}")
+                logging.debug(f"Error in reviewer_did_show_question: {e}")
 
         # Test answer card hook
         for func in mock_aqt_gui_hooks_module.reviewer_did_answer_card:
             try:
                 func(None, test_card, 3)  # Good answer
             except Exception as e:
-                print(f"[DEBUG] Error in reviewer_did_answer_card: {e}")
+                logging.debug(f"Error in reviewer_did_answer_card: {e}")
 
-        print("[DEBUG] Hook testing completed")
+        logging.debug("Hook testing completed")
 
     test_hooks_action.triggered.connect(test_hooks)
     mw_instance.pokemenu.addAction(test_hooks_action)
@@ -1149,12 +1279,12 @@ Cards Available: {len(mw_instance.reviewer_window.cards) if hasattr(mw_instance,
     debug_info_action.triggered.connect(show_debug_info)
     mw_instance.pokemenu.addAction(debug_info_action)
 
-    print("[INFO] Enhanced test environment setup complete!")
-    print("[INFO] Available actions:")
-    print("  - Enhanced Mock Reviewer: Full-featured card review simulation")
-    print("  - Test Ankimon Hooks: Trigger Ankimon's hook functions")
-    print("  - Debug Info: Show current environment status")
-    print("  - Various Ankimon menu items (depending on successful imports)")
+    logging.info("Enhanced test environment setup complete!")
+    logging.info("Available actions:")
+    logging.info("  - Enhanced Mock Reviewer: Full-featured card review simulation")
+    logging.info("  - Test Ankimon Hooks: Trigger Ankimon's hook functions")
+    logging.info("  - Debug Info: Show current environment status")
+    logging.info("  - Various Ankimon menu items (depending on successful imports)")
 
     # Show the mock main window
     mw_instance.show()
@@ -1163,9 +1293,9 @@ Cards Available: {len(mw_instance.reviewer_window.cards) if hasattr(mw_instance,
     sys.exit(app.exec())
 
 else:
-    print("Enhanced Ankimon Test Environment")
-    print("Usage:")
-    print("  --file <path>     Test an individual Python file")
-    print("  --full-anki       Run full Anki-like interface with enhanced features")
-    print("  --debug           Enable debug logging")
+    logging.info("Enhanced Ankimon Test Environment")
+    logging.info("Usage:")
+    logging.info("  --file <path>     Test an individual Python file")
+    logging.info("  --full-anki       Run full Anki-like interface with enhanced features")
+    logging.info("  --debug           Enable debug logging")
     sys.exit(1)
