@@ -42,8 +42,7 @@ def test_selftest_failure_mock_missing(monkeypatch):
     
     modified_content = original_content.replace(
         "        'aqt.reviewer': ['Reviewer'],",
-        "        # 'aqt.reviewer': ['Reviewer'], # Deliberately commented out for test
-        "aqt.reviewer_missing": ['Reviewer'], # Add a non-existent mock to trigger failure
+        "        # 'aqt.reviewer': ['Reviewer'], # Deliberately commented out for test\n        'aqt.reviewer_missing': ['Reviewer'],"
     )
 
     with open(RUN_TEST_ENV_PATH, 'w', encoding='utf-8') as f:
