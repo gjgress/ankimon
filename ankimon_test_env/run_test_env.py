@@ -61,23 +61,22 @@ else:
 is_headless_file_mode = bool(args.file) or os.environ.get('ANKIMON_HEADLESS_SELFTEST', 'False') == 'True'
 
 
-# Import PyQt6 components if QApplication was created
-if app:
-    from PyQt6.QtWidgets import QMainWindow, QMessageBox, QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QSizePolicy, QGridLayout, QFrame, QToolTip, QMenuBar, QMenu, QCheckBox
-    from PyQt6.QtGui import QFont, QPixmap, QImage, QPainter, QFontDatabase, QAction
-    from PyQt6.QtCore import Qt, QSize, QFile, QUrl, QTimer
-    from PyQt6.QtWebEngineWidgets import QWebEngineView
-else:
-    # Define dummy PyQt6 components for headless mode
+# Import PyQt6 components if a GUI is required. QtWebEngineWidgets must be imported early.
+if not is_headless_file_mode: # If not in headless mode, we expect a GUI and try to import Qt
+    try:
+        from PyQt6.QtWidgets import QMainWindow, QMessageBox, QDialog, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit, QSizePolicy, QGridLayout, QFrame, QToolTip, QMenuBar, QMenu, QCheckBox
+        from PyQt6.QtGui import QFont, QPixmap, QImage, QPainter, QFontDatabase, QAction
+        from PyQt6.QtCore import Qt, QSize, QFile, QUrl, QTimer
+        # Crucial: Import QWebEngineView here, before QApplication is instantiated if possible
+        from PyQt6.QtWebEngineWidgets import QWebEngineView
+    except ImportError as e:
+        logging.warning(f"PyQt6 or QtWebEngineWidgets not fully available: {e}. Running in headless mode for GUI components.")
+        # Fallback to dummy classes if import fails
+        is_headless_file_mode = True # Force headless mode for all subsequent checks
+        
+# Define dummy PyQt6 components for headless mode or if imports failed
+if is_headless_file_mode:
     logging.debug("Defining dummy PyQt6 components for headless operation.")
-    class DummyQApplication:
-        def instance(self): return None
-        def processEvents(self): pass
-        def quit(self): pass
-        def exec(self): return 0
-    app = DummyQApplication() # Assign dummy app for consistent API
-
-    # Define minimal dummy classes for necessary PyQt6 components
     class QMainWindow: pass
     class QMessageBox:
         def setText(self, text): pass
@@ -153,6 +152,31 @@ else:
         def page(self): return self._page
         def setHtml(self, html_content): logging.debug(f"DummyQWebEngineView.setHtml: {html_content[:100]}...")
         def setMinimumHeight(self, height): pass
+
+# Re-evaluate app creation after ensuring QWebEngineView is imported or mocked
+if not args.selftest or (args.selftest and not os.environ.get('ANKIMON_HEADLESS_SELFTEST', 'False') == 'True'):
+    # Only create QApplication if not running headless selftest
+    try:
+        from PyQt6.QtWidgets import QApplication
+        if QApplication.instance():
+            app = QApplication.instance()
+            logging.debug("QApplication instance already exists, reusing.")
+        else:
+            app = QApplication(sys.argv)
+            logging.debug("New QApplication instance created.")
+    except ImportError as e:
+        logging.warning(f"PyQt6 not available for QApplication: {e}. Running in headless mode.")
+        if args.full_anki and not args.selftest:
+            logging.critical("Full Anki-like interface requires PyQt6 QApplication but it's not available. Exiting.")
+            sys.exit(1)
+else:
+    logging.debug("Running in headless mode, skipping QApplication instantiation.")
+    class DummyQApplication: # Define DummyQApplication here to ensure it's always available
+        def instance(self): return None
+        def processEvents(self): pass
+        def quit(self): pass
+        def exec(self): return 0
+    app = DummyQApplication() # Assign dummy app for consistent API
 
 # Helper to load JSON data from Ankimon's user_files
 def load_ankimon_json(file_name: Path):
