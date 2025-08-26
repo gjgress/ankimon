@@ -110,51 +110,6 @@ if is_headless_env:
     class QHBoxLayout:
         def __init__(self, parent=None): pass
         def addWidget(self, widget): pass
-    class QLabel:
-        def __init__(self, text=""): self.text = text
-    class MockSignal: # Define a reusable mock signal
-        def connect(self, func):
-            logging.debug(f"MockSignal: connect called with func {func.__name__}")
-            # In a more advanced mock, you might store func to be called later
-            # self._connected_func = func
-
-    class QPushButton:
-        def __init__(self, text=""):
-            self.text = text
-            self._clicked = MockSignal() # 'clicked' should be an instance of a signal
-        def setMinimumHeight(self, height): pass
-        @property
-        def clicked(self): # Expose it as a property
-            return self._clicked
-        def hide(self): pass
-        def show(self): pass
-    class QLineEdit: pass
-    class QSizePolicy: pass
-    class QGridLayout: pass
-    class QFrame: pass
-    class QToolTip: pass
-    class QMenuBar: pass
-    class QMenu: # Improved Mock QMenu
-        def __init__(self, *args, parent=None):
-            self.title = None
-            self.actions = []
-            if len(args) == 1 and isinstance(args[0], QWidget): # QMenu(parent)
-                parent = args[0]
-            elif len(args) == 1 and isinstance(args[0], str): # QMenu(title)
-                self.title = args[0]
-            elif len(args) == 2 and isinstance(args[0], str) and isinstance(args[1], QWidget): # QMenu(title, parent)
-                self.title = args[0]
-                parent = args[1]
-            self.parent = parent
-            logging.debug(f"Mock QMenu initialized: title='{self.title}', parent={parent}")
-
-        def addAction(self, action):
-            self.actions.append(action)
-            logging.debug(f"Mock QMenu '{self.title}' added action: '{action.text}'")
-
-        def addSeparator(self):
-            logging.debug(f"Mock QMenu '{self.title}' added separator.")
-
     class QAction:
         def __init__(self, text, parent=None):
             self.text = text
@@ -199,6 +154,38 @@ is_headless_file_mode = is_headless_env or bool(args.file) or os.environ.get('AN
 if isinstance(app, DummyQApplication):
     is_headless_env = True
     is_headless_file_mode = True
+
+# --- Custom Exceptions ---
+class ConfigError(Exception):
+    """Custom exception for errors related to Ankimon configuration loading."""
+    pass
+
+# Helper to load JSON data from Ankimon's user_files
+def load_ankimon_json(file_name: Path):
+    base_path = Path(__file__).parent.parent / "src" / "Ankimon" / "user_files"
+    file_path = base_path / file_name
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logging.error(f"ConfigError: JSON file not found: {file_path}")
+        raise ConfigError(f"Required JSON file not found: {file_path}")
+    except json.JSONDecodeError:
+        logging.error(f"ConfigError: Error decoding JSON from file: {file_path}")
+        raise ConfigError(f"Corrupt JSON in file: {file_path}")
+
+# Helper to load Ankimon's config.json
+def load_ankimon_config():
+    config_path = Path(__file__).parent.parent / "src" / "Ankimon" / "config.json"
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        logging.error(f"ConfigError: Ankimon config.json not found: {config_path}")
+        raise ConfigError(f"Ankimon config.json not found: {config_path}")
+    except json.JSONDecodeError:
+        logging.error(f"ConfigError: Error decoding JSON from Ankimon config.json: {config_path}")
+        raise ConfigError(f"Corrupt JSON in Ankimon config.json: {config_path}")
 
 # Fallback/Mock Ankimon addon classes for when imports fail or are not needed
 class MockSettings:
@@ -253,33 +240,6 @@ class MockShowInfoLogger:
         logging.info(f"MockLogger.log_and_showinfo: {args}, {kwargs}")
     def toggle_log_window(self):
         logging.debug("MockLogger.toggle_log_window called")
-
-# Helper to load JSON data from Ankimon's user_files
-def load_ankimon_json(file_name: Path):
-    base_path = Path(__file__).parent.parent / "src" / "Ankimon" / "user_files"
-    file_path = base_path / file_name
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        logging.error(f"ConfigError: JSON file not found: {file_path}")
-        raise ConfigError(f"Required JSON file not found: {file_path}")
-    except json.JSONDecodeError:
-        logging.error(f"ConfigError: Error decoding JSON from file: {file_path}")
-        raise ConfigError(f"Corrupt JSON in file: {file_path}")
-
-# Helper to load Ankimon's config.json
-def load_ankimon_config():
-    config_path = Path(__file__).parent.parent / "src" / "Ankimon" / "config.json"
-    try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        logging.error(f"ConfigError: Ankimon config.json not found: {config_path}")
-        raise ConfigError(f"Ankimon config.json not found: {config_path}")
-    except json.JSONDecodeError:
-        logging.error(f"ConfigError: Error decoding JSON from Ankimon config.json: {config_path}")
-        raise ConfigError(f"Corrupt JSON in Ankimon config.json: {config_path}")
 
 class MockAddonManager:
     """Mocks Anki's addonManager object, providing methods for config management.
