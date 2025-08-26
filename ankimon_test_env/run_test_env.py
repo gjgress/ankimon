@@ -103,13 +103,20 @@ if is_headless_file_mode:
         def addWidget(self, widget): pass
     class QLabel:
         def __init__(self, text=""): self.text = text
+    class MockSignal: # Define a reusable mock signal
+        def connect(self, func):
+            logging.debug(f"MockSignal: connect called with func {func.__name__}")
+            # In a more advanced mock, you might store func to be called later
+            # self._connected_func = func
+
     class QPushButton:
-        def __init__(self, text=""): self.text = text
+        def __init__(self, text=""):
+            self.text = text
+            self._clicked = MockSignal() # 'clicked' should be an instance of a signal
         def setMinimumHeight(self, height): pass
-        def clicked(self):
-            class Signal:
-                def connect(self, func): self.func = func
-            return Signal()
+        @property
+        def clicked(self): # Expose it as a property
+            return self._clicked
         def hide(self): pass
         def show(self): pass
     class QLineEdit: pass
