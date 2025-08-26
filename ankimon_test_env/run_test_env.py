@@ -1613,8 +1613,10 @@ elif args.full_anki:
         json.dump([], f)
 
     # Create dialog objects
+    # These will use the aliased classes (_PokemonCollectionDialog, etc.) which are
+    # either the real Ankimon classes or the MockDialog fallbacks.
     try:
-        collection_dialog_obj = PokemonCollectionDialog(
+        collection_dialog_obj = _PokemonCollectionDialog(
             logger=logger_obj,
             translator=translator_obj,
             reviewer_obj=reviewer_obj,
@@ -1624,7 +1626,7 @@ elif args.full_anki:
             parent=mw_instance
         )
 
-        item_window_obj = ItemWindow(
+        item_window_obj = _ItemWindow(
             logger=logger_obj,
             main_pokemon=main_pokemon_obj,
             enemy_pokemon=enemy_pokemon_obj,
@@ -1634,7 +1636,7 @@ elif args.full_anki:
             evo_window=evo_window_obj,
         )
 
-        pokemon_pc_obj = PokemonPC(
+        pokemon_pc_obj = _PokemonPC(
             logger=logger_obj,
             translator=translator_obj,
             reviewer_obj=reviewer_obj,
@@ -1645,8 +1647,9 @@ elif args.full_anki:
         )
         logging.info("Ankimon dialog objects created successfully")
     except Exception as e:
-        logging.warning(f"Could not create some dialog objects: {e}. Using fallback mocks.")
-        # Create fallback mock objects
+        logging.warning(f"Could not create some dialog objects: {e}. This might indicate issues with Ankimon's __init__ for these classes, falling back to basic mocks.")
+        # Re-create using explicit MockDialog as a final fallback,
+        # in case the aliased classes still cause issues despite being mocked.
         collection_dialog_obj = MockDialog("PokemonCollection")
         item_window_obj = MockDialog("ItemWindow")
         pokemon_pc_obj = MockDialog("PokemonPC")
