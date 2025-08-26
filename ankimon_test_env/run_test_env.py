@@ -682,8 +682,10 @@ class MockForm:
         self.menubar = MockMenuBar()
         self.centralwidget = QWidget()
     def setupUi(self, main_window):
-        main_window.setMenuBar(self.menubar)
-        main_window.setCentralWidget(self.centralwidget)
+        if hasattr(main_window, 'setMenuBar'):
+            main_window.setMenuBar(self.menubar)
+        if hasattr(main_window, 'setCentralWidget'):
+            main_window.setCentralWidget(self.centralwidget)
 
 class MockMainWindow(QMainWindow):
     """Mocks Anki's main window (mw), providing core Anki objects."""
