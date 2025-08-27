@@ -1,3 +1,13 @@
+import sys
+print("---- Python version:", sys.version)
+try:
+    import PyQt6
+    print("PyQt6 path:", PyQt6.__file__)
+    from PyQt6.QtGui import QAction
+    print("QAction exists?:", 'QAction' in dir(PyQt6.QtGui))
+except Exception as e:
+    print("PyQt6 import or QAction error:", e)
+
 from typing import Callable
 from pathlib import Path
 from typing import Union
