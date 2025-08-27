@@ -229,6 +229,7 @@ def run_test_environment():
     # Add dummy methods for common hook functions
     anki_hooks_mock.addHook = lambda *args, **kwargs: None
     anki_hooks_mock.remHook = lambda *args, **kwargs: None
+    anki_hooks_mock.wrap = lambda func, hook, *args, **kwargs: func # Simple pass-through mock for 'wrap'
     anki_mock_module.hooks = anki_hooks_mock # Link to the main anki mock
 
 
