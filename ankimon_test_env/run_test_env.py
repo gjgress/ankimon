@@ -73,6 +73,8 @@ class MockAnkiMainWindow:
     def __init__(self):
         # This mock represents the Anki main window object that Ankimon interacts with.
         # It needs to have a menubar and a way to add menus.
+        # Note: self.form is created here, but MockReviewerWindow (which it uses) is a QMainWindow.
+        # This MockAnkiMainWindow init method will now be called *after* QApplication is set up.
         self.form = MockReviewerWindow() # Our simulated reviewer window
         self.menubar = self.form.menubar # Access the menubar from the reviewer window
         self.pokemenu = None # This will be populated by create_menu_actions
@@ -90,52 +92,22 @@ class MockAnkiMainWindow:
     def show(self):
         self.form.show()
 
-# Mock `aqt` and the global `mw` object so Ankimon modules can be imported.
-from types import ModuleType
 
-# Global mock 'mw' object for the test environment.
-# Ankimon's code expects this to exist when its modules are imported.
-mw = MockAnkiMainWindow()
-
-# Mock the 'aqt' module and set its 'mw' attribute.
-# Anki addons use 'from aqt import mw' to get the main window instance.
-try:
-    import aqt
-    aqt.mw = mw
-except ImportError:
-    # If aqt is not installed (e.g., in a clean CI environment),
-    # create a mock module and inject it into sys.modules so the import doesn't fail.
-    aqt_mock = ModuleType('aqt')
-    aqt_mock.mw = mw
-    sys.modules['aqt'] = aqt_mock
-
-
-# Import actual Ankimon functions and constants
-# These imports are wrapped in a try-except block in case the Ankimon source is not fully present or correctly configured
+# Global placeholders for mw and Ankimon imports, to be set after QApplication is initialized
+mw = None
+create_menu_actions = None
+ankimon_key = None
+join_discord_url = None
+open_leaderboard_url = None
+rate_addon_url = None
+open_team_builder = None
+export_to_pkmn_showdown = None
+export_all_pkmn_showdown = None
+flex_pokemon_collection = None
+open_help_window = None
+report_bug = None
 ANKIMON_AVAILABLE = False
-try:
-    from src.Ankimon.menu_buttons import create_menu_actions
-    from src.Ankimon.consts import ANKIMON_KEY as ankimon_key, JOIN_DISCORD_URL as join_discord_url, OPEN_LEADERBOARD_URL as open_leaderboard_url, RATE_ADDON_URL as rate_addon_url
-    from src.Ankimon.functions.utils import open_team_builder, export_to_pkmn_showdown, export_all_pkmn_showdown, flex_pokemon_collection, open_help_window, report_bug
-    
-    ANKIMON_AVAILABLE = True
-    print("Successfully imported Ankimon core modules.")
-except ImportError as e:
-    print(f"Failed to import Ankimon core modules (src.Ankimon.*): {e}")
-    # Define dummy functions and variables if Ankimon modules are not available
-    # to prevent NameErrors later in the script if MOCKS_AVAILABLE is True.
-    def create_menu_actions(*args, **kwargs): pass
-    def open_team_builder(*args, **kwargs): pass
-    def export_to_pkmn_showdown(*args, **kwargs): pass
-    def export_all_pkmn_showdown(*args, **kwargs): pass
-    def flex_pokemon_collection(*args, **kwargs): pass
-    def open_help_window(*args, **kwargs): pass
-    def report_bug(*args, **kwargs): pass
-    rate_addon_url = "http://mock.rate.addon.url"
-    ankimon_key = "mock_ankimon_key"
-    join_discord_url = "http://mock.discord.url"
-    open_leaderboard_url = "http://mock.leaderboard.url"
-    # ANKIMON_AVAILABLE remains False from initialization
+
 
 # Define dummy classes for Ankimon UI elements that are instantiated in the test environment
 # These are minimal implementations to satisfy instantiation and basic method calls.
@@ -212,9 +184,51 @@ def run_test_environment():
     Sets up and runs the Ankimon test environment.
     This includes creating mock Anki objects and injecting Ankimon's UI.
     """
+    # Declare global variables that will be populated in this function
+    global mw, create_menu_actions, ankimon_key, join_discord_url, open_leaderboard_url, rate_addon_url, ANKIMON_AVAILABLE, \
+           open_team_builder, export_to_pkmn_showdown, export_all_pkmn_showdown, flex_pokemon_collection, open_help_window, report_bug
+
     print("Starting Ankimon test environment...")
 
-    # The global 'mw' object is now used, which was created before Ankimon was imported.
+    # Create the global mock 'mw' object AFTER QApplication is guaranteed to exist.
+    mw = MockAnkiMainWindow()
+
+    # Mock `aqt` and the global `mw` object so Ankimon modules can be imported.
+    from types import ModuleType
+    try:
+        import aqt
+        aqt.mw = mw
+    except ImportError:
+        # If aqt is not installed (e.g., in a clean CI environment),
+        # create a mock module and inject it into sys.modules so the import doesn't fail.
+        aqt_mock = ModuleType('aqt')
+        aqt_mock.mw = mw
+        sys.modules['aqt'] = aqt_mock
+
+    # Import actual Ankimon functions and constants AFTER mw is set up
+    try:
+        from src.Ankimon.menu_buttons import create_menu_actions
+        from src.Ankimon.consts import ANKIMON_KEY as ankimon_key, JOIN_DISCORD_URL as join_discord_url, OPEN_LEADERBOARD_URL as open_leaderboard_url, RATE_ADDON_URL as rate_addon_url
+        from src.Ankimon.functions.utils import open_team_builder, export_to_pkmn_showdown, export_all_pkmn_showdown, flex_pokemon_collection, open_help_window, report_bug
+        
+        ANKIMON_AVAILABLE = True
+        print("Successfully imported Ankimon core modules.")
+    except ImportError as e:
+        print(f"Failed to import Ankimon core modules (src.Ankimon.*): {e}")
+        # Define dummy functions and variables if Ankimon modules are not available
+        # to prevent NameErrors later in the script if MOCKS_AVAILABLE is True.
+        def create_menu_actions(*args, **kwargs): pass
+        def open_team_builder(*args, **kwargs): pass
+        def export_to_pkmn_showdown(*args, **kwargs): pass
+        def export_all_pkmn_showdown(*args, **kwargs): pass
+        def flex_pokemon_collection(*args, **kwargs): pass
+        def open_help_window(*args, **kwargs): pass
+        def report_bug(*args, **kwargs): pass
+        rate_addon_url = "http://mock.rate.addon.url"
+        ankimon_key = "mock_ankimon_key"
+        join_discord_url = "http://mock.discord.url"
+        open_leaderboard_url = "http://mock.leaderboard.url"
+        ANKIMON_AVAILABLE = False # Redundant, but explicit
 
     # Initialize Ankimon components that need to be passed to create_menu_actions
     # These are mocks or dummy objects for the test environment.
@@ -223,7 +237,8 @@ def run_test_environment():
     # Instantiate mock dialogs/windows that menu_buttons.py might expect
     pokecollection_win = MockPokemonCollectionDialog(settings_obj=settings_obj, data_handler_obj=MockDataHandler())
     item_window = MockItemWindow(settings_obj=settings_obj)
-    test_window = MockTestWindow(parent=mw.form) # Pass the mock main window as parent
+    # The parent for MockTestWindow needs to be mw.form, which is now available.
+    test_window = MockTestWindow(parent=mw.form)
     achievement_bag = MockAchievementWindow(addon_dir=Path(ANKIMON_ROOT), data_handler_obj=MockDataHandler())
     ankimon_tracker_window = MockAnkimonTrackerWindow(settings_obj=settings_obj)
     data_handler_window = MockDataHandlerWindow(settings_obj=settings_obj, data_handler_obj=MockDataHandler())
