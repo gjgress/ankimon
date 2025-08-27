@@ -331,6 +331,12 @@ def run_test_environment():
     aqt_qt_mock.Qt = Qt
     aqt_mock_module.qt = aqt_qt_mock
 
+    # Mock aqt.utils
+    aqt_utils_mock = ensure_mock_module('aqt.utils')
+    # Use the MockAqtUtils class defined in mock_anki
+    from ankimon_test_env.mock_anki import MockAqtUtils
+    aqt_utils_mock.__dict__.update(MockAqtUtils().__dict__)
+    aqt_mock_module.utils = aqt_utils_mock
 
     # Import actual Ankimon functions and constants AFTER mw and all anki/aqt mocks are set up
     try:
