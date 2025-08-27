@@ -1,12 +1,52 @@
 # mock_anki/__init__.py
 from typing import Union, Optional
-from PyQt6.QtWidgets import QWidget, QMainWindow, QMenu, QMenuBar, QVBoxLayout, QAction, QApplication, QDialog
+from PyQt6.QtWidgets import QWidget, QMainWindow, QMenu, QMenuBar, QVBoxLayout, QApplication, QDialog
+from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QIcon, QKeySequence
 
 # Mock classes for dependencies
 class Card:
     pass
+
+class MockPokemonCollectionDialog:
+    def __init__(self, settings_obj=None, data_handler_obj=None):
+        print("MockPokemonCollectionDialog initialized.")
+        self.settings_obj = settings_obj
+        self.data_handler_obj = data_handler_obj
+
+class Card:
+    pass
+
+class MockTestWindow:
+    def __init__(self, parent=None):
+        print("MockTestWindow initialized.")
+        self.parent = parent
+
+class MockItemWindow:
+    def __init__(self, settings_obj=None):
+        print("MockItemWindow initialized.")
+        self.settings_obj = settings_obj
+
+class MockDataHandler:
+    def __init__(self):
+        print("MockDataHandler initialized.")
+
+class MockShowInfoLogger:
+    def __init__(self):
+        print("MockShowInfoLogger initialized.")
+    def showInfo(self, message):
+        print(f"MockShowInfoLogger: {message}")
+
+class MockSettings:
+    def __init__(self):
+        print("MockSettings initialized.")
+    # Add any methods or attributes that Ankimon's code might call on a settings object
+    def get(self, key, default=None):
+        print(f"MockSettings: get called for {key}, returning {default}")
+        return default
+    def set(self, key, value):
+        print(f"MockSettings: set called for {key} = {value}")
 
 class AnkiUtils:
     def __init__(self):
@@ -126,9 +166,7 @@ class MockAnkiMainWindow:
     def show(self):
         self.form.show()
 
-# Global mock 'mw' object for the test environment
-# This is the object that Ankimon's code will interact with.
-mw = MockAnkiMainWindow()
+
 
 # Mock classes from aqt.qt and aqt.utils if they are directly used by Ankimon code
 # For example, if Ankimon directly imports from aqt.qt:
