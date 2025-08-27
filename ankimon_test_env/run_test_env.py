@@ -193,53 +193,94 @@ def run_test_environment():
     # Create the global mock 'mw' object AFTER QApplication is guaranteed to exist.
     mw = MockAnkiMainWindow()
 
-    # Mock base 'anki' modules if they are not already in sys.modules.
-    # This is necessary because some Ankimon code might import directly from 'anki' (e.g., anki.models).
+    # --- Robustly Mock Anki Core Modules ---
+    # This section ensures that all Anki-related imports in Ankimon code
+    # are directed to our mock objects, preventing "partially initialized module" errors.
     from types import ModuleType
 
-    if 'anki' not in sys.modules:
-        anki_mock_module = ModuleType('anki')
-        sys.modules['anki'] = anki_mock_module
-    else:
-        anki_mock_module = sys.modules['anki']
+    # Helper to ensure a mock module exists and is put into sys.modules
+    def ensure_mock_module(name: str):
+        if name in sys.modules:
+            # If already imported (e.g., real Anki module), remove it
+            # This is critical to prevent "partially initialized module" errors.
+            print(f"Warning: Real '{name}' module found in sys.modules. Overriding with mock.")
+            del sys.modules[name]
+        mock_module = ModuleType(name)
+        sys.modules[name] = mock_module
+        return mock_module
 
-    # Mock anki.models to include NotetypeDict
-    if 'anki.models' not in sys.modules:
-        anki_models_mock = ModuleType('anki.models')
-        # NotetypeDict is usually a dictionary-like type or a type alias.
-        # For mocking, a simple dict or an empty class will do to satisfy import.
-        class NotetypeDict(dict):
-            pass
-        anki_models_mock.NotetypeDict = NotetypeDict
-        sys.modules['anki.models'] = anki_models_mock
-    else:
-        anki_models_mock = sys.modules['anki.models']
+    # Mock 'anki' and its submodules
+    anki_mock_module = ensure_mock_module('anki')
     
-    # Optionally, if other parts of anki.models are expected:
-    # anki_models_mock.Collection = Collection() # If Anki code expects anki.models.Collection
-
-    # Link anki.models into the anki mock module
+    # Mock anki.models
+    anki_models_mock = ensure_mock_module('anki.models')
+    class NotetypeDict(dict): # Define a simple mock for NotetypeDict
+        pass
+    anki_models_mock.NotetypeDict = NotetypeDict
     anki_mock_module.models = anki_models_mock
-    
-    # Also link our mock Collection to anki.collection if Ankimon expects it there
-    # (mw.col is already our mock collection)
-    if 'anki.collection' not in sys.modules:
-        anki_collection_mock = ModuleType('anki.collection')
-        sys.modules['anki.collection'] = anki_collection_mock
-    else:
-        anki_collection_mock = sys.modules['anki.collection']
-    anki_collection_mock.Collection = Collection # Use our already defined mock Collection class
+
+    # Mock anki.collection
+    anki_collection_mock = ensure_mock_module('anki.collection')
+    anki_collection_mock.Collection = Collection # Use our already defined MockCollection class
     anki_mock_module.collection = anki_collection_mock
 
+    # Mock anki.hooks (Ankimon often uses Anki's hook system)
+    anki_hooks_mock = ensure_mock_module('anki.hooks')
+    # Add dummy methods for common hook functions
+    anki_hooks_mock.addHook = lambda *args, **kwargs: None
+    anki_hooks_mock.remHook = lambda *args, **kwargs: None
+    anki_mock_module.hooks = anki_hooks_mock # Link to the main anki mock
 
-    # This block ensures that 'aqt' and its necessary submodules are mocked
-    # regardless of whether a real 'aqt' package is installed in the environment.
-    # Create a mock aqt module if it doesn't exist in sys.modules, or use the existing one.
-    if 'aqt' not in sys.modules:
-        aqt_mock_module = ModuleType('aqt')
-        sys.modules['aqt'] = aqt_mock_module
-    else:
-        aqt_mock_module = sys.modules['aqt']
+
+    # --- Robustly Mock aqt Modules ---
+    # This ensures 'aqt' and its necessary submodules are mocked.
+    aqt_mock_module = ensure_mock_module('aqt')
+
+    # Unconditionally set mw attribute on aqt
+    aqt_mock_module.mw = mw
+
+    # Mock aqt.gui_hooks
+    aqt_gui_hooks_mock = ensure_mock_module('aqt.gui_hooks')
+    class MockGuiHooks:
+        def reviewer_will_show_question(self, *args): pass
+        def reviewer_did_show_answer(self, *args): pass
+        def editor_did_init_note(self, *args): pass
+        def editor_did_load_note(self, *args): pass
+        def deck_browser_did_render(self, *args): pass
+        def profile_did_open(self, *args): pass
+        def profile_will_close(self, *args): pass
+        def collection_did_flush(self, *args): pass
+        def add_cards_did_add_note(self, *args): pass
+        def add_cards_will_add_note(self, *args): pass
+        def add_cards_did_add_cards(self, *args): pass
+        def browser_did_reset(self, *args): pass
+        def webview_will_set_content(self, *args): pass
+        # Add other gui_hooks as needed if more ImportError issues arise
+    
+    aqt_gui_hooks_mock.__dict__.update(MockGuiHooks().__dict__) # Assign methods to the mock module
+    aqt_mock_module.gui_hooks = aqt_gui_hooks_mock
+
+
+    # Mock aqt.qt - crucial for `from aqt.qt import *` in menu_buttons.py
+    aqt_qt_mock = ensure_mock_module('aqt.qt')
+    # Re-export the necessary PyQt6 classes that `menu_buttons.py` might expect.
+    # These are already imported by run_test_env.py at the top, so we can access them.
+    aqt_qt_mock.QAction = QAction
+    aqt_qt_mock.QApplication = QApplication
+    aqt_qt_mock.QWidget = QWidget
+    aqt_qt_mock.QVBoxLayout = QVBoxLayout
+    aqt_qt_mock.QLabel = QLabel
+    aqt_qt_mock.QPushButton = QPushButton
+    aqt_qt_mock.QMainWindow = QMainWindow
+    aqt_qt_mock.QMenuBar = QMenuBar
+    aqt_qt_mock.QMenu = QMenu
+    aqt_qt_mock.QDialog = QDialog
+    aqt_qt_mock.Qt = Qt
+    aqt_mock_module.qt = aqt_qt_mock
+
+
+    # Import actual Ankimon functions and constants AFTER mw and all anki/aqt mocks are set up
+    try:
 
     # Unconditionally set mw attribute on aqt
     aqt_mock_module.mw = mw
