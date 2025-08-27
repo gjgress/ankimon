@@ -52,12 +52,13 @@ try:
         MockDataHandler,
         MockItemWindow,
         MockTestWindow,
-        MockAchievementWindow
+        MockAchievementWindow,
+        MockAqtUtils # Import MockAqtUtils here
     )
     MOCKS_AVAILABLE = True
-    print("Successfully imported MockReviewerWindow, Collection, AddonManager, ProfileManager, and MockSettings.")
+    print("Successfully imported MockReviewerWindow, Collection, AddonManager, ProfileManager, MockSettings, and MockAqtUtils.")
 except ImportError as e:
-    print(f"Failed to import MockReviewerWindow, Collection, AddonManager, ProfileManager, or MockSettings: {e}")
+    print(f"Failed to import MockReviewerWindow, Collection, AddonManager, ProfileManager, MockSettings, or MockAqtUtils: {e}")
     MOCKS_AVAILABLE = False
 
 
@@ -197,6 +198,7 @@ def run_test_environment():
     # This section ensures that all Anki-related imports in Ankimon code
     # are directed to our mock objects, preventing "partially initialized module" errors.
     from types import ModuleType
+    import functools # Ensure functools is imported for the wrap function
 
     # Helper to ensure a mock module exists and is put into sys.modules
     def ensure_mock_module(name: str):
@@ -224,12 +226,10 @@ def run_test_environment():
     anki_collection_mock.Collection = Collection # Use our already defined MockCollection class
     anki_mock_module.collection = anki_collection_mock
 
-    # Mock anki.hooks (Ankimon often uses Anki's hook system)
+    # Mock anki.hooks
     anki_hooks_mock = ensure_mock_module('anki.hooks')
 
     # Define mock functions for common hook operations
-    import functools
-
     def wrap(old_func, new_func, pos="after"):
         """
         Mock implementation of anki.hooks.wrap for test environment.
@@ -276,11 +276,12 @@ def run_test_environment():
         """Mock remHook - already implemented but ensure it exists"""  
         pass
 
-    anki_hooks_mock.addHook = addHook
-    anki_hooks_mock.remHook = remHook
+    # Assign the mock functions to the anki_hooks_mock object
+    anki_hooks_mock.wrap = wrap
     anki_hooks_mock.runHook = runHook
     anki_hooks_mock.runFilter = runFilter
-    anki_hooks_mock.wrap = wrap # Assign the detailed mock wrap function
+    anki_hooks_mock.addHook = addHook
+    anki_hooks_mock.remHook = remHook
 
     anki_mock_module.hooks = anki_hooks_mock # Link to the main anki mock
 
@@ -333,9 +334,15 @@ def run_test_environment():
 
     # Mock aqt.utils
     aqt_utils_mock = ensure_mock_module('aqt.utils')
-    # Use the MockAqtUtils class defined in mock_anki
-    from ankimon_test_env.mock_anki import MockAqtUtils
+    # Define the missing downArrow function
+    def downArrow():
+        """Mock for aqt.utils.downArrow"""
+        return "↓" # Or any suitable placeholder character
+
+    # Use the MockAqtUtils class defined in mock_anki and add the downArrow function
+    # Ensure MockAqtUtils is imported at the top of this file
     aqt_utils_mock.__dict__.update(MockAqtUtils().__dict__)
+    aqt_utils_mock.downArrow = downArrow # Add the mocked downArrow function
     aqt_mock_module.utils = aqt_utils_mock
 
     # Mock aqt.reviewer
