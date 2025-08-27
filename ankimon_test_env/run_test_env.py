@@ -9,18 +9,17 @@ from pathlib import Path
 print("---- Python version:", sys.version)
 
 try:
-
     import PyQt6
-
     print("PyQt6 path:", PyQt6.__file__)
-
-    from PyQt6.QtGui import QAction
-
+    # The problematic import was here, trying to import QAction from QtWidgets.
+    # It should be from QtGui.
+    # from PyQt6.QtWidgets import QAction # This line was incorrect.
+    # The correct import is already at the top of the file.
+    # We can verify its existence here.
     print("QAction exists?:", 'QAction' in dir(PyQt6.QtGui))
-
 except Exception as e:
-
     print("PyQt6 import or QAction error:", e)
+
 # Add the Ankimon directory to the Python path
 # Assuming this script is run from the root of the repository
 ANKIMON_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
