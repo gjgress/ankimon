@@ -1,7 +1,8 @@
 import sys
 import os
+# Corrected import for QAction to be from PyQt6.QtGui
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu
-from PyQt6.QtGui import QAction # Corrected import for QAction
 from PyQt6.QtCore import Qt
 from pathlib import Path
 
