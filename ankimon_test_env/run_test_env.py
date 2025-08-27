@@ -108,11 +108,12 @@ class LogViewerWidget(logging.Handler):
         self.widget.setPlaceholderText("Ankimon Test Environment Logs...")
         self.widget.setStyleSheet("""
             QTextEdit {
-                background-color: #f0f0f0;
-                border: 1px solid #cccccc;
+                background-color: #2d2d2d;
+                border: 1px solid #555555;
                 padding: 5px;
                 font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
                 font-size: 10pt;
+                color: #f0f0f0;
             }
         """)
 
@@ -142,7 +143,7 @@ class TestBrowserWidget(QWidget):
 
         # Splitter for List/Output
         splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.setStyleSheet("QSplitter::handle { background-color: #cccccc; }")
+        splitter.setStyleSheet("QSplitter::handle { background-color: #555555; }")
 
         # Top pane: Test List and Controls
         top_pane_widget = QWidget()
@@ -152,21 +153,22 @@ class TestBrowserWidget(QWidget):
         self.test_list_widget.setAlternatingRowColors(True)
         self.test_list_widget.setStyleSheet("""
             QListWidget {
-                background-color: #ffffff;
-                border: 1px solid #cccccc;
+                background-color: #2d2d2d;
+                border: 1px solid #555555;
                 padding: 5px;
                 font-size: 10pt;
+                color: #f0f0f0;
             }
             QListWidget::item {
                 padding: 5px;
-                border-bottom: 1px solid #eeeeee;
+                border-bottom: 1px solid #3c3c3c;
             }
             QListWidget::item:selected {
-                background-color: #cce5ff;
-                color: #004085;
+                background-color: #2a82da;
+                color: #ffffff;
             }
             QListWidget::item:hover {
-                background-color: #f8f9fa;
+                background-color: #3c3c3c;
             }
         """)
         top_layout.addWidget(self.test_list_widget)
@@ -194,11 +196,12 @@ class TestBrowserWidget(QWidget):
         self.output_area.setPlaceholderText("Test execution output will appear here...")
         self.output_area.setStyleSheet("""
             QTextEdit {
-                background-color: #f8f9fa;
-                border: 1px solid #cccccc;
+                background-color: #2d2d2d;
+                border: 1px solid #555555;
                 padding: 5px;
                 font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
                 font-size: 10pt;
+                color: #f0f0f0;
             }
         """)
         self.output_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -212,8 +215,8 @@ class TestBrowserWidget(QWidget):
         layout.addWidget(self.status_label)
 
         self.setStyleSheet("""
-            QWidget { background-color: #e0f7fa; }
-            QLabel { color: #00796b; }
+            QWidget { background-color: #2d2d2d; }
+            QLabel { color: #f0f0f0; }
         """)
 
         # Initial discovery on load
@@ -224,7 +227,7 @@ class TestBrowserWidget(QWidget):
         self.test_list_widget.clear()
         self.output_area.clear()
         self.status_label.setText("Status: Discovering tests...")
-        self.parent_window.statusBar.showMessage("Discovering tests...")
+        self.parent_window.status_bar.showMessage("Discovering tests...")
 
         tests_found = False
         try:
@@ -248,13 +251,13 @@ class TestBrowserWidget(QWidget):
                 self.status_label.setText("Status: No tests found.")
             else:
                 self.status_label.setText(f"Status: Found {self.test_list_widget.count()} tests.")
-                self.parent_window.statusBar.showMessage(f"Found {self.test_list_widget.count()} tests.")
+                self.parent_window.status_bar.showMessage(f"Found {self.test_list_widget.count()} tests.")
 
         except Exception as e:
             error_msg = f"Error during test discovery: {e}"
             self.output_area.append(error_msg)
             self.status_label.setText("Status: Error during discovery.")
-            self.parent_window.statusBar.showMessage("Error during test discovery.")
+            self.parent_window.status_bar.showMessage("Error during test discovery.")
             logger.error(error_msg)
 
     def run_test(self, item):
@@ -282,7 +285,7 @@ class TestBrowserWidget(QWidget):
         thread.start()
 
         self.status_label.setText(f"Status: Running '{test_name}'...")
-        self.parent_window.statusBar.showMessage(f"Running '{test_name}'...")
+        self.parent_window.status_bar.showMessage(f"Running '{test_name}'...")
         self.run_all_button.setEnabled(False)
         self.discover_button.setEnabled(False)
         self.stop_all_button.setEnabled(True)
@@ -295,7 +298,7 @@ class TestBrowserWidget(QWidget):
 
         self.output_area.clear()
         self.status_label.setText("Status: Starting all tests...")
-        self.parent_window.statusBar.showMessage("Starting all tests...")
+        self.parent_window.status_bar.showMessage("Starting all tests...")
         self.run_all_button.setEnabled(False)
         self.discover_button.setEnabled(False)
         self.stop_all_button.setEnabled(True)
@@ -315,7 +318,7 @@ class TestBrowserWidget(QWidget):
                 self.test_threads[item.data(Qt.ItemDataRole.UserRole)].wait() # Wait for this thread to complete
 
         self.status_label.setText("Status: All tests finished.")
-        self.parent_window.statusBar.showMessage("All tests finished.")
+        self.parent_window.status_bar.showMessage("All tests finished.")
         self.run_all_button.setEnabled(True)
         self.discover_button.setEnabled(True)
         self.stop_all_button.setEnabled(False)
@@ -323,7 +326,7 @@ class TestBrowserWidget(QWidget):
     def stop_all_tests(self):
         """Stops all currently running tests."""
         self.status_label.setText("Status: Stopping tests...")
-        self.parent_window.statusBar.showMessage("Stopping tests...")
+        self.parent_window.status_bar.showMessage("Stopping tests...")
         for test_file_path, thread in self.test_threads.items():
             if thread.isRunning():
                 thread.stop()
@@ -331,7 +334,7 @@ class TestBrowserWidget(QWidget):
         self.test_threads.clear()
         self.current_test_item = None
         self.status_label.setText("Status: All tests stopped.")
-        self.parent_window.statusBar.showMessage("All tests stopped.")
+        self.parent_window.status_bar.showMessage("All tests stopped.")
         self.run_all_button.setEnabled(True)
         self.discover_button.setEnabled(True)
         self.stop_all_button.setEnabled(False)
@@ -371,13 +374,13 @@ class TestBrowserWidget(QWidget):
 
         if all_tests_finished:
             self.status_label.setText("Status: All tests finished.")
-            self.parent_window.statusBar.showMessage("All tests finished.")
+            self.parent_window.status_bar.showMessage("All tests finished.")
             self.run_all_button.setEnabled(True)
             self.discover_button.setEnabled(True)
             self.stop_all_button.setEnabled(False)
         else:
             self.status_label.setText(f"Status: Test '{test_name}' finished. More tests running...")
-            self.parent_window.statusBar.showMessage(f"Test '{test_name}' finished. More tests running...")
+            self.parent_window.status_bar.showMessage(f"Test '{test_name}' finished. More tests running...")
 
         # Connect itemClicked to display docstring/output
         self.test_list_widget.itemClicked.connect(self.display_test_details)
@@ -414,10 +417,10 @@ class ReviewerSimulationWidget(QWidget):
         self.card_display = QWidget()
         self.card_layout = QVBoxLayout(self.card_display)
         self.card_display.setStyleSheet("""
-            QWidget { background-color: #e3f2fd; border: 1px solid #90caf9; border-radius: 5px; padding: 10px; }
-            QLabel { color: #0d47a1; font-size: 12pt; }
-            QPushButton { background-color: #42a5f5; color: white; padding: 8px 15px; border-radius: 4px; }
-            QPushButton:hover { background-color: #1e88e5; }
+            QWidget { background-color: #2d2d2d; border: 1px solid #555555; border-radius: 5px; padding: 10px; }
+            QLabel { color: #f0f0f0; font-size: 12pt; }
+            QPushButton { background-color: #555555; color: white; padding: 8px 15px; border-radius: 4px; }
+            QPushButton:hover { background-color: #666666; }
         """)
         self.question_label = QLabel("Question: Loading...")
         self.question_label.setWordWrap(True)
@@ -453,14 +456,16 @@ class ReviewerSimulationWidget(QWidget):
         self.hooks_log_display.setReadOnly(True)
         self.hooks_log_display.setFixedHeight(100)
         self.hooks_log_display.setStyleSheet("""
-            QTextEdit { background-color: #f5f5f5; border: 1px solid #cccccc; padding: 5px; font-size: 9pt; }
+            QTextEdit {
+                background-color: #2d2d2d; border: 1px solid #555555; padding: 5px; font-size: 9pt; color: #f0f0f0;
+            }
         """)
         layout.addWidget(self.hooks_log_label)
         layout.addWidget(self.hooks_log_display)
 
         self.setStyleSheet("""
-            QWidget { background-color: #fff9c4; }
-            QLabel { color: #f57f17; }
+            QWidget { background-color: #2d2d2d; }
+            QLabel { color: #f0f0f0; }
         """)
 
         # Initialize with some mock cards
@@ -564,7 +569,7 @@ class ConfigEditorWidget(QWidget):
 
         # Splitter for editor and buttons
         splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.setStyleSheet("QSplitter::handle { background-color: #cccccc; }")
+        splitter.setStyleSheet("QSplitter::handle { background-color: #555555; }")
 
         # Top pane: JSON Editor
         editor_pane_widget = QWidget()
@@ -574,11 +579,12 @@ class ConfigEditorWidget(QWidget):
         self.config_editor.setPlaceholderText("Ankimon configuration will be displayed and edited here as JSON.")
         self.config_editor.setStyleSheet("""
             QPlainTextEdit {
-                background-color: #ffffff;
-                border: 1px solid #cccccc;
+                background-color: #2d2d2d;
+                border: 1px solid #555555;
                 padding: 5px;
                 font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
                 font-size: 10pt;
+                color: #f0f0f0;
             }
         """)
         editor_layout.addWidget(self.config_editor)
@@ -600,8 +606,8 @@ class ConfigEditorWidget(QWidget):
         layout.addWidget(splitter)
 
         self.setStyleSheet("""
-            QWidget { background-color: #e8f5e9; }
-            QLabel { color: #2e7d32; }
+            QWidget { background-color: #2d2d2d; }
+            QLabel { color: #f0f0f0; }
         """)
 
         # Attempt to load default config on initialization
@@ -649,13 +655,13 @@ class ConfigEditorWidget(QWidget):
             # Display the config in the editor
             self.config_editor.setPlainText(json.dumps(self.config_data, indent=2))
             self.save_config_button.setEnabled(True)
-            self.parent_window.statusBar.showMessage("Default configuration loaded.")
+            self.parent_window.status_bar.showMessage("Default configuration loaded.")
 
         except Exception as e:
             self.config_path_label.setText("Config File: Error loading")
             self.config_editor.setPlainText(f"Error loading configuration: {e}")
             self.save_config_button.setEnabled(False)
-            self.parent_window.statusBar.showMessage("Error loading configuration.")
+            self.parent_window.status_bar.showMessage("Error loading configuration.")
             logger.error(f"Error loading config: {e}")
 
     def save_config(self):
@@ -668,13 +674,13 @@ class ConfigEditorWidget(QWidget):
             # For the mock, we'll just update the internal state and log.
             self.parent_window.mock_addon_manager.writeConfig("Ankimon", new_config_data) # Using the mock manager from parent
             self.config_data = new_config_data # Update internal state
-            self.parent_window.statusBar.showMessage("Configuration saved successfully.")
+            self.parent_window.status_bar.showMessage("Configuration saved successfully.")
             self.config_editor.setPlainText(json.dumps(self.config_data, indent=2)) # Reformat to ensure consistency
 
         except json.JSONDecodeError:
-            self.parent_window.statusBar.showMessage("Error: Invalid JSON format. Please correct before saving.")
+            self.parent_window.status_bar.showMessage("Error: Invalid JSON format. Please correct before saving.")
         except Exception as e:
-            self.parent_window.statusBar.showMessage(f"Error saving configuration: {e}")
+            self.parent_window.status_bar.showMessage(f"Error saving configuration: {e}")
             logger.error(f"Error saving config: {e}")
 
 class AnkimonTestApp(QMainWindow):
@@ -689,29 +695,29 @@ class AnkimonTestApp(QMainWindow):
         self.setMinimumSize(900, 700)
 
         # --- Mock Objects Initialization ---
-        self.mock_collection = MockCollection()
-        self.mock_profile_manager = MockProfileManager()
-        self.mock_addon_manager = MockAddonManager()
-        self.mock_utils = MockUtils()
-        self.mock_reviewer = MockReviewer()
-        self.mock_reviewer_window = MockReviewerWindow()
-        self.mock_main_window = MockMainWindow(self)
-        self.mock_form = MockForm()
-        self.mock_logger = MockShowInfoLogger()
-        self.mock_translator = MockTranslator("en")
+        # self.mock_collection = MockCollection()
+        # self.mock_profile_manager = MockProfileManager()
+        # self.mock_addon_manager = MockAddonManager()
+        # self.mock_utils = MockUtils()
+        # self.mock_reviewer = MockReviewer()
+        # self.mock_reviewer_window = MockReviewerWindow()
+        # self.mock_main_window = MockMainWindow(self)
+        # self.mock_form = MockForm()
+        # self.mock_logger = MockShowInfoLogger()
+        # self.mock_translator = MockTranslator("en")
 
-        self.settings = MockAqtCollection()
-        self.ankimon_tracker = MockAnkimonTrackerWindow()
-        self.main_pokemon = MockPokemonObject()
-        self.enemy_pokemon = MockEnemyPokemon()
-        self.reviewer_manager = MockReviewerManager(
-            self.settings, self.main_pokemon, self.enemy_pokemon, self.ankimon_tracker
-        )
+        # self.settings = MockAqtCollection()
+        # self.ankimon_tracker = MockAnkimonTrackerWindow()
+        # self.main_pokemon = MockPokemonObject()
+        # self.enemy_pokemon = MockEnemyPokemon()
+        # self.reviewer_manager = MockReviewerManager(
+        #     self.settings, self.main_pokemon, self.enemy_pokemon, self.ankimon_tracker
+        # )
 
         # --- GUI Setup ---
+        self._setup_status_bar()
         self._setup_menu_bar()
         self._setup_central_widget()
-        self._setup_status_bar()
         self._apply_theme()
 
         logger.info("Ankimon Test Environment GUI initialized.")
@@ -722,23 +728,23 @@ class AnkimonTestApp(QMainWindow):
 
         # File Menu
         file_menu = menu_bar.addMenu("&File")
-        exit_action = MockAction("&Exit")
+        exit_action = QAction("&Exit", self)
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
         # Tests Menu
         tests_menu = menu_bar.addMenu("&Tests")
-        run_all_tests_action = MockAction("Run &All Tests")
+        run_all_tests_action = QAction("Run &All Tests", self)
         run_all_tests_action.triggered.connect(self.run_all_tests_from_menu)
         tests_menu.addAction(run_all_tests_action)
         tests_menu.addSeparator()
-        discover_tests_action = MockAction("&Discover Tests")
+        discover_tests_action = QAction("&Discover Tests", self)
         discover_tests_action.triggered.connect(self.discover_tests_from_menu)
         tests_menu.addAction(discover_tests_action)
 
         # Help Menu
         help_menu = menu_bar.addMenu("&Help")
-        about_action = MockAction("&About")
+        about_action = QAction("&About", self)
         about_action.triggered.connect(self.show_about_dialog)
         help_menu.addAction(about_action)
 
@@ -763,19 +769,20 @@ class AnkimonTestApp(QMainWindow):
         self.tab_widget.addTab(self.config_editor_tab, "Config Editor")
 
         self.tab_widget.setStyleSheet("""
-            QTabWidget::pane { border: 1px solid #cccccc; }
+            QTabWidget::pane { border: 1px solid #555555; }
             QTabBar::tab {
-                background: #e0e0e0;
-                border: 1px solid #cccccc;
+                background: #3c3c3c;
+                border: 1px solid #555555;
                 border-bottom: none;
                 padding: 8px;
                 min-width: 100px;
                 font-weight: bold;
+                color: #f0f0f0;
             }
             QTabBar::tab:selected {
-                background: #ffffff;
-                border-color: #999999;
-                border-bottom: 2px solid #ffffff;
+                background: #2d2d2d;
+                border-color: #555555;
+                border-bottom: 2px solid #2d2d2d;
             }
             QTabBar::tab:!selected {
                 margin-top: 2px;
@@ -784,29 +791,38 @@ class AnkimonTestApp(QMainWindow):
 
     def _setup_status_bar(self):
         """Sets up the status bar at the bottom of the window."""
-        self.statusBar = QStatusBar()
-        self.setStatusBar(self.statusBar)
-        self.statusBar.showMessage("Ready")
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage("Ready")
 
     def _apply_theme(self):
         """Applies a basic theme to the main window."""
         palette = self.palette()
-        palette.setColor(QPalette.ColorRole.Window, QColor(245, 245, 245))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(50, 50, 50))
-        palette.setColor(QPalette.ColorRole.Button, QColor(220, 220, 220))
-        palette.setColor(QPalette.ColorRole.ButtonText, QColor(30, 30, 30))
+        palette.setColor(QPalette.ColorRole.Window, QColor(60, 60, 60))
+        palette.setColor(QPalette.ColorRole.WindowText, QColor(240, 240, 240))
+        palette.setColor(QPalette.ColorRole.Base, QColor(45, 45, 45))
+        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(60, 60, 60))
+        palette.setColor(QPalette.ColorRole.ToolTipBase, QColor(240, 240, 240))
+        palette.setColor(QPalette.ColorRole.ToolTipText, QColor(0, 0, 0))
+        palette.setColor(QPalette.ColorRole.Text, QColor(240, 240, 240))
+        palette.setColor(QPalette.ColorRole.Button, QColor(85, 85, 85))
+        palette.setColor(QPalette.ColorRole.ButtonText, QColor(240, 240, 240))
+        palette.setColor(QPalette.ColorRole.BrightText, QColor(255, 0, 0))
+        palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
+        palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
+        palette.setColor(QPalette.ColorRole.HighlightedText, QColor(240, 240, 240))
         self.setPalette(palette)
 
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #f5f5f5;
+                background-color: #3c3c3c;
             }
             QLabel {
-                color: #333333;
+                color: #f0f0f0;
                 font-size: 11pt;
             }
             QPushButton {
-                background-color: #4CAF50;
+                background-color: #555555;
                 border: none;
                 color: white;
                 padding: 10px 20px;
@@ -818,11 +834,12 @@ class AnkimonTestApp(QMainWindow):
                 border-radius: 5px;
             }
             QPushButton:hover {
-                background-color: #45a049;
+                background-color: #666666;
             }
             QStatusBar {
-                background-color: #e0e0e0;
+                background-color: #3c3c3c;
                 font-weight: bold;
+                color: #f0f0f0;
             }
         """)
 
@@ -871,7 +888,7 @@ def main():
     mw = AnkimonTestApp()
     mw.show()
 
-    sys.exit(app.exec())
+    app.exec()
 
 if __name__ == "__main__":
     main()

@@ -1,13 +1,14 @@
 # mock_anki/__init__.py
+from .collection import Collection
 
-class MockCard:
+class Card:
     def __init__(self, id, question, answer):
         self.id = id
         self.question = question
         self.answer = answer
         print(f"MockCard initialized: {self.id}")
 
-class MockAnkiUtils:
+class AnkiUtils:
     def __init__(self):
         print("MockAnkiUtils initialized.")
     def is_win(self):
@@ -17,27 +18,27 @@ class MockAnkiUtils:
         print("MockAnkiUtils: isWin called.")
         return True # Assuming Windows for testing based on user's OS
 
-class MockAnkiBuildInfo:
+class BuildInfo:
     def __init__(self):
         print("MockAnkiBuildInfo initialized.")
     def version(self):
         print("MockAnkiBuildInfo: version called.")
         return "2.1.99 (test)"
 
-class MockProfileManager:
+class ProfileManager:
     def __init__(self):
         print("MockProfileManager initialized.")
     def openProfile(self, profile_name):
         print(f"MockProfileManager: openProfile called for {profile_name}")
 
-class MockDataHandler:
+class DataHandler:
     def __init__(self):
         print("MockDataHandler initialized.")
 
-class MockEnemyPokemon:
+class EnemyPokemon:
     def __init__(self):
         print("MockEnemyPokemon initialized.")
 
-class MockAchievements:
+class Achievements:
     def __init__(self):
         print("MockAchievements initialized.")
