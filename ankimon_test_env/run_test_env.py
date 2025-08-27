@@ -51,7 +51,8 @@ try:
         MockPokemonCollectionDialog,
         MockDataHandler,
         MockItemWindow,
-        MockTestWindow
+        MockTestWindow,
+        MockAchievementWindow
     )
     MOCKS_AVAILABLE = True
     print("Successfully imported MockReviewerWindow, Collection, AddonManager, ProfileManager, and MockSettings.")
