@@ -226,10 +226,46 @@ def run_test_environment():
 
     # Mock anki.hooks (Ankimon often uses Anki's hook system)
     anki_hooks_mock = ensure_mock_module('anki.hooks')
-    # Add dummy methods for common hook functions
-    anki_hooks_mock.addHook = lambda *args, **kwargs: None
-    anki_hooks_mock.remHook = lambda *args, **kwargs: None
-    anki_hooks_mock.wrap = lambda func, hook, *args, **kwargs: func # Simple pass-through mock for 'wrap'
+
+    # Define mock functions for common hook operations
+    import functools
+
+    def wrap(old_func, new_func, pos="after"):
+        """
+        Mock implementation of anki.hooks.wrap for test environment.
+        In Anki, this is used to wrap/decorate existing functions.
+        For testing, we'll create a basic wrapper that preserves functionality.
+        """
+        if pos == "before":
+            @functools.wraps(old_func)
+            def wrapper(*args, **kwargs):
+                new_func(*args, **kwargs)
+                return old_func(*args, **kwargs)
+        elif pos == "after":
+            @functools.wraps(old_func)
+            def wrapper(*args, **kwargs):
+                result = old_func(*args, **kwargs)
+                new_func(*args, **kwargs)
+                return result
+        elif pos == "around":
+            @functools.wraps(old_func)
+            def wrapper(*args, **kwargs):
+                return new_func(old_func, *args, **kwargs)
+        else:
+            # Default to "after" behavior
+            @functools.wraps(old_func)
+            def wrapper(*args, **kwargs):
+                result = old_func(*args, **kwargs)
+                new_func(*args, **kwargs)
+                return result
+        return wrapper
+
+    anki_hooks_mock.addHook = lambda hook_name, func: None
+    anki_hooks_mock.remHook = lambda hook_name, func: None
+    anki_hooks_mock.runHook = lambda hook_name, *args: None
+    anki_hooks_mock.runFilter = lambda hook_name, value, *args: value
+    anki_hooks_mock.wrap = wrap # Assign the detailed mock wrap function
+
     anki_mock_module.hooks = anki_hooks_mock # Link to the main anki mock
 
 
