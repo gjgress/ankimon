@@ -17,6 +17,18 @@ try:
 except Exception as e:
     print("PyQt6 import or QAction error:", e)
 
+# --- Debugging: Check for QAction import from QtWidgets ---
+print("\n--- Debugging QAction import ---")
+try:
+    # This import should FAIL if QAction is still being imported from QtWidgets
+    # and cause the ImportError we're seeing.
+    from PyQt6.QtWidgets import QAction as QtWidgets_QAction
+    print("Successfully imported QAction from PyQt6.QtWidgets (this should not happen if the error is real).")
+except ImportError as e:
+    print(f"Caught expected ImportError for QAction from QtWidgets: {e}")
+print("--- End Debugging QAction import ---\n")
+
+
 # Add the Ankimon directory to the Python path
 # Assuming this script is run from the root of the repository
 ANKIMON_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -25,6 +37,7 @@ sys.path.insert(0, ANKIMON_ROOT)
 # Import mock classes from the mock_anki package FIRST
 # This ensures that classes like MockReviewerWindow are defined before they are used
 # in the definition of MockAnkiMainWindow.
+print("Attempting to import mock classes...")
 try:
     from ankimon_test_env.mock_anki import (
         MockReviewerWindow, # Moved up
@@ -64,10 +77,11 @@ try:
         MockPokemonPC
     )
     MOCKS_AVAILABLE = True
+    print("Successfully imported mock classes.")
 except ImportError as e:
     # This block will catch the error if QAction is still being imported incorrectly
     # from QtWidgets, which would prevent the mock classes from loading.
-    print(f"Could not import mock classes: {e}")
+    print(f"Failed to import mock classes: {e}")
     MOCKS_AVAILABLE = False
 
 
@@ -113,6 +127,7 @@ mw = MockAnkiMainWindow()
 # Now import Ankimon components, which might depend on the mocks or the global 'mw'
 # This import order is crucial. We need to ensure that 'mw' is available before
 # any Ankimon module that directly accesses it at the module level (like config_var.py).
+print("Attempting to import Ankimon modules...")
 try:
     # Import config_var first, as it's the one causing the immediate issue.
     # This import will trigger the module-level code in config_var.py.
@@ -171,8 +186,9 @@ try:
     from src.Ankimon.pyobj.download_sprites import show_agreement_and_download_dialog
 
     ANKIMON_AVAILABLE = True
+    print("Successfully imported Ankimon modules.")
 except ImportError as e:
-    print(f"Could not import Ankimon modules: {e}")
+    print(f"Failed to import Ankimon modules: {e}")
     print("Please ensure Ankimon is installed or its path is correctly set.")
     ANKIMON_AVAILABLE = False
 
