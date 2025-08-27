@@ -2,7 +2,7 @@ import sys
 import os
 # Ensure QAction is imported ONLY from PyQt6.QtGui at the very top.
 from PyQt6.QtGui import QAction
-# Remove any other import of QAction from QtWidgets.
+# Explicitly import only the necessary components from QtWidgets, excluding QAction.
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu
 from PyQt6.QtCore import Qt
 from pathlib import Path
@@ -22,6 +22,8 @@ print("\n--- Debugging QAction import ---")
 try:
     # This import should FAIL if QAction is still being imported from QtWidgets
     # and cause the ImportError we're seeing.
+    # We are explicitly trying to import QAction from QtWidgets here to trigger the error
+    # if it's still present in that module's namespace in a way that causes conflict.
     from PyQt6.QtWidgets import QAction as QtWidgets_QAction
     print("Successfully imported QAction from PyQt6.QtWidgets (this should not happen if the error is real).")
 except ImportError as e:
