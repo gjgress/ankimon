@@ -23,6 +23,14 @@ class MockTestWindow:
         print("MockTestWindow initialized.")
         self.parent = parent
 
+class MockAchievementWindow:
+    def __init__(self, addon_dir=None, data_handler_obj=None):
+        print("MockAchievementWindow initialized.")
+        self.addon_dir = addon_dir
+        self.data_handler_obj = data_handler_obj
+    def show(self):
+        print("MockAchievementWindow shown.")
+
 class MockItemWindow:
     def __init__(self, settings_obj=None):
         print("MockItemWindow initialized.")
