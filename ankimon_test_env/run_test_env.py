@@ -260,10 +260,26 @@ def run_test_environment():
                 return result
         return wrapper
 
-    anki_hooks_mock.addHook = lambda hook_name, func: None
-    anki_hooks_mock.remHook = lambda hook_name, func: None
-    anki_hooks_mock.runHook = lambda hook_name, *args: None
-    anki_hooks_mock.runFilter = lambda hook_name, value, *args: value
+    def runHook(hook_name, *args):
+        """Mock runHook - just pass through silently for testing"""
+        pass
+
+    def runFilter(hook_name, value, *args):
+        """Mock runFilter - return the value unchanged for testing"""
+        return value
+
+    def addHook(hook_name, func):
+        """Mock addHook - already implemented but ensure it exists"""
+        pass
+
+    def remHook(hook_name, func):
+        """Mock remHook - already implemented but ensure it exists"""  
+        pass
+
+    anki_hooks_mock.addHook = addHook
+    anki_hooks_mock.remHook = remHook
+    anki_hooks_mock.runHook = runHook
+    anki_hooks_mock.runFilter = runFilter
     anki_hooks_mock.wrap = wrap # Assign the detailed mock wrap function
 
     anki_mock_module.hooks = anki_hooks_mock # Link to the main anki mock
