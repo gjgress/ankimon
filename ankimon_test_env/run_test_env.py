@@ -4,6 +4,15 @@ import argparse
 import logging
 from pathlib import Path
 
+# --- PyQt6 Imports ---
+# These are essential for building the GUI.
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,
+    QTabWidget, QStatusBar, QDialog, QTextEdit, QPushButton
+)
+from PyQt6.QtCore import Qt, QObject, QSignalMapper, QVariant, QTimer, QThread, pyqtSignal, QCoreApplication
+from PyQt6.QtGui import QPalette, QColor, QAction, QIcon
+
 # --- Mocking Anki Components ---
 # Import mock objects from the mock_anki and mock_aqt directories
 # These will be used to simulate Anki's environment without running the actual Anki application.
