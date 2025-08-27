@@ -338,6 +338,12 @@ def run_test_environment():
     aqt_utils_mock.__dict__.update(MockAqtUtils().__dict__)
     aqt_mock_module.utils = aqt_utils_mock
 
+    # Mock aqt.reviewer
+    aqt_reviewer_mock = ensure_mock_module('aqt.reviewer')
+    # If specific attributes of aqt.reviewer are needed later, they can be added here.
+    # For now, just ensuring the module exists should resolve the import error.
+    aqt_mock_module.reviewer = aqt_reviewer_mock
+
     # Import actual Ankimon functions and constants AFTER mw and all anki/aqt mocks are set up
     try:
         from src.Ankimon.menu_buttons import create_menu_actions
