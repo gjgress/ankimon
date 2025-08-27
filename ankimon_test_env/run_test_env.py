@@ -125,66 +125,6 @@ def run_test_environment():
         def show(self):
             self.form.show()
 
-    # Define dummy classes for Ankimon UI elements that are instantiated in the test environment
-    # These are minimal implementations to satisfy instantiation and basic method calls.
-    class MockAnkimonTrackerWindow(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockDataHandlerWindow(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockSettingsWindow(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockPokemonShopManager(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockPokedex(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockPokemonPC(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockTableWidget(QWidget):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-
-    class MockIDTableWidget(QWidget):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-
-    class MockCredits(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockLicense(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    class MockVersionDialog(QDialog):
-        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
-        def show(self): pass
-        def setWindowTitle(self, title): pass
-
-    # Global mock 'mw' object for the test environment
-    # This is the object that Ankimon's code will interact with.
-    # We initialize it here so it's available for imports that might happen early.
-    mw = MockAnkiMainWindow()
-
 
     # Initialize Ankimon components that need to be passed to create_menu_actions
     # These are mocks or dummy objects for the test environment.
