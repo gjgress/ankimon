@@ -1,7 +1,8 @@
 import sys
 import os
-# Corrected import for QAction to be from PyQt6.QtGui
+# Ensure QAction is imported ONLY from PyQt6.QtGui at the very top.
 from PyQt6.QtGui import QAction
+# Remove any other import of QAction from QtWidgets.
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu
 from PyQt6.QtCore import Qt
 from pathlib import Path
@@ -11,10 +12,7 @@ print("---- Python version:", sys.version)
 try:
     import PyQt6
     print("PyQt6 path:", PyQt6.__file__)
-    # The problematic import was here, trying to import QAction from QtWidgets.
-    # It should be from QtGui.
-    # The correct import is already at the top of the file.
-    # We can verify its existence here.
+    # This check confirms QAction is available in QtGui.
     print("QAction exists?:", 'QAction' in dir(PyQt6.QtGui))
 except Exception as e:
     print("PyQt6 import or QAction error:", e)
@@ -67,6 +65,8 @@ try:
     )
     MOCKS_AVAILABLE = True
 except ImportError as e:
+    # This block will catch the error if QAction is still being imported incorrectly
+    # from QtWidgets, which would prevent the mock classes from loading.
     print(f"Could not import mock classes: {e}")
     MOCKS_AVAILABLE = False
 
