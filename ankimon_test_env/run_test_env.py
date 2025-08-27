@@ -61,6 +61,34 @@ except ImportError as e:
     MOCKS_AVAILABLE = False
 
 
+# Import actual Ankimon functions and constants
+# These imports are wrapped in a try-except block in case the Ankimon source is not fully present or correctly configured
+ANKIMON_AVAILABLE = False
+try:
+    from src.Ankimon.menu_buttons import create_menu_actions
+    from src.Ankimon.consts import ANKIMON_KEY as ankimon_key, JOIN_DISCORD_URL as join_discord_url, OPEN_LEADERBOARD_URL as open_leaderboard_url, RATE_ADDON_URL as rate_addon_url
+    from src.Ankimon.functions.utils import open_team_builder, export_to_pkmn_showdown, export_all_pkmn_showdown, flex_pokemon_collection, open_help_window, report_bug
+    
+    ANKIMON_AVAILABLE = True
+    print("Successfully imported Ankimon core modules.")
+except ImportError as e:
+    print(f"Failed to import Ankimon core modules (src.Ankimon.*): {e}")
+    # Define dummy functions and variables if Ankimon modules are not available
+    # to prevent NameErrors later in the script if MOCKS_AVAILABLE is True.
+    def create_menu_actions(*args, **kwargs): pass
+    def open_team_builder(*args, **kwargs): pass
+    def export_to_pkmn_showdown(*args, **kwargs): pass
+    def export_all_pkmn_showdown(*args, **kwargs): pass
+    def flex_pokemon_collection(*args, **kwargs): pass
+    def open_help_window(*args, **kwargs): pass
+    def report_bug(*args, **kwargs): pass
+    rate_addon_url = "http://mock.rate.addon.url"
+    ankimon_key = "mock_ankimon_key"
+    join_discord_url = "http://mock.discord.url"
+    open_leaderboard_url = "http://mock.leaderboard.url"
+    # ANKIMON_AVAILABLE remains False from initialization
+
+
 def run_test_environment():
     """
     Sets up and runs the Ankimon test environment.
@@ -96,6 +124,61 @@ def run_test_environment():
 
         def show(self):
             self.form.show()
+
+    # Define dummy classes for Ankimon UI elements that are instantiated in the test environment
+    # These are minimal implementations to satisfy instantiation and basic method calls.
+    class MockAnkimonTrackerWindow(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockDataHandlerWindow(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockSettingsWindow(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockPokemonShopManager(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockPokedex(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockPokemonPC(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockTableWidget(QWidget):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+
+    class MockIDTableWidget(QWidget):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+
+    class MockCredits(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockLicense(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
+
+    class MockVersionDialog(QDialog):
+        def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+        def show(self): pass
+        def setWindowTitle(self, title): pass
 
     # Global mock 'mw' object for the test environment
     # This is the object that Ankimon's code will interact with.
