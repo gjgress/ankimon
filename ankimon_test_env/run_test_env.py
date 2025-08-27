@@ -340,15 +340,29 @@ def run_test_environment():
         return "↓" # Or any suitable placeholder character
 
     # Define the missing showWarning function
-    def showWarning(msg: str):
-        """Mock for aqt.utils.showWarning"""
-        print(f"Mock aqt.utils.showWarning: {msg}")
+    def showWarning(text, parent=None, help=None, type="warning", title="Warning", textFormat=None, customBtns=None):
+        """Mock for aqt.utils.showWarning - just print message for test environment"""
+        print(f"[MOCK showWarning] {title}: {text}")
+        return 0  # Mimic standard QMessageBox exec() return
+
+    # Define stubs for other commonly used Qt dialog functions
+    def showInfo(text, parent=None, help=None, type="info", title="Info", textFormat=None, customBtns=None):
+        """Mock for aqt.utils.showInfo"""
+        print(f"[MOCK showInfo] {title}: {text}")
+        return 0
+
+    def showCritical(text, parent=None, help=None, type="critical", title="Critical", textFormat=None, customBtns=None):
+        """Mock for aqt.utils.showCritical"""
+        print(f"[MOCK showCritical] {title}: {text}")
+        return 0
 
     # Use the MockAqtUtils class defined in mock_anki and add the missing functions
     # Ensure MockAqtUtils is imported at the top of this file
     aqt_utils_mock.__dict__.update(MockAqtUtils().__dict__)
     aqt_utils_mock.downArrow = downArrow # Add the mocked downArrow function
     aqt_utils_mock.showWarning = showWarning # Add the mocked showWarning function
+    aqt_utils_mock.showInfo = showInfo # Add the mocked showInfo function
+    aqt_utils_mock.showCritical = showCritical # Add the mocked showCritical function
     aqt_mock_module.utils = aqt_utils_mock
 
     # Mock aqt.reviewer
