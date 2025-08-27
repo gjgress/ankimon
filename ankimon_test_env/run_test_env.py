@@ -193,38 +193,64 @@ def run_test_environment():
     # Create the global mock 'mw' object AFTER QApplication is guaranteed to exist.
     mw = MockAnkiMainWindow()
 
-    # Mock `aqt` and the global `mw` object so Ankimon modules can be imported.
+    # This block ensures that 'aqt' and its necessary submodules are mocked
+    # regardless of whether a real 'aqt' package is installed in the environment.
     from types import ModuleType
-    try:
-        import aqt
-        aqt.mw = mw
-    except ImportError:
-        # If aqt is not installed (e.g., in a clean CI environment),
-        # create a mock module and inject it into sys.modules so the import doesn't fail.
-        aqt_mock = ModuleType('aqt')
-        aqt_mock.mw = mw
 
-        # Mock aqt.gui_hooks
-        class MockGuiHooks:
-            def reviewer_will_show_question(self, *args): pass
-            def reviewer_did_show_answer(self, *args): pass
-            def editor_did_init_note(self, *args): pass
-            def editor_did_load_note(self, *args): pass
-            def deck_browser_did_render(self, *args): pass
-            def profile_did_open(self, *args): pass
-            def profile_will_close(self, *args): pass
-            def collection_did_flush(self, *args): pass
-            def add_cards_did_add_note(self, *args): pass
-            def add_cards_will_add_note(self, *args): pass
-            def add_cards_did_add_cards(self, *args): pass
-            def browser_did_reset(self, *args): pass
-            def webview_will_set_content(self, *args): pass
-            # Add other gui_hooks as needed if more ImportError issues arise
-        
-        aqt_mock.gui_hooks = MockGuiHooks()
-        sys.modules['aqt'] = aqt_mock
+    # Create a mock aqt module if it doesn't exist in sys.modules, or use the existing one.
+    if 'aqt' not in sys.modules:
+        aqt_mock_module = ModuleType('aqt')
+        sys.modules['aqt'] = aqt_mock_module
+    else:
+        aqt_mock_module = sys.modules['aqt']
 
-    # Import actual Ankimon functions and constants AFTER mw is set up
+    # Unconditionally set mw attribute on aqt
+    aqt_mock_module.mw = mw
+
+    # Mock aqt.gui_hooks
+    class MockGuiHooks:
+        def reviewer_will_show_question(self, *args): pass
+        def reviewer_did_show_answer(self, *args): pass
+        def editor_did_init_note(self, *args): pass
+        def editor_did_load_note(self, *args): pass
+        def deck_browser_did_render(self, *args): pass
+        def profile_did_open(self, *args): pass
+        def profile_will_close(self, *args): pass
+        def collection_did_flush(self, *args): pass
+        def add_cards_did_add_note(self, *args): pass
+        def add_cards_will_add_note(self, *args): pass
+        def add_cards_did_add_cards(self, *args): pass
+        def browser_did_reset(self, *args): pass
+        def webview_will_set_content(self, *args): pass
+        # Add other gui_hooks as needed if more ImportError issues arise
+    
+    aqt_mock_module.gui_hooks = MockGuiHooks()
+
+    # Mock aqt.qt - this is crucial for `from aqt.qt import *` in menu_buttons.py
+    # We will create a mock module for aqt.qt and re-export the necessary PyQt6 classes
+    # that `menu_buttons.py` expects.
+    if 'aqt.qt' not in sys.modules:
+        aqt_qt_mock = ModuleType('aqt.qt')
+        sys.modules['aqt.qt'] = aqt_qt_mock
+        # Re-export the necessary PyQt6 classes that `menu_buttons.py` might expect.
+        # These are already imported by run_test_env.py at the top, so we can access them.
+        aqt_qt_mock.QAction = QAction
+        aqt_qt_mock.QApplication = QApplication
+        aqt_qt_mock.QWidget = QWidget
+        aqt_qt_mock.QVBoxLayout = QVBoxLayout
+        aqt_qt_mock.QLabel = QLabel
+        aqt_qt_mock.QPushButton = QPushButton
+        aqt_qt_mock.QMainWindow = QMainWindow
+        aqt_qt_mock.QMenuBar = QMenuBar
+        aqt_qt_mock.QMenu = QMenu
+        aqt_qt_mock.QDialog = QDialog
+        aqt_qt_mock.Qt = Qt
+        # Add other Qt elements from PyQt6 that aqt.qt might typically expose
+        # as the Ankimon code progresses and more issues arise.
+    aqt_mock_module.qt = sys.modules['aqt.qt']
+
+
+    # Import actual Ankimon functions and constants AFTER mw and aqt mocks are set up
     try:
         from src.Ankimon.menu_buttons import create_menu_actions
         from src.Ankimon.consts import ANKIMON_KEY as ankimon_key, JOIN_DISCORD_URL as join_discord_url, OPEN_LEADERBOARD_URL as open_leaderboard_url, RATE_ADDON_URL as rate_addon_url
