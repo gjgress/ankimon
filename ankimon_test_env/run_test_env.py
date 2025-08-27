@@ -88,6 +88,94 @@ except ImportError as e:
     open_leaderboard_url = "http://mock.leaderboard.url"
     # ANKIMON_AVAILABLE remains False from initialization
 
+# Mock Anki App
+class MockAnkiApp:
+    def __init__(self):
+        # 'win' attribute usually points to the main Anki window
+        self.win = None
+        print("MockAnkiApp initialized.")
+
+# Mock Anki MainWindow (mw)
+class MockAnkiMainWindow:
+    def __init__(self):
+        # This mock represents the Anki main window object that Ankimon interacts with.
+        # It needs to have a menubar and a way to add menus.
+        self.form = MockReviewerWindow() # Our simulated reviewer window
+        self.menubar = self.form.menubar # Access the menubar from the reviewer window
+        self.pokemenu = None # This will be populated by create_menu_actions
+
+        # Mock other attributes Ankimon might access on mw
+        self.col = Collection() # From mock_anki/__init__.py
+        self.addonManager = AddonManager() # From mock_anki/__init__.py
+        self.reviewer = self.form # Link to our mock reviewer window
+        self.pm = ProfileManager() # From mock_anki/__init__.py
+        self.app = MockAnkiApp()
+        self.app.win = self.form # Link the app to our reviewer window
+
+        print("MockAnkiMainWindow initialized.")
+
+    def show(self):
+        self.form.show()
+
+# Define dummy classes for Ankimon UI elements that are instantiated in the test environment
+# These are minimal implementations to satisfy instantiation and basic method calls.
+class MockAnkimonTrackerWindow(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockDataHandlerWindow(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockSettingsWindow(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockPokemonShopManager(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockPokedex(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockPokemonPC(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockTableWidget(QWidget):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+
+class MockIDTableWidget(QWidget):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+
+class MockCredits(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockLicense(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+class MockVersionDialog(QDialog):
+    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def show(self): pass
+    def setWindowTitle(self, title): pass
+
+# Global mock 'mw' object for the test environment
+# This is the object that Ankimon's code will interact with.
+# We initialize it here so it's available for imports that might happen early.
+mw = MockAnkiMainWindow()
 
 def run_test_environment():
     """
@@ -95,35 +183,6 @@ def run_test_environment():
     This includes creating mock Anki objects and injecting Ankimon's UI.
     """
     print("Starting Ankimon test environment...")
-
-    # Mock Anki App
-    class MockAnkiApp:
-        def __init__(self):
-            # 'win' attribute usually points to the main Anki window
-            self.win = None
-            print("MockAnkiApp initialized.")
-
-    # Mock Anki MainWindow (mw)
-    class MockAnkiMainWindow:
-        def __init__(self):
-            # This mock represents the Anki main window object that Ankimon interacts with.
-            # It needs to have a menubar and a way to add menus.
-            self.form = MockReviewerWindow() # Our simulated reviewer window
-            self.menubar = self.form.menubar # Access the menubar from the reviewer window
-            self.pokemenu = None # This will be populated by create_menu_actions
-
-            # Mock other attributes Ankimon might access on mw
-            self.col = Collection() # From mock_anki/__init__.py
-            self.addonManager = AddonManager() # From mock_anki/__init__.py
-            self.reviewer = self.form # Link to our mock reviewer window
-            self.pm = ProfileManager() # From mock_anki/__init__.py
-            self.app = MockAnkiApp()
-            self.app.win = self.form # Link the app to our reviewer window
-
-            print("MockAnkiMainWindow initialized.")
-
-        def show(self):
-            self.form.show()
 
 
     # Initialize Ankimon components that need to be passed to create_menu_actions
