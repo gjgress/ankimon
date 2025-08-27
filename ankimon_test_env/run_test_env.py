@@ -339,10 +339,16 @@ def run_test_environment():
         """Mock for aqt.utils.downArrow"""
         return "↓" # Or any suitable placeholder character
 
-    # Use the MockAqtUtils class defined in mock_anki and add the downArrow function
+    # Define the missing showWarning function
+    def showWarning(msg: str):
+        """Mock for aqt.utils.showWarning"""
+        print(f"Mock aqt.utils.showWarning: {msg}")
+
+    # Use the MockAqtUtils class defined in mock_anki and add the missing functions
     # Ensure MockAqtUtils is imported at the top of this file
     aqt_utils_mock.__dict__.update(MockAqtUtils().__dict__)
     aqt_utils_mock.downArrow = downArrow # Add the mocked downArrow function
+    aqt_utils_mock.showWarning = showWarning # Add the mocked showWarning function
     aqt_mock_module.utils = aqt_utils_mock
 
     # Mock aqt.reviewer
