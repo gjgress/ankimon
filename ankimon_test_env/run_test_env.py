@@ -10,48 +10,12 @@ from pathlib import Path
 ANKIMON_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, ANKIMON_ROOT)
 
-# --- Mock Anki Objects ---
-# These mocks are essential for Ankimon's code to run in the test environment.
-# They should align with the mocks defined in mock_anki/__init__.py
-
-# Mock Anki App
-class MockAnkiApp:
-    def __init__(self):
-        # 'win' attribute usually points to the main Anki window
-        self.win = None
-        print("MockAnkiApp initialized.")
-
-# Mock Anki MainWindow (mw)
-class MockAnkiMainWindow:
-    def __init__(self):
-        # This mock represents the Anki main window object that Ankimon interacts with.
-        # It needs to have a menubar and a way to add menus.
-        self.form = MockReviewerWindow() # Our simulated reviewer window
-        self.menubar = self.form.menubar # Access the menubar from the reviewer window
-        self.pokemenu = None # This will be populated by create_menu_actions
-
-        # Mock other attributes Ankimon might access on mw
-        self.col = Collection() # From mock_anki/__init__.py
-        self.addonManager = AddonManager() # From mock_anki/__init__.py
-        self.reviewer = self.form # Link to our mock reviewer window
-        self.pm = ProfileManager() # From mock_anki/__init__.py
-        self.app = MockAnkiApp()
-        self.app.win = self.form # Link the app to our reviewer window
-
-        print("MockAnkiMainWindow initialized.")
-
-    def show(self):
-        self.form.show()
-
-# Global mock 'mw' object for the test environment
-# This is the object that Ankimon's code will interact with.
-# We initialize it here so it's available for imports that might happen early.
-mw = MockAnkiMainWindow()
-
-# Import mock classes from the mock_anki package
+# Import mock classes from the mock_anki package FIRST
+# This ensures that classes like MockReviewerWindow are defined before they are used
+# in the definition of MockAnkiMainWindow.
 try:
     from ankimon_test_env.mock_anki import (
-        MockReviewerWindow,
+        MockReviewerWindow, # Moved up
         Collection,
         AddonManager,
         ProfileManager,
@@ -91,6 +55,46 @@ try:
 except ImportError as e:
     print(f"Could not import mock classes: {e}")
     MOCKS_AVAILABLE = False
+
+
+# --- Mock Anki Objects ---
+# These mocks are essential for Ankimon's code to run in the test environment.
+# They should align with the mocks defined in mock_anki/__init__.py
+
+# Mock Anki App
+class MockAnkiApp:
+    def __init__(self):
+        # 'win' attribute usually points to the main Anki window
+        self.win = None
+        print("MockAnkiApp initialized.")
+
+# Mock Anki MainWindow (mw)
+class MockAnkiMainWindow:
+    def __init__(self):
+        # This mock represents the Anki main window object that Ankimon interacts with.
+        # It needs to have a menubar and a way to add menus.
+        self.form = MockReviewerWindow() # Our simulated reviewer window
+        self.menubar = self.form.menubar # Access the menubar from the reviewer window
+        self.pokemenu = None # This will be populated by create_menu_actions
+
+        # Mock other attributes Ankimon might access on mw
+        self.col = Collection() # From mock_anki/__init__.py
+        self.addonManager = AddonManager() # From mock_anki/__init__.py
+        self.reviewer = self.form # Link to our mock reviewer window
+        self.pm = ProfileManager() # From mock_anki/__init__.py
+        self.app = MockAnkiApp()
+        self.app.win = self.form # Link the app to our reviewer window
+
+        print("MockAnkiMainWindow initialized.")
+
+    def show(self):
+        self.form.show()
+
+# Global mock 'mw' object for the test environment
+# This is the object that Ankimon's code will interact with.
+# We initialize it here so it's available for imports that might happen early.
+mw = MockAnkiMainWindow()
+
 
 # Now import Ankimon components, which might depend on the mocks or the global 'mw'
 # This import order is crucial. We need to ensure that 'mw' is available before
