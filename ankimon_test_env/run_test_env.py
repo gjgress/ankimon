@@ -10,35 +10,43 @@ from pathlib import Path
 ANKIMON_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, ANKIMON_ROOT)
 
-# Import necessary Ankimon components
-try:
-    from src.Ankimon.menu_buttons import create_menu_actions
-    from src.Ankimon.pyobj.settings import Settings
-    from src.Ankimon.pyobj.InfoLogger import ShowInfoLogger
-    from src.Ankimon.pyobj.collection_dialog import PokemonCollectionDialog
-    from src.Ankimon.pyobj.item_window import ItemWindow
-    from src.Ankimon.pyobj.test_window import TestWindow
-    from src.Ankimon.pyobj.achievement_window import AchievementWindow
-    from src.Ankimon.pyobj.ankimon_tracker_window import AnkimonTrackerWindow
-    from src.Ankimon.pyobj.data_handler_window import DataHandlerWindow
-    from src.Ankimon.pyobj.settings_window import SettingsWindow
-    from src.Ankimon.pyobj.data_handler import DataHandler
-    from src.Ankimon.pyobj.ankimon_shop import PokemonShopManager
-    from src.Ankimon.pyobj.trainer_card import TrainerCard
-    from src.Ankimon.pyobj.pc_box import PokemonPC
-    from src.Ankimon.pokedex.pokedex_obj import Pokedex
-    from src.Ankimon.gui_entities import Credits, License, Version_Dialog, TableWidget, IDTableWidget
-    from src.Ankimon.gui_classes.pokemon_team_window import PokemonTeamDialog
-    from src.Ankimon.gui_classes.check_files import FileCheckerApp
-    from src.Ankimon.gui_classes.choose_trainer_sprite import TrainerSpriteDialog
-    from src.Ankimon.pyobj.ankimon_leaderboard import show_api_key_dialog
-    from src.Ankimon.pyobj.download_sprites import show_agreement_and_download_dialog
+# --- Mock Anki Objects ---
+# These mocks are essential for Ankimon's code to run in the test environment.
+# They should align with the mocks defined in mock_anki/__init__.py
 
-    ANKIMON_AVAILABLE = True
-except ImportError as e:
-    print(f"Could not import Ankimon modules: {e}")
-    print("Please ensure Ankimon is installed or its path is correctly set.")
-    ANKIMON_AVAILABLE = False
+# Mock Anki App
+class MockAnkiApp:
+    def __init__(self):
+        # 'win' attribute usually points to the main Anki window
+        self.win = None
+        print("MockAnkiApp initialized.")
+
+# Mock Anki MainWindow (mw)
+class MockAnkiMainWindow:
+    def __init__(self):
+        # This mock represents the Anki main window object that Ankimon interacts with.
+        # It needs to have a menubar and a way to add menus.
+        self.form = MockReviewerWindow() # Our simulated reviewer window
+        self.menubar = self.form.menubar # Access the menubar from the reviewer window
+        self.pokemenu = None # This will be populated by create_menu_actions
+
+        # Mock other attributes Ankimon might access on mw
+        self.col = Collection() # From mock_anki/__init__.py
+        self.addonManager = AddonManager() # From mock_anki/__init__.py
+        self.reviewer = self.form # Link to our mock reviewer window
+        self.pm = ProfileManager() # From mock_anki/__init__.py
+        self.app = MockAnkiApp()
+        self.app.win = self.form # Link the app to our reviewer window
+
+        print("MockAnkiMainWindow initialized.")
+
+    def show(self):
+        self.form.show()
+
+# Global mock 'mw' object for the test environment
+# This is the object that Ankimon's code will interact with.
+# We initialize it here so it's available for imports that might happen early.
+mw = MockAnkiMainWindow()
 
 # Import mock classes from the mock_anki package
 try:
@@ -84,43 +92,72 @@ except ImportError as e:
     print(f"Could not import mock classes: {e}")
     MOCKS_AVAILABLE = False
 
+# Now import Ankimon components, which might depend on the mocks or the global 'mw'
+# This import order is crucial. We need to ensure that 'mw' is available before
+# any Ankimon module that directly accesses it at the module level (like config_var.py).
+try:
+    # Import config_var first, as it's the one causing the immediate issue.
+    # This import will trigger the module-level code in config_var.py.
+    from src.Ankimon.config_var import (
+        pop_up_dialog_message_on_defeat,
+        reviewer_text_message_box,
+        reviewer_text_message_box_time,
+        reviewer_image_gif,
+        show_mainpkmn_in_reviewer,
+        xp_bar_config,
+        review_hp_bar_thickness,
+        hp_bar_config,
+        xp_bar_location,
+        animate_time,
+        view_main_front,
+        gif_in_collection,
+        styling_in_reviewer,
+        automatic_battle,
+        dmg_in_reviewer,
+        cards_per_round,
+        leaderboard,
+        ankiweb_sync,
+        no_more_news,
+        remove_levelcap,
+        ssh,
+        language,
+        ankimon_key,
+        defeat_shortcut,
+        catch_shortcut,
+        reviewer_buttons,
+        sound_effects,
+        sounds,
+        battle_sounds,
+        system, # This variable is defined in config_var.py
+    )
+    from src.Ankimon.menu_buttons import create_menu_actions
+    from src.Ankimon.pyobj.settings import Settings
+    from src.Ankimon.pyobj.InfoLogger import ShowInfoLogger
+    from src.Ankimon.pyobj.collection_dialog import PokemonCollectionDialog
+    from src.Ankimon.pyobj.item_window import ItemWindow
+    from src.Ankimon.pyobj.test_window import TestWindow
+    from src.Ankimon.pyobj.achievement_window import AchievementWindow
+    from src.Ankimon.pyobj.ankimon_tracker_window import AnkimonTrackerWindow
+    from src.Ankimon.pyobj.data_handler_window import DataHandlerWindow
+    from src.Ankimon.pyobj.settings_window import SettingsWindow
+    from src.Ankimon.pyobj.data_handler import DataHandler
+    from src.Ankimon.pyobj.ankimon_shop import PokemonShopManager
+    from src.Ankimon.pyobj.trainer_card import TrainerCard
+    from src.Ankimon.pyobj.pc_box import PokemonPC
+    from src.Ankimon.pokedex.pokedex_obj import Pokedex
+    from src.Ankimon.gui_entities import Credits, License, Version_Dialog, TableWidget, IDTableWidget
+    from src.Ankimon.gui_classes.pokemon_team_window import PokemonTeamDialog
+    from src.Ankimon.gui_classes.check_files import FileCheckerApp
+    from src.Ankimon.gui_classes.choose_trainer_sprite import TrainerSpriteDialog
+    from src.Ankimon.pyobj.ankimon_leaderboard import show_api_key_dialog
+    from src.Ankimon.pyobj.download_sprites import show_agreement_and_download_dialog
 
-# --- Mock Anki Objects ---
-# These mocks are essential for Ankimon's code to run in the test environment.
-# They should align with the mocks defined in mock_anki/__init__.py
+    ANKIMON_AVAILABLE = True
+except ImportError as e:
+    print(f"Could not import Ankimon modules: {e}")
+    print("Please ensure Ankimon is installed or its path is correctly set.")
+    ANKIMON_AVAILABLE = False
 
-# Mock Anki App
-class MockAnkiApp:
-    def __init__(self):
-        # 'win' attribute usually points to the main Anki window
-        self.win = None
-        print("MockAnkiApp initialized.")
-
-# Mock Anki MainWindow (mw)
-class MockAnkiMainWindow:
-    def __init__(self):
-        # This mock represents the Anki main window object that Ankimon interacts with.
-        # It needs to have a menubar and a way to add menus.
-        self.form = MockReviewerWindow() # Our simulated reviewer window
-        self.menubar = self.form.menubar # Access the menubar from the reviewer window
-        self.pokemenu = None # This will be populated by create_menu_actions
-
-        # Mock other attributes Ankimon might access on mw
-        self.col = Collection() # From mock_anki/__init__.py
-        self.addonManager = AddonManager() # From mock_anki/__init__.py
-        self.reviewer = self.form # Link to our mock reviewer window
-        self.pm = ProfileManager() # From mock_anki/__init__.py
-        self.app = MockAnkiApp()
-        self.app.win = self.form # Link the app to our reviewer window
-
-        print("MockAnkiMainWindow initialized.")
-
-    def show(self):
-        self.form.show()
-
-# Global mock 'mw' object for the test environment
-# This is the object that Ankimon's code will interact with.
-mw = MockAnkiMainWindow()
 
 # --- Test Environment Setup ---
 
@@ -144,6 +181,11 @@ class MockSettings:
         print("MockSettings initialized.")
     def get(self, key, default=None):
         print(f"MockSettings: Getting key '{key}' with default '{default}'")
+        # For testing purposes, we need to simulate reading config values.
+        # In a real scenario, this would read from a config file.
+        # For now, we'll return defaults or mock values.
+        if key == "misc.language":
+            return 9 # Default language
         return default # Return default for simplicity
 
 class MockShowInfoLogger:
@@ -286,6 +328,8 @@ if __name__ == '__main__':
     if not app:
         app = QApplication(sys.argv)
 
+    # The rest of the setup and execution happens within run_test_environment()
+    # which is called after all necessary imports are done.
     run_test_environment()
 
     # Start the Qt event loop
