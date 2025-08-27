@@ -2,12 +2,11 @@ from typing import Callable
 from pathlib import Path
 from typing import Union
 
-from aqt.utils import *
 from aqt.qt import *
 from PyQt6.QtWidgets import QMenu
 from PyQt6.QtGui import QAction, QKeySequence
-from aqt import mw  # The main window object
-from aqt.utils import qconnect
+# Removed: from aqt import mw  # The main window object
+# Removed: from aqt.utils import qconnect # qconnect is now imported from mock_anki
 
 from .gui_classes.choose_trainer_sprite import TrainerSpriteDialog
 from .pyobj.trainer_card_window import TrainerCardGUI
@@ -38,9 +37,22 @@ from .gui_entities import (
     Version_Dialog,
 )
 
+# Import qconnect from the mock_anki package for the test environment
+# In a real Anki environment, this would be from aqt.utils
+try:
+    from ankimon_test_env.mock_anki import qconnect
+except ImportError:
+    # Fallback for when not in the test environment (though this file is primarily for it)
+    from aqt.utils import qconnect
+
+
 debug = True
 
 # Initialize the menu
+# NOTE: In the test environment, 'mw' is our mock object.
+# In a real Anki run, 'mw' is the actual Anki main window.
+# We need to ensure that the initialization here uses the mock 'mw' when run in the test env.
+# The test runner (run_test_env.py) ensures 'mw' is available and is our MockAnkiMainWindow.
 mw.translator = Translator(language=int(Settings().get("misc.language", int(9))))
 mw.pokemenu = QMenu('&' + mw.translator.translate("ankimon_button_title"), mw)
 game_menu = mw.pokemenu.addMenu(mw.translator.translate("ankimon_game_button_title"))
