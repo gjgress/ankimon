@@ -13,7 +13,6 @@ try:
     print("PyQt6 path:", PyQt6.__file__)
     # The problematic import was here, trying to import QAction from QtWidgets.
     # It should be from QtGui.
-    # from PyQt6.QtWidgets import QAction # This line was incorrect.
     # The correct import is already at the top of the file.
     # We can verify its existence here.
     print("QAction exists?:", 'QAction' in dir(PyQt6.QtGui))
