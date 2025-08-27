@@ -6,6 +6,21 @@ from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushBut
 from PyQt6.QtCore import Qt
 from pathlib import Path
 
+print("---- Python version:", sys.version)
+
+try:
+
+    import PyQt6
+
+    print("PyQt6 path:", PyQt6.__file__)
+
+    from PyQt6.QtGui import QAction
+
+    print("QAction exists?:", 'QAction' in dir(PyQt6.QtGui))
+
+except Exception as e:
+
+    print("PyQt6 import or QAction error:", e)
 # Add the Ankimon directory to the Python path
 # Assuming this script is run from the root of the repository
 ANKIMON_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
