@@ -193,10 +193,47 @@ def run_test_environment():
     # Create the global mock 'mw' object AFTER QApplication is guaranteed to exist.
     mw = MockAnkiMainWindow()
 
-    # This block ensures that 'aqt' and its necessary submodules are mocked
-    # regardless of whether a real 'aqt' package is installed in the environment.
+    # Mock base 'anki' modules if they are not already in sys.modules.
+    # This is necessary because some Ankimon code might import directly from 'anki' (e.g., anki.models).
     from types import ModuleType
 
+    if 'anki' not in sys.modules:
+        anki_mock_module = ModuleType('anki')
+        sys.modules['anki'] = anki_mock_module
+    else:
+        anki_mock_module = sys.modules['anki']
+
+    # Mock anki.models to include NotetypeDict
+    if 'anki.models' not in sys.modules:
+        anki_models_mock = ModuleType('anki.models')
+        # NotetypeDict is usually a dictionary-like type or a type alias.
+        # For mocking, a simple dict or an empty class will do to satisfy import.
+        class NotetypeDict(dict):
+            pass
+        anki_models_mock.NotetypeDict = NotetypeDict
+        sys.modules['anki.models'] = anki_models_mock
+    else:
+        anki_models_mock = sys.modules['anki.models']
+    
+    # Optionally, if other parts of anki.models are expected:
+    # anki_models_mock.Collection = Collection() # If Anki code expects anki.models.Collection
+
+    # Link anki.models into the anki mock module
+    anki_mock_module.models = anki_models_mock
+    
+    # Also link our mock Collection to anki.collection if Ankimon expects it there
+    # (mw.col is already our mock collection)
+    if 'anki.collection' not in sys.modules:
+        anki_collection_mock = ModuleType('anki.collection')
+        sys.modules['anki.collection'] = anki_collection_mock
+    else:
+        anki_collection_mock = sys.modules['anki.collection']
+    anki_collection_mock.Collection = Collection # Use our already defined mock Collection class
+    anki_mock_module.collection = anki_collection_mock
+
+
+    # This block ensures that 'aqt' and its necessary submodules are mocked
+    # regardless of whether a real 'aqt' package is installed in the environment.
     # Create a mock aqt module if it doesn't exist in sys.modules, or use the existing one.
     if 'aqt' not in sys.modules:
         aqt_mock_module = ModuleType('aqt')
