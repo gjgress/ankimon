@@ -203,6 +203,25 @@ def run_test_environment():
         # create a mock module and inject it into sys.modules so the import doesn't fail.
         aqt_mock = ModuleType('aqt')
         aqt_mock.mw = mw
+
+        # Mock aqt.gui_hooks
+        class MockGuiHooks:
+            def reviewer_will_show_question(self, *args): pass
+            def reviewer_did_show_answer(self, *args): pass
+            def editor_did_init_note(self, *args): pass
+            def editor_did_load_note(self, *args): pass
+            def deck_browser_did_render(self, *args): pass
+            def profile_did_open(self, *args): pass
+            def profile_will_close(self, *args): pass
+            def collection_did_flush(self, *args): pass
+            def add_cards_did_add_note(self, *args): pass
+            def add_cards_will_add_note(self, *args): pass
+            def add_cards_did_add_cards(self, *args): pass
+            def browser_did_reset(self, *args): pass
+            def webview_will_set_content(self, *args): pass
+            # Add other gui_hooks as needed if more ImportError issues arise
+        
+        aqt_mock.gui_hooks = MockGuiHooks()
         sys.modules['aqt'] = aqt_mock
 
     # Import actual Ankimon functions and constants AFTER mw is set up
