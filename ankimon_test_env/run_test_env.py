@@ -340,8 +340,19 @@ def run_test_environment():
 
     # Mock aqt.reviewer
     aqt_reviewer_mock = ensure_mock_module('aqt.reviewer')
-    # If specific attributes of aqt.reviewer are needed later, they can be added here.
-    # For now, just ensuring the module exists should resolve the import error.
+    
+    # Define a mock Reviewer class to satisfy the import
+    class MockAqtReviewerClass:
+        def __init__(self, mw=None):
+            self.mw = mw # Real Anki Reviewer often has a reference to mw
+            # Add any other attributes or methods if Ankimon later tries to access them on aqt.reviewer.Reviewer
+        
+        # Example of a common method Anki's Reviewer might have
+        def show(self):
+            # print("Mock Reviewer.show() called.")
+            pass
+
+    aqt_reviewer_mock.Reviewer = MockAqtReviewerClass
     aqt_mock_module.reviewer = aqt_reviewer_mock
 
     # Import actual Ankimon functions and constants AFTER mw and all anki/aqt mocks are set up
