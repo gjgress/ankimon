@@ -3,7 +3,7 @@ import os
 # Ensure QAction is imported ONLY from PyQt6.QtGui at the very top.
 from PyQt6.QtGui import QAction
 # Explicitly import only the necessary components from QtWidgets, excluding QAction.
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu, QDialog
 from PyQt6.QtCore import Qt
 from pathlib import Path
 
