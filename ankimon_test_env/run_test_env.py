@@ -2,20 +2,21 @@ import sys
 import os
 import argparse
 import logging
+import subprocess
+import importlib
+import threading
 from pathlib import Path
 
 # --- PyQt6 Imports ---
-# These are essential for building the GUI.
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel,
-    QTabWidget, QStatusBar, QDialog, QTextEdit, QPushButton
+    QTabWidget, QStatusBar, QDialog, QTextEdit, QPushButton,
+    QListWidget, QListWidgetItem, QHBoxLayout, QSizePolicy
 )
 from PyQt6.QtCore import Qt, QObject, QSignalMapper, QVariant, QTimer, QThread, pyqtSignal, QCoreApplication
 from PyQt6.QtGui import QPalette, QColor, QAction, QIcon
 
 # --- Mocking Anki Components ---
-# Import mock objects from the mock_anki and mock_aqt directories
-# These will be used to simulate Anki's environment without running the actual Anki application.
 try:
     from ankimon_test_env.mock_anki import Collection as MockCollection
     from ankimon_test_env.mock_anki import ProfileManager as MockProfileManager
@@ -73,8 +74,11 @@ except ImportError as e:
     print("Please ensure 'ankimon_test_env/mock_aqt' is correctly set up.")
     sys.exit(1)
 
+# --- Test Runner Configuration ---
+ANKIMON_TESTS_DIR = "ankimon_test_env/tests/"
+TEST_FILE_PATTERN = "*.py"
+
 # --- Global Variables ---
-# This 'mw' will be set to our main test window instance.
 mw = None
 app = None
 
@@ -82,6 +86,87 @@ app = None
 log_format = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_format)
 logger = logging.getLogger(__name__)
+
+# --- Test Runner Logic ---
+
+class TestRunnerThread(QThread):
+    """
+    Thread to run tests and emit output and status signals.
+    """
+    output_signal = pyqtSignal(str)
+    finished_signal = pyqtSignal(str, bool) # test_name, success
+
+    def __init__(self, test_file_path, test_name):
+        super().__init__()
+        self.test_file_path = test_file_path
+        self.test_name = test_name
+        self._is_running = True
+
+    def run(self):
+        """Executes the test script."""
+        self.output_signal.emit(f"--- Running test: {self.test_name} ---\n")
+        try:
+            # Use subprocess to run the test script
+            # We need to ensure the Python interpreter used is the one running this script
+            python_executable = sys.executable
+            process = subprocess.Popen(
+                [python_executable, str(self.test_file_path)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8'
+            )
+
+            # Read output in real-time
+            while self._is_running:
+                stdout_line = process.stdout.readline()
+                if stdout_line:
+                    self.output_signal.emit(stdout_line)
+                stderr_line = process.stderr.readline()
+                if stderr_line:
+                    self.output_signal.emit(f"ERROR: {stderr_line}")
+
+                # Check if process has finished
+                if process.poll() is not None:
+                    break
+
+                # Small sleep to prevent busy-waiting
+                self.msleep(50)
+
+            # If the thread was stopped prematurely
+            if not self._is_running:
+                process.terminate() # Attempt to terminate the process
+                process.wait()
+                self.output_signal.emit("\n--- Test stopped by user ---\n")
+                self.finished_signal.emit(self.test_name, False)
+                return
+
+            # Process completion
+            stdout_remaining, stderr_remaining = process.communicate()
+            if stdout_remaining:
+                self.output_signal.emit(stdout_remaining)
+            if stderr_remaining:
+                self.output_signal.emit(f"ERROR: {stderr_remaining}")
+
+            if process.returncode == 0:
+                self.output_signal.emit(f"\n--- Test '{self.test_name}' PASSED ---\n")
+                self.finished_signal.emit(self.test_name, True)
+            else:
+                self.output_signal.emit(f"\n--- Test '{self.test_name}' FAILED (Exit code: {process.returncode}) ---\n")
+                self.finished_signal.emit(self.test_name, False)
+
+        except FileNotFoundError:
+            error_msg = f"ERROR: Test file not found at {self.test_file_path}"
+            self.output_signal.emit(error_msg)
+            self.finished_signal.emit(self.test_name, False)
+        except Exception as e:
+            error_msg = f"ERROR: An unexpected error occurred while running test '{self.test_name}': {e}"
+            self.output_signal.emit(error_msg)
+            self.finished_signal.emit(self.test_name, False)
+
+    def stop(self):
+        """Signals the thread to stop."""
+        self._is_running = False
 
 # --- GUI Components ---
 
@@ -107,19 +192,229 @@ class LogViewerWidget(logging.Handler):
         self.widget.append(msg)
 
 class TestBrowserWidget(QWidget):
-    """Placeholder for the test browser/launcher interface."""
+    """Widget for browsing and running tests."""
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent_window = parent # Store reference to the main window
+        self.test_threads = {} # To keep track of running test threads
+
         layout = QVBoxLayout(self)
-        label = QLabel("<h2>Test Browser</h2>")
-        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(label)
-        layout.addWidget(QLabel("Test discovery and execution will be implemented here."))
-        layout.addStretch()
+
+        # Title
+        title_label = QLabel("<h2>Test Browser</h2>")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title_label)
+
+        # Test Directory Label
+        dir_label = QLabel(f"<b>Test Directory:</b> {os.path.abspath(ANKIMON_TESTS_DIR)}")
+        dir_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(dir_label)
+
+        # Test List and Controls
+        self.test_list_widget = QListWidget()
+        self.test_list_widget.setAlternatingRowColors(True)
+        self.test_list_widget.setStyleSheet("""
+            QListWidget {
+                background-color: #ffffff;
+                border: 1px solid #cccccc;
+                padding: 5px;
+                font-size: 10pt;
+            }
+            QListWidget::item {
+                padding: 5px;
+                border-bottom: 1px solid #eeeeee;
+            }
+            QListWidget::item:selected {
+                background-color: #cce5ff;
+                color: #004085;
+            }
+            QListWidget::item:hover {
+                background-color: #f8f9fa;
+            }
+        """)
+        layout.addWidget(self.test_list_widget)
+
+        # Buttons for Test Actions
+        button_layout = QHBoxLayout()
+        self.discover_button = QPushButton("Discover Tests")
+        self.discover_button.clicked.connect(self.discover_tests)
+        self.run_all_button = QPushButton("Run All")
+        self.run_all_button.clicked.connect(self.run_all_tests)
+        self.stop_all_button = QPushButton("Stop All")
+        self.stop_all_button.clicked.connect(self.stop_all_tests)
+        self.stop_all_button.setEnabled(False) # Initially disabled
+
+        button_layout.addWidget(self.discover_button)
+        button_layout.addWidget(self.run_all_button)
+        button_layout.addWidget(self.stop_all_button)
+        layout.addLayout(button_layout)
+
+        # Output Area
+        self.output_area = QTextEdit()
+        self.output_area.setReadOnly(True)
+        self.output_area.setPlaceholderText("Test execution output will appear here...")
+        self.output_area.setStyleSheet("""
+            QTextEdit {
+                background-color: #f8f9fa;
+                border: 1px solid #cccccc;
+                padding: 5px;
+                font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+                font-size: 10pt;
+            }
+        """)
+        self.output_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        layout.addWidget(self.output_area)
+
+        # Status Label
+        self.status_label = QLabel("Status: Idle")
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(self.status_label)
+
         self.setStyleSheet("""
             QWidget { background-color: #e0f7fa; }
             QLabel { color: #00796b; }
         """)
+
+        # Initial discovery on load
+        self.discover_tests()
+
+    def discover_tests(self):
+        """Discovers .py files in the ANKIMON_TESTS_DIR."""
+        self.test_list_widget.clear()
+        self.output_area.clear()
+        self.status_label.setText("Status: Discovering tests...")
+        self.parent_window.statusBar.showMessage("Discovering tests...")
+
+        tests_found = False
+        try:
+            tests_path = Path(ANKIMON_TESTS_DIR)
+            if not tests_path.is_dir():
+                self.output_area.append(f"Error: Test directory not found: {ANKIMON_TESTS_DIR}")
+                self.status_label.setText("Status: Test directory not found.")
+                return
+
+            for test_file in tests_path.glob(TEST_FILE_PATTERN):
+                if test_file.is_file():
+                    item = QListWidgetItem(test_file.name)
+                    item.setData(Qt.ItemDataRole.UserRole, str(test_file.resolve())) # Store full path
+                    self.test_list_widget.addItem(item)
+                    tests_found = True
+
+            if not tests_found:
+                item = QListWidgetItem("No tests found in ankimon_test_env/tests/")
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable) # Make it non-selectable
+                self.test_list_widget.addItem(item)
+                self.status_label.setText("Status: No tests found.")
+            else:
+                self.status_label.setText(f"Status: Found {self.test_list_widget.count()} tests.")
+                self.parent_window.statusBar.showMessage(f"Found {self.test_list_widget.count()} tests.")
+
+        except Exception as e:
+            error_msg = f"Error during test discovery: {e}"
+            self.output_area.append(error_msg)
+            self.status_label.setText("Status: Error during discovery.")
+            self.parent_window.statusBar.showMessage("Error during test discovery.")
+            logger.error(error_msg)
+
+    def run_test(self, test_file_path, test_name):
+        """Starts a test in a separate thread."""
+        if test_file_path in self.test_threads and self.test_threads[test_file_path].isRunning():
+            self.output_area.append(f"Test '{test_name}' is already running.")
+            return
+
+        thread = TestRunnerThread(test_file_path, test_name)
+        thread.output_signal.connect(self.append_output)
+        thread.finished_signal.connect(self.handle_test_finish)
+        self.test_threads[test_file_path] = thread
+        thread.start()
+        self.status_label.setText(f"Status: Running '{test_name}'...")
+        self.parent_window.statusBar.showMessage(f"Running '{test_name}'...")
+        self.run_all_button.setEnabled(False)
+        self.discover_button.setEnabled(False)
+        self.stop_all_button.setEnabled(True)
+
+    def run_all_tests(self):
+        """Runs all discovered tests sequentially."""
+        if self.test_list_widget.count() == 0:
+            self.output_area.append("No tests to run. Please discover tests first.")
+            return
+
+        self.output_area.clear()
+        self.status_label.setText("Status: Starting all tests...")
+        self.parent_window.statusBar.showMessage("Starting all tests...")
+        self.run_all_button.setEnabled(False)
+        self.discover_button.setEnabled(False)
+        self.stop_all_button.setEnabled(True)
+
+        for i in range(self.test_list_widget.count()):
+            item = self.test_list_widget.item(i)
+            test_name = item.text()
+            test_file_path = item.data(Qt.ItemDataRole.UserRole)
+
+            if test_file_path and "No tests found" not in test_name:
+                self.run_test(test_file_path, test_name)
+                # Wait for the current test to finish before starting the next one
+                # This is a simple sequential execution. For parallel, this would be different.
+                if test_file_path in self.test_threads:
+                    self.test_threads[test_file_path].wait() # Wait for this thread to complete
+
+        self.status_label.setText("Status: All tests finished.")
+        self.parent_window.statusBar.showMessage("All tests finished.")
+        self.run_all_button.setEnabled(True)
+        self.discover_button.setEnabled(True)
+        self.stop_all_button.setEnabled(False)
+
+    def stop_all_tests(self):
+        """Stops all currently running tests."""
+        self.status_label.setText("Status: Stopping tests...")
+        self.parent_window.statusBar.showMessage("Stopping tests...")
+        for test_file_path, thread in self.test_threads.items():
+            if thread.isRunning():
+                thread.stop()
+                thread.wait() # Wait for the thread to actually stop
+        self.test_threads.clear()
+        self.status_label.setText("Status: All tests stopped.")
+        self.parent_window.statusBar.showMessage("All tests stopped.")
+        self.run_all_button.setEnabled(True)
+        self.discover_button.setEnabled(True)
+        self.stop_all_button.setEnabled(False)
+
+    def append_output(self, text):
+        """Appends text to the output area."""
+        self.output_area.insertPlainText(text)
+        self.output_area.ensureCursorVisible() # Auto-scroll to the bottom
+
+    def handle_test_finish(self, test_name, success):
+        """Updates UI when a test finishes."""
+        # Find the item in the list and update its appearance
+        for i in range(self.test_list_widget.count()):
+            item = self.test_list_widget.item(i)
+            if item.text() == test_name:
+                if success:
+                    item.setForeground(QColor("green"))
+                    item.setText(f"{test_name} (PASSED)")
+                else:
+                    item.setForeground(QColor("red"))
+                    item.setText(f"{test_name} (FAILED)")
+                break
+
+        # Check if all tests are done to re-enable buttons
+        all_tests_finished = True
+        for test_file_path, thread in self.test_threads.items():
+            if thread.isRunning():
+                all_tests_finished = False
+                break
+
+        if all_tests_finished:
+            self.status_label.setText("Status: All tests finished.")
+            self.parent_window.statusBar.showMessage("All tests finished.")
+            self.run_all_button.setEnabled(True)
+            self.discover_button.setEnabled(True)
+            self.stop_all_button.setEnabled(False)
+        else:
+            self.status_label.setText(f"Status: Test '{test_name}' finished. More tests running...")
+            self.parent_window.statusBar.showMessage(f"Test '{test_name}' finished. More tests running...")
+
 
 class ReviewerSimulationWidget(QWidget):
     """Placeholder for the simulated reviewer interface."""
@@ -163,7 +458,6 @@ class AnkimonTestApp(QMainWindow):
         self.setMinimumSize(900, 700) # Increased size for better layout
 
         # --- Mock Objects Initialization ---
-        # These mocks will be used by various Ankimon components during testing.
         self.mock_collection = MockCollection()
         self.mock_profile_manager = MockProfileManager()
         self.mock_addon_manager = MockAddonManager()
@@ -176,9 +470,8 @@ class AnkimonTestApp(QMainWindow):
         self.mock_translator = MockTranslator("en") # Default to English
 
         # Initialize Ankimon's core components with mocks
-        # This is a simplified setup; actual integration will be more complex.
-        self.settings = MockAqtCollection() # Using mock_aqt.Collection as a settings holder
-        self.ankimon_tracker = MockAnkimonTrackerWindow() # Placeholder for tracker
+        self.settings = MockAqtCollection()
+        self.ankimon_tracker = MockAnkimonTrackerWindow()
         self.main_pokemon = MockPokemonObject()
         self.enemy_pokemon = MockEnemyPokemon()
         self.reviewer_manager = MockReviewerManager(
@@ -208,11 +501,11 @@ class AnkimonTestApp(QMainWindow):
         # Tests Menu
         tests_menu = menu_bar.addMenu("&Tests")
         run_all_tests_action = MockAction("Run &All Tests")
-        run_all_tests_action.triggered.connect(self.run_all_tests)
+        run_all_tests_action.triggered.connect(self.run_all_tests_from_menu) # Connect to the TestBrowserWidget method
         tests_menu.addAction(run_all_tests_action)
         tests_menu.addSeparator()
         discover_tests_action = MockAction("&Discover Tests")
-        discover_tests_action.triggered.connect(self.discover_tests)
+        discover_tests_action.triggered.connect(self.discover_tests_from_menu) # Connect to the TestBrowserWidget method
         tests_menu.addAction(discover_tests_action)
 
         # Help Menu
@@ -231,7 +524,7 @@ class AnkimonTestApp(QMainWindow):
         self.layout.addWidget(self.tab_widget)
 
         # Create and add widgets for each tab
-        self.test_browser_tab = TestBrowserWidget()
+        self.test_browser_tab = TestBrowserWidget(self) # Pass self (the main window)
         self.reviewer_simulation_tab = ReviewerSimulationWidget()
         self.log_viewer_tab_widget = LogViewerWidget(self) # Instantiate the log handler
         self.config_editor_tab = ConfigEditorWidget()
@@ -308,23 +601,14 @@ class AnkimonTestApp(QMainWindow):
         """)
 
     # --- Menu Actions ---
-    def discover_tests(self):
-        """Placeholder for discovering test files."""
-        self.statusBar.showMessage("Discovering tests...")
-        # In a real implementation, this would scan a directory for test files.
-        # For now, we'll just log a message.
-        logger.info("Discovering test files (placeholder)...")
-        # Update the Test Browser tab content if needed
-        self.tab_widget.setCurrentWidget(self.test_browser_tab)
-        self.statusBar.showMessage("Test discovery initiated.")
+    # These methods now delegate to the TestBrowserWidget
+    def discover_tests_from_menu(self):
+        """Triggers test discovery from the menu."""
+        self.test_browser_tab.discover_tests()
 
-    def run_all_tests(self):
-        """Placeholder for running all discovered tests."""
-        self.statusBar.showMessage("Running all tests...")
-        logger.info("Running all tests (placeholder)...")
-        # This would trigger the execution of tests and update the UI accordingly.
-        self.tab_widget.setCurrentWidget(self.test_browser_tab)
-        self.statusBar.showMessage("All tests execution initiated.")
+    def run_all_tests_from_menu(self):
+        """Triggers running all tests from the menu."""
+        self.test_browser_tab.run_all_tests()
 
     def show_about_dialog(self):
         """Displays a simple about dialog."""
@@ -342,29 +626,27 @@ class AnkimonTestApp(QMainWindow):
     def closeEvent(self, event):
         """Handles the window close event."""
         logger.info("Closing Ankimon Test Environment.")
-        # Add any cleanup logic here if necessary
+        # Ensure any running threads are stopped before closing
+        if self.test_browser_tab:
+            self.test_browser_tab.stop_all_tests()
         event.accept()
 
 # --- Main Execution Logic ---
 def main():
     global mw, app
 
-    # Argument parsing is kept for potential future use, but not critical for initial GUI setup.
     parser = argparse.ArgumentParser(description="Ankimon Test Environment")
     parser.add_argument('--full-anki', action='store_true', help='Run a full Anki-like interface')
     args = parser.parse_args()
 
-    # Initialize QApplication
     if not QApplication.instance():
         app = QApplication(sys.argv)
     else:
         app = QApplication.instance()
 
-    # Create and show the main AnkimonTestApp window
     mw = AnkimonTestApp()
     mw.show()
 
-    # Start the application event loop
     sys.exit(app.exec())
 
 if __name__ == "__main__":
