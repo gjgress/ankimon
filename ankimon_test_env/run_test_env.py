@@ -39,6 +39,51 @@ except ImportError as e:
     print("Please ensure Ankimon is installed or its path is correctly set.")
     ANKIMON_AVAILABLE = False
 
+# Import mock classes from the mock_anki package
+try:
+    from ankimon_test_env.mock_anki import (
+        MockReviewerWindow,
+        Collection,
+        AddonManager,
+        ProfileManager,
+        MockAnkiApp,
+        MockAnkiMainWindow,
+        MockAqtUtils,
+        qconnect,
+        Dialog,
+        MainWindow,
+        Utils,
+        QWebEngineSettings,
+        Reviewer,
+        DialogManager,
+        Menu,
+        ReviewerWindow,
+        MockTranslator,
+        MockSettings,
+        MockShowInfoLogger,
+        MockTableWidget,
+        MockIDTableWidget,
+        MockCredits,
+        MockLicense,
+        MockVersionDialog,
+        MockPokemonCollectionDialog,
+        MockItemWindow,
+        MockTestWindow,
+        MockAchievementWindow,
+        MockAnkimonTrackerWindow,
+        MockDataHandlerWindow,
+        MockSettingsWindow,
+        MockDataHandler,
+        MockPokemonShopManager,
+        MockPokedex,
+        MockPokemonPC
+    )
+    MOCKS_AVAILABLE = True
+except ImportError as e:
+    print(f"Could not import mock classes: {e}")
+    MOCKS_AVAILABLE = False
+
+
 # --- Mock Anki Objects ---
 # These mocks are essential for Ankimon's code to run in the test environment.
 # They should align with the mocks defined in mock_anki/__init__.py
