@@ -120,32 +120,47 @@ class MockAnkiMainWindow:
 # Define dummy classes for Ankimon UI elements that are instantiated in the test environment
 # These are minimal implementations to satisfy instantiation and basic method calls.
 class MockAnkimonTrackerWindow(QDialog):
-    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __init__(self, settings_obj=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings_obj = settings_obj
     def show(self): pass
     def setWindowTitle(self, title): pass
 
 class MockDataHandlerWindow(QDialog):
-    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __init__(self, settings_obj=None, data_handler_obj=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings_obj = settings_obj
+        self.data_handler_obj = data_handler_obj
     def show(self): pass
     def setWindowTitle(self, title): pass
 
 class MockSettingsWindow(QDialog):
-    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __init__(self, settings_obj=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings_obj = settings_obj
     def show(self): pass
     def setWindowTitle(self, title): pass
 
 class MockPokemonShopManager(QDialog):
-    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __init__(self, settings_obj=None, data_handler_obj=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings_obj = settings_obj
+        self.data_handler_obj = data_handler_obj
     def show(self): pass
     def setWindowTitle(self, title): pass
 
 class MockPokedex(QDialog):
-    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __init__(self, settings_obj=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings_obj = settings_obj
     def show(self): pass
     def setWindowTitle(self, title): pass
 
 class MockPokemonPC(QDialog):
-    def __init__(self, *args, **kwargs): super().__init__(*args, **kwargs)
+    def __init__(self, settings_obj=None, data_handler_obj=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.settings_obj = settings_obj
+        self.data_handler_obj = data_handler_obj
     def show(self): pass
     def setWindowTitle(self, title): pass
 
