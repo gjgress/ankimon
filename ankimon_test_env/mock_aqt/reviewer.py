@@ -171,6 +171,25 @@ class EnhancedMockWebview:
         """
         self.qwebengine_view.page().runJavaScript(js_bridge_injection)
 
+    def inject_js(self, js_content):
+        """Inject JavaScript directly into the webview's current frame."""
+        print(f"EnhancedMockWebview: Injecting JS (first 100 chars): {js_content[:100]}...")
+        self.qwebengine_view.page().runJavaScript(js_content)
+
+    def inject_css(self, css_content):
+        """Inject CSS directly into the webview's current frame."""
+        print(f"EnhancedMockWebview: Injecting CSS (first 100 chars): {css_content[:100]}...")
+        # For CSS injection, we typically add a style tag to the head.
+        # This is a common pattern in Anki add-ons.
+        self.qwebengine_view.page().runJavaScript(
+            f"""
+            var style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerHTML = `{css_content.replace('`', '\\`')}`; // Escape backticks
+            document.head.appendChild(style);
+            """
+        )
+
 class EnhancedMockReviewer:
     """Enhanced MockReviewer with full HUD support and card simulation"""
     
