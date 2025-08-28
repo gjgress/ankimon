@@ -1,3 +1,4 @@
+import sys
 import json
 from typing import Any, Callable
 from PyQt6.QtWebEngineWidgets import QWebEngineView
@@ -124,8 +125,9 @@ class EnhancedMockWebview:
 class EnhancedMockReviewer:
     """Enhanced MockReviewer with full HUD support and card simulation"""
     
-    def __init__(self, mw):
+    def __init__(self, mw, main_win=None):
         self.mw = mw
+        self.main_win = main_win
         self.state = "question"  # Current reviewer state
         self.card = None
         self.previous_card = None
@@ -181,6 +183,7 @@ class EnhancedMockReviewer:
                 </tr>
             </table>
         </center>
+        <div id="button-place"></div>
         """
         
         # Load HTML with CSS
@@ -203,6 +206,10 @@ class EnhancedMockReviewer:
     def show(self):
         """Start the review session"""
         print("EnhancedMockReviewer: Starting review session")
+        if self.main_win:
+            self.main_win.answer_btn.setEnabled(True)
+            for btn in self.main_win.ease_btns:
+                btn.setEnabled(True)
         
         # Get first card
         self.nextCard()
@@ -210,11 +217,13 @@ class EnhancedMockReviewer:
         # Trigger GUI hooks
         if hasattr(sys.modules.get('aqt'), 'gui_hooks'):
             hooks = sys.modules['aqt'].gui_hooks
-            for hook_func in getattr(hooks, 'reviewer_did_show_question', []):
-                try:
-                    hook_func(self.card)
-                except Exception as e:
-                    print(f"Hook error: {e}")
+            hook_obj = getattr(hooks, 'reviewer_did_show_question', None)
+            if hook_obj:
+                for hook_func in hook_obj.hooks:
+                    try:
+                        hook_func(self.card)
+                    except Exception as e:
+                        print(f"Hook error: {e}")
 
     def nextCard(self):
         """Get and display the next card"""
@@ -228,6 +237,16 @@ class EnhancedMockReviewer:
         else:
             print("EnhancedMockReviewer: No more cards to review")
             self.card = None
+            self._reviewFinished()
+
+    def _reviewFinished(self):
+        """Called when the review queue is empty."""
+        self.web.eval("document.getElementById('qa').innerHTML = '<h1>Finished!</h1>';")
+        self.bottom.web.eval("document.getElementById('middle').innerHTML = '';")
+        if self.main_win:
+            self.main_win.answer_btn.setEnabled(False)
+            for btn in self.main_win.ease_btns:
+                btn.setEnabled(False)
 
     def _showQuestion(self):
         """Display the question side of the current card"""
@@ -254,12 +273,14 @@ class EnhancedMockReviewer:
         # Trigger hooks
         if hasattr(sys.modules.get('aqt'), 'gui_hooks'):
             hooks = sys.modules['aqt'].gui_hooks
-            for hook_func in getattr(hooks, 'reviewer_did_show_question', []):
-                try:
-                    hook_func(self.card)
-                    print(f"Triggered reviewer_did_show_question hook")
-                except Exception as e:
-                    print(f"Hook error: {e}")
+            hook_obj = getattr(hooks, 'reviewer_did_show_question', None)
+            if hook_obj:
+                for hook_func in hook_obj.hooks:
+                    try:
+                        hook_func(self.card)
+                        print(f"Triggered reviewer_did_show_question hook")
+                    except Exception as e:
+                        print(f"Hook error: {e}")
 
     def _showAnswer(self):
         """Display the answer side of the current card"""
@@ -288,12 +309,14 @@ class EnhancedMockReviewer:
         # Trigger hooks
         if hasattr(sys.modules.get('aqt'), 'gui_hooks'):
             hooks = sys.modules['aqt'].gui_hooks
-            for hook_func in getattr(hooks, 'reviewer_did_show_answer', []):
-                try:
-                    hook_func(self.card)
-                    print(f"Triggered reviewer_did_show_answer hook")
-                except Exception as e:
-                    print(f"Hook error: {e}")
+            hook_obj = getattr(hooks, 'reviewer_did_show_answer', None)
+            if hook_obj:
+                for hook_func in hook_obj.hooks:
+                    try:
+                        hook_func(self.card)
+                        print(f"Triggered reviewer_did_show_answer hook")
+                    except Exception as e:
+                        print(f"Hook error: {e}")
 
     def _showAnswerButton(self):
         """Show the 'Show Answer' button"""
@@ -322,16 +345,21 @@ class EnhancedMockReviewer:
 
     def _answerCard(self, ease):
         """Handle answering a card with the given ease rating"""
+        if not self.card:
+            return
+
         print(f"EnhancedMockReviewer: Answering card {self.card.id} with ease {ease}")
         
         # Trigger will_answer_card hook
         if hasattr(sys.modules.get('aqt'), 'gui_hooks'):
             hooks = sys.modules['aqt'].gui_hooks
-            for hook_func in getattr(hooks, 'reviewer_will_answer_card', []):
-                try:
-                    hook_func((True, ease), self, self.card)
-                except Exception as e:
-                    print(f"Hook error: {e}")
+            hook_obj = getattr(hooks, 'reviewer_will_answer_card', None)
+            if hook_obj:
+                for hook_func in hook_obj.hooks:
+                    try:
+                        hook_func((True, ease), self, self.card)
+                    except Exception as e:
+                        print(f"Hook error: {e}")
         
         # Store previous card
         self.previous_card = self.card
@@ -339,12 +367,14 @@ class EnhancedMockReviewer:
         # Trigger did_answer_card hook (this is where the HUD gets updated!)
         if hasattr(sys.modules.get('aqt'), 'gui_hooks'):
             hooks = sys.modules['aqt'].gui_hooks
-            for hook_func in getattr(hooks, 'reviewer_did_answer_card', []):
-                try:
-                    hook_func(self, self.card, ease)
-                    print(f"Triggered reviewer_did_answer_card hook - HUD should update!")
-                except Exception as e:
-                    print(f"Hook error: {e}")
+            hook_obj = getattr(hooks, 'reviewer_did_answer_card', None)
+            if hook_obj:
+                for hook_func in hook_obj.hooks:
+                    try:
+                        hook_func(self, self.card, ease)
+                        print(f"Triggered reviewer_did_answer_card hook - HUD should update!")
+                    except Exception as e:
+                        print(f"Hook error: {e}")
         
         # Move to next card after a short delay
         QTimer.singleShot(1000, self.nextCard)

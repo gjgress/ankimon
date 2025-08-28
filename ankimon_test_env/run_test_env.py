@@ -1,3 +1,4 @@
+import webbrowser
 import sys
 import os
 import types
@@ -8,7 +9,7 @@ from unittest.mock import MagicMock
 def setup_anki_mocks():
     """Set up comprehensive Anki/AQT mocks in sys.modules"""
     print("Setting up Anki/AQT mocks...")
-    
+
     # Create anki module and submodules
     mock_anki = types.ModuleType("anki")
     mock_anki.collection = types.ModuleType("anki.collection")
@@ -16,13 +17,12 @@ def setup_anki_mocks():
     mock_anki.notes = types.ModuleType("anki.notes")
     mock_anki.sched = types.ModuleType("anki.sched")
     mock_anki.utils = types.ModuleType("anki.utils")
+    mock_anki.utils.isWin = lambda: True
+    mock_anki.utils.is_win = lambda: True
     mock_anki.hooks = types.ModuleType("anki.hooks")
-
-    # Import after QApplication exists
-    from mock_anki.collection import Collection, MockCard, MockNote, MockScheduler
-    mock_anki.collection.Collection = Collection
-    mock_anki.cards.Card = MockCard
-    mock_anki.notes.Note = MockNote
+    mock_anki.hooks.addHook = lambda name, func: None
+    mock_anki.buildinfo = types.ModuleType("anki.buildinfo")
+    mock_anki.buildinfo.version = "2.1.54"
 
     # Create aqt module and submodules
     mock_aqt = types.ModuleType("aqt")
@@ -32,11 +32,14 @@ def setup_anki_mocks():
     mock_aqt.gui_hooks = types.ModuleType("aqt.gui_hooks")
     mock_aqt.qt = types.ModuleType("aqt.qt")
     mock_aqt.webview = types.ModuleType("aqt.webview")
+    mock_aqt.sound = types.ModuleType("aqt.sound")
+    mock_aqt.toolbar = types.ModuleType("aqt.toolbar")
+    mock_aqt.theme = types.ModuleType("aqt.theme")
     mock_aqt.operations = types.ModuleType("aqt.operations")
     mock_aqt.operations.scheduling = types.ModuleType("aqt.operations.scheduling")
 
-    from mock_aqt.reviewer import EnhancedMockReviewer
-    mock_aqt.reviewer.Reviewer = EnhancedMockReviewer
+    from PyQt6.QtWidgets import QDialog, QVBoxLayout
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
 
     # Mock aqt.utils functions
     def mock_qconnect(signal, slot):
@@ -46,58 +49,116 @@ def setup_anki_mocks():
             print(f"MockQConnect error: {e}")
 
     mock_aqt.utils.qconnect = mock_qconnect
-    mock_aqt.utils.showWarning = lambda msg: print(f"MockWarning: {msg}")
-    mock_aqt.utils.showInfo = lambda msg: print(f"MockInfo: {msg}")
-    mock_aqt.utils.openLink = lambda url: print(f"MockOpenLink: {url}")
+    mock_aqt.qconnect = mock_qconnect
+    mock_aqt.QDialog = QDialog
+    mock_aqt.QVBoxLayout = QVBoxLayout
+    mock_aqt.QWebEngineView = QWebEngineView
+    mock_aqt.utils.showWarning = lambda msg, parent=None, title="Warning": print(f"MockWarning: {msg}")
+    mock_aqt.utils.showInfo = lambda msg, parent=None, title="Info": print(f"MockInfo: {msg}")
+    mock_aqt.utils.tooltip = lambda msg, period=3000: print(f"MockTooltip: {msg}")
+    mock_aqt.utils.openLink = lambda url: webbrowser.open_new_tab(url)
 
-    # Mock GUI hooks - create empty lists that add-ons can append to
-    mock_hooks = [
-        'reviewer_did_show_question', 'reviewer_did_show_answer', 'reviewer_will_answer_card',
-        'reviewer_did_answer_card', 'card_will_show', 'reviewer_will_end',
-        'reviewer_will_show_context_menu', 'reviewer_will_init_answer_buttons'
-    ]
+    # Mock GUI hooks
+    class MockHook:
+        def __init__(self, name=""):
+            self.name = name
+            self.hooks = []
+        def append(self, func):
+            print(f"Appending to hook: {self.name}")
+            self.hooks.append(func)
+        def remove(self, func):
+            if func in self.hooks:
+                self.hooks.remove(func)
+        def __call__(self, *args, **kwargs):
+            for hook in self.hooks:
+                try:
+                    hook(*args, **kwargs)
+                except:
+                    pass # Anki ignores hook errors
 
-    for hook_name in mock_hooks:
-        setattr(mock_aqt.gui_hooks, hook_name, [])
+    mock_aqt.gui_hooks.addon_config_editor_will_display_json = MockHook("addon_config_editor_will_display_json")
+    mock_aqt.gui_hooks.addon_config_editor_will_save_json = MockHook("addon_config_editor_will_save_json")
+    mock_aqt.gui_hooks.sync_did_finish = MockHook("sync_did_finish")
+    mock_aqt.gui_hooks.reviewer_did_show_question = MockHook("reviewer_did_show_question")
+    mock_aqt.gui_hooks.reviewer_did_show_answer = MockHook("reviewer_did_show_answer")
+    mock_aqt.gui_hooks.reviewer_will_answer_card = MockHook("reviewer_will_answer_card")
+    mock_aqt.gui_hooks.card_will_show = MockHook("card_will_show")
+    mock_aqt.gui_hooks.main_window_did_init = MockHook("main_window_did_init")
+    mock_aqt.gui_hooks.av_player_will_play = MockHook("av_player_will_play")
+    mock_aqt.gui_hooks.reviewer_will_end = MockHook("reviewer_will_end")
+    mock_aqt.gui_hooks.reviewer_did_answer_card = MockHook("reviewer_did_answer_card")
+    mock_aqt.gui_hooks.theme_did_change = MockHook("theme_did_change")
+
 
     # Mock Qt classes
     from PyQt6.QtWidgets import (
         QApplication, QWidget, QMainWindow, QMenu, QMenuBar, QDialog, QVBoxLayout,
-        QHBoxLayout, QLabel, QPushButton, QFrame
+        QHBoxLayout, QLabel, QPushButton, QFrame, QSizePolicy, QLineEdit, QCheckBox,
+        QSpinBox, QDoubleSpinBox, QComboBox, QSlider, QListWidget, QListWidgetItem,
+        QTabWidget, QTabBar, QToolButton, QDialogButtonBox, QTextEdit, QMessageBox, QScrollArea,
+        QGridLayout, QTextBrowser, QToolBar, QStatusBar, QToolTip
     )
+    from PyQt6.QtGui import (
+        QAction, QKeySequence, QFont, QIcon, QColor, QPalette, QPixmap, QPainter, QMovie,
+        QFontDatabase
+    )
+    from PyQt6.QtCore import Qt, QSize, QPoint, QRect, QTimer, pyqtSignal, QObject, QUrl, QFile
 
-    from PyQt6.QtGui import QAction, QKeySequence
+    # Assign all Qt classes to the mock aqt.qt module
+    qt_classes = {
+        'QApplication': QApplication, 'QWidget': QWidget, 'QMainWindow': QMainWindow, 'QMenu': QMenu,
+        'QMenuBar': QMenuBar, 'QDialog': QDialog, 'QVBoxLayout': QVBoxLayout, 'QHBoxLayout': QHBoxLayout,
+        'QLabel': QLabel, 'QPushButton': QPushButton, 'QFrame': QFrame, 'QKeySequence': QKeySequence,
+        'QSizePolicy': QSizePolicy, 'QLineEdit': QLineEdit, 'QCheckBox': QCheckBox, 'QSpinBox': QSpinBox,
+        'QDoubleSpinBox': QDoubleSpinBox, 'QComboBox': QComboBox, 'QSlider': QSlider, 'QListWidget': QListWidget,
+        'QListWidgetItem': QListWidgetItem, 'QTabWidget': QTabWidget, 'QTabBar': QTabBar, 'QToolButton': QToolButton,
+        'QDialogButtonBox': QDialogButtonBox, 'QTextEdit': QTextEdit, 'QMessageBox': QMessageBox,
+        'QScrollArea': QScrollArea, 'QGridLayout': QGridLayout, 'QTextBrowser': QTextBrowser,
+        'QAction': QAction, 'QFont': QFont, 'QFontDatabase': QFontDatabase, 'QIcon': QIcon, 'QColor': QColor,
+        'QPalette': QPalette, 'QPixmap': QPixmap, 'QPainter': QPainter, 'QMovie': QMovie, 'Qt': Qt,
+        'QSize': QSize, 'QPoint': QPoint, 'QRect': QRect, 'QTimer': QTimer, 'pyqtSignal': pyqtSignal,
+        'QObject': QObject, 'qconnect': mock_qconnect, 'QToolBar': QToolBar, 'QStatusBar': QStatusBar,
+        'QUrl': QUrl, 'QToolTip': QToolTip, 'QFile': QFile
+    }
+    for name, cls in qt_classes.items():
+        setattr(mock_aqt.qt, name, cls)
 
-    mock_aqt.qt.QApplication = QApplication
-    mock_aqt.qt.QMainWindow = QMainWindow
-    mock_aqt.qt.QWidget = QWidget
-    mock_aqt.qt.QAction = QAction
-    mock_aqt.qt.QMenu = QMenu
-    mock_aqt.qt.QMenuBar = QMenuBar
-    mock_aqt.qt.QDialog = QDialog
-    mock_aqt.qt.QVBoxLayout = QVBoxLayout
-    mock_aqt.qt.QHBoxLayout = QHBoxLayout
-    mock_aqt.qt.QLabel = QLabel
-    mock_aqt.qt.QPushButton = QPushButton
-    mock_aqt.qt.QFrame = QFrame
-    mock_aqt.qt.QKeySequence = QKeySequence
+    # Mock aqt.webview
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtWebEngineCore import QWebEnginePage
+    mock_aqt.webview.AnkiWebView = QWebEngineView
+    mock_aqt.webview.WebContent = MagicMock()
+    mock_aqt.webview.AnkiWebView.setHtml = lambda self, html: print("Mock AnkiWebView.setHtml called")
+
+
+    # Mock aqt.sound
+    class MockAVPlayer:
+        def __init__(self):
+            self.current_player = None
+            self.no_interrupt = False
+        def play_without_interrupt(self, file):
+            print(f"MockAVPlayer: Playing {file} without interruption.")
+        def stop(self):
+            print("MockAVPlayer: Stopping current sound.")
+
+    mock_aqt.sound.SoundOrVideoTag = lambda filename: {"filename": filename}
+    mock_aqt.sound.AVPlayer = MockAVPlayer
+    mock_aqt.sound.av_player = MockAVPlayer()
+
+    # Mock aqt.toolbar
+    mock_aqt.toolbar.Toolbar = QToolBar
+
+    mock_aqt.theme.theme_manager = MagicMock()
 
     # Inject into sys.modules
     modules_to_inject = {
-        "anki": mock_anki,
-        "anki.collection": mock_anki.collection,
-        "anki.cards": mock_anki.cards,
-        "anki.notes": mock_anki.notes,
-        "anki.sched": mock_anki.sched,
-        "anki.utils": mock_anki.utils,
-        "anki.hooks": mock_anki.hooks,
-        "aqt": mock_aqt,
-        "aqt.main": mock_aqt.main,
-        "aqt.reviewer": mock_aqt.reviewer,
-        "aqt.utils": mock_aqt.utils,
-        "aqt.gui_hooks": mock_aqt.gui_hooks,
-        "aqt.qt": mock_aqt.qt,
-        "aqt.webview": mock_aqt.webview,
+        "anki": mock_anki, "anki.collection": mock_anki.collection, "anki.cards": mock_anki.cards,
+        "anki.notes": mock_anki.notes, "anki.sched": mock_anki.sched, "anki.utils": mock_anki.utils,
+        "anki.hooks": mock_anki.hooks, "anki.buildinfo": mock_anki.buildinfo,
+        "aqt": mock_aqt, "aqt.main": mock_aqt.main, "aqt.reviewer": mock_aqt.reviewer,
+        "aqt.utils": mock_aqt.utils, "aqt.gui_hooks": mock_aqt.gui_hooks, "aqt.qt": mock_aqt.qt,
+        "aqt.webview": mock_aqt.webview, "aqt.sound": mock_aqt.sound, "aqt.toolbar": mock_aqt.toolbar,
+        "aqt.theme": mock_aqt.theme,
         "aqt.operations": mock_aqt.operations,
         "aqt.operations.scheduling": mock_aqt.operations.scheduling,
     }
@@ -109,28 +170,43 @@ def setup_anki_mocks():
 
 def setup_global_mw():
     """Set up the global mw object that Ankimon expects"""
-    # Import Collection after mocks are set up
-    from mock_anki.collection import Collection, MockScheduler
-    
-    # Create a simple mock mw first
-    mw = type('MockMainWindow', (), {})()
-    
-    # Add basic properties
-    mw.col = Collection()
-    mw.addonManager = type('MockAddonManager', (), {
-        'getConfig': lambda self, addon_id: {},
-        'writeConfig': lambda self, addon_id, config: print(f"Writing config for {addon_id}: {config}"),
-        'addonsFolder': lambda self: Path(__file__).parent.parent / "src",
-        'addonFromModule': lambda self, module_name: "ankimon"
-    })()
+    from PyQt6.QtWidgets import QMainWindow, QMenuBar, QVBoxLayout, QWidget
+    from mock_anki.collection import Collection
 
-    mw.pm = type('MockProfileManager', (), {
-        'openProfile': lambda self, name: print(f"Opening profile: {name}"),
-        'video_driver': lambda self: 'Software'
-    })()
+    class MockMainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.form = QWidget()
+            self.setCentralWidget(self.form)
+            self.form.vbox = QVBoxLayout(self.form)
+            self.menubar = QMenuBar()
+            self.form.menubar = self.menubar
+            self.setMenuBar(self.menubar)
+
+    mw = MockMainWindow()
+    mw.col = Collection()
+    # Determine the Ankimon path to read config.json
+    ankimon_path = Path(__file__).parent.parent / "src" / "Ankimon"
+    user_files_path = ankimon_path / "user_files"
+    config_path = user_files_path / "config.json"
+
+    mock_config_content = {}
+    if config_path.exists():
+        with open(config_path, 'r', encoding='utf-8') as f:
+            mock_config_content = json.load(f)
+    else:
+        print(f"Warning: Mock config file not found at {config_path}. Using empty config.")
+
+    mw.addonManager = MagicMock()
+    mw.addonManager.getConfig.return_value = mock_config_content # Make getConfig return the file content
+    mw.addonManager.addonFromModule.return_value = "ankimon"
+
+    mw.pm = MagicMock()
+    mw.pm.name = "test-profile"
+    mw.pm.profileFolder.return_value = str(Path(__file__).parent / "profile")
 
     from PyQt6.QtWidgets import QApplication
-    mw.app = QApplication.instance()
+    mw.app = QApplication.instance() or QApplication(sys.argv)
 
     # Set in modules
     sys.modules['aqt'].mw = mw
@@ -141,103 +217,90 @@ def setup_global_mw():
 def create_mock_data_files():
     """Create necessary mock data files for Ankimon"""
     print("Creating mock data files...")
-    
-    # Determine the Ankimon path
     ankimon_path = Path(__file__).parent.parent / "src" / "Ankimon"
     user_files_path = ankimon_path / "user_files"
     user_files_path.mkdir(parents=True, exist_ok=True)
-    
-    # Create mock mypokemon.json
-    mypokemon_path = user_files_path / "mypokemon.json"
-    if not mypokemon_path.exists():
-        mock_pokemon_data = [
-            {
-                "id": 25,
-                "name": "Pikachu", 
-                "level": 50,
-                "hp": 100,
-                "max_hp": 100,
-                "stats": {"hp": 100, "atk": 80, "def": 70, "spa": 90, "spd": 80, "spe": 120},
-                "shiny": False,
-                "gender": "M",
-                "attacks": ["Thunderbolt", "Quick Attack", "Thunder Wave", "Agility"]
+
+    # List of files to create with default content
+    # Create mock meta.json with default config
+    meta_path = ankimon_path / "meta.json"
+    if not meta_path.exists():
+        mock_meta_content = {
+            "config": {
+                "gui.show_mainpkmn_in_reviewer": 2,
+                "battle.hp_bar_thickness": 4,
+                "gui.reviewer_image_gif": 1,
+                "gui.reviewer_text_message_box": True,
+                "misc.language": 9,
+                "trainer.name": "TestTrainer",
+                "trainer.sprite": "ash-sinnoh"
             }
-        ]
-        with open(mypokemon_path, 'w', encoding='utf-8') as f:
-            json.dump(mock_pokemon_data, f, indent=2)
-        print(f"Created mock Pokemon data: {mypokemon_path}")
-    
-    # Create mock itembag.json
-    itembag_path = user_files_path / "itembag.json"
-    if not itembag_path.exists():
-        with open(itembag_path, 'w', encoding='utf-8') as f:
-            json.dump({}, f)
-        print(f"Created mock itembag: {itembag_path}")
-    
-    # Create mock config.json
-    config_path = user_files_path / "config.json"
-    if not config_path.exists():
-        mock_config = {
-            "gui.show_mainpkmn_in_reviewer": 2,  # Show both Pokemon
-            "battle.hp_bar_thickness": 4,
-            "gui.reviewer_image_gif": 1,
-            "gui.reviewer_text_message_box": True,
-            "misc.language": 9
         }
-        with open(config_path, 'w', encoding='utf-8') as f:
-            json.dump(mock_config, f, indent=2)
-        print(f"Created mock config: {config_path}")
+        with open(meta_path, 'w', encoding='utf-8') as f:
+            json.dump(mock_meta_content, f, indent=2)
+        print(f"Created mock meta.json: {meta_path}")
+
+    # Create other data files
+    files_to_create = {
+        "mypokemon.json": [],
+        "mainpokemon.json": {},
+        "itembag.json": {},
+        "badges.json": [],
+        "team.json": [],
+    }
+
+    for filename, content in files_to_create.items():
+        filepath = user_files_path / filename
+        if not filepath.exists():
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(content, f, indent=2)
+            print(f"Created mock data file: {filepath}")
+
+    # Now, create config.obf from the mock meta.json
+    from Ankimon.pyobj.ankimon_sync import AnkimonDataSync
+    sync_handler = AnkimonDataSync()
+    sync_handler._save_obfuscated_config()
+    print("Created mock config.obf from meta.json")
+
 
 def load_ankimon_singletons():
     """Load and create all Ankimon singleton objects"""
     print("Loading Ankimon singletons...")
     try:
-        ankimon_path = Path(__file__).parent.parent / "src" / "Ankimon"
-        if str(ankimon_path) not in sys.path:
-            sys.path.insert(0, str(ankimon_path))
+        src_path = Path(__file__).parent.parent / "src"
+        if str(src_path) not in sys.path:
+            sys.path.insert(0, str(src_path))
 
-        # Create mock files first
         create_mock_data_files()
 
-        # Import and create Ankimon objects
-        from singletons import (
-            settings_obj, translator, logger, main_pokemon, enemy_pokemon,
-            trainer_card, ankimon_tracker_obj, test_window, achievement_bag,
-            data_handler_obj, data_handler_window, shop_manager, ankimon_tracker_window,
-            pokedex_window, reviewer_obj, eff_chart, gen_id_chart, license, credits,
-            version_dialog, item_window, pokecollection_win, pokemon_pc
-        )
-
-        print(f"Successfully loaded Ankimon objects:")
-        print(f"  Main Pokemon: {main_pokemon.name} (Level {main_pokemon.level})")
-        print(f"  Enemy Pokemon: {enemy_pokemon.name} (Level {enemy_pokemon.level})")
-        print(f"  Settings loaded: {settings_obj is not None}")
-        print(f"  Reviewer loaded: {reviewer_obj is not None}")
-
+        # Now, import the singletons
+        from Ankimon import singletons
+        print("Successfully imported Ankimon.singletons")
         return {
-            'settings_obj': settings_obj,
-            'translator': translator,
-            'logger': logger,
-            'main_pokemon': main_pokemon,
-            'enemy_pokemon': enemy_pokemon,
-            'trainer_card': trainer_card,
-            'ankimon_tracker_obj': ankimon_tracker_obj,
-            'test_window': test_window,
-            'achievement_bag': achievement_bag,
-            'data_handler_obj': data_handler_obj,
-            'data_handler_window': data_handler_window,
-            'shop_manager': shop_manager,
-            'ankimon_tracker_window': ankimon_tracker_window,
-            'pokedex_window': pokedex_window,
-            'reviewer_obj': reviewer_obj,
-            'eff_chart': eff_chart,
-            'gen_id_chart': gen_id_chart,
-            'license': license,
-            'credits': credits,
-            'version_dialog': version_dialog,
-            'item_window': item_window,
-            'pokecollection_win': pokecollection_win,
-            'pokemon_pc': pokemon_pc,
+            'settings_obj': singletons.settings_obj,
+            'settings_window': singletons.settings_window,
+            'translator': singletons.translator,
+            'logger': singletons.logger,
+            'main_pokemon': singletons.main_pokemon,
+            'enemy_pokemon': singletons.enemy_pokemon,
+            'trainer_card': singletons.trainer_card,
+            'ankimon_tracker_obj': singletons.ankimon_tracker_obj,
+            'test_window': singletons.test_window,
+            'achievement_bag': singletons.achievement_bag,
+            'data_handler_obj': singletons.data_handler_obj,
+            'data_handler_window': singletons.data_handler_window,
+            'shop_manager': singletons.shop_manager,
+            'ankimon_tracker_window': singletons.ankimon_tracker_window,
+            'pokedex_window': singletons.pokedex_window,
+            'reviewer_obj': singletons.reviewer_obj,
+            'eff_chart': singletons.eff_chart,
+            'gen_id_chart': singletons.gen_id_chart,
+            'license': singletons.license,
+            'credits': singletons.credits,
+            'version_dialog': singletons.version_dialog,
+            'item_window': singletons.item_window,
+            'pokecollection_win': singletons.pokecollection_win,
+            'pokemon_pc': singletons.pokemon_pc,
         }
 
     except Exception as e:
@@ -250,52 +313,43 @@ def load_ankimon_menu(mw, ankimon_objects):
     """Load and initialize Ankimon menu"""
     print("Loading Ankimon menu...")
     try:
-        from menu_buttons import create_menu_actions
+        from Ankimon.menu_buttons import create_menu_actions
         print("Successfully imported menu_buttons")
 
-        # Create mock functions for menu callbacks
-        def mock_callback(name):
-            return lambda: print(f"Mock callback: {name}")
-
-        # Prepare the parameters for create_menu_actions
-        menu_params = {
-            'database_complete': True,
-            'online_connectivity': False,
-            'pokecollection_win': ankimon_objects.get('pokecollection_win'),
-            'item_window': ankimon_objects.get('item_window'),
-            'test_window': ankimon_objects.get('test_window'),
-            'achievement_bag': ankimon_objects.get('achievement_bag'),
-            'open_team_builder': mock_callback("Team Builder"),
-            'export_to_pkmn_showdown': mock_callback("Export to Showdown"),
-            'export_all_pkmn_showdown': mock_callback("Export All to Showdown"),
-            'flex_pokemon_collection': mock_callback("Flex Collection"),
-            'eff_chart': ankimon_objects.get('eff_chart'),
-            'gen_id_chart': ankimon_objects.get('gen_id_chart'),
-            'credits': ankimon_objects.get('credits'),
-            'license': ankimon_objects.get('license'),
-            'open_help_window': lambda connectivity: print("Help window opened"),
-            'report_bug': mock_callback("Bug Report"),
-            'rate_addon_url': mock_callback("Rate Addon"),
-            'version_dialog': ankimon_objects.get('version_dialog'),
-            'trainer_card': ankimon_objects.get('trainer_card'),
-            'ankimon_tracker_window': ankimon_objects.get('ankimon_tracker_window'),
-            'logger': ankimon_objects.get('logger'),
-            'data_handler_window': ankimon_objects.get('data_handler_window'),
-            'settings_window': type('MockSettingsWindow', (), {
-                'show_window': mock_callback("Settings Window")
-            })(),
-            'shop_manager': ankimon_objects.get('shop_manager'),
-            'pokedex_window': ankimon_objects.get('pokedex_window'),
-            'ankimon_key': 'Ctrl+K',
-            'join_discord_url': mock_callback("Join Discord"),
-            'open_leaderboard_url': mock_callback("Open Leaderboard"),
-            'settings_obj': ankimon_objects.get('settings_obj'),
-            'addon_dir': Path(__file__).parent.parent / "src" / "Ankimon",
-            'data_handler_obj': ankimon_objects.get('data_handler_obj'),
-            'pokemon_pc': ankimon_objects.get('pokemon_pc'),
-        }
-
-        create_menu_actions(**menu_params)
+        create_menu_actions(
+            database_complete=True,
+            online_connectivity=False,
+            pokecollection_win=ankimon_objects.get('pokecollection_win'),
+            item_window=ankimon_objects.get('item_window'),
+            test_window=ankimon_objects.get('test_window'),
+            achievement_bag=ankimon_objects.get('achievement_bag'),
+            open_team_builder=lambda: print("Mock callback: Team Builder"),
+            export_to_pkmn_showdown=lambda: print("Mock callback: Export to Showdown"),
+            export_all_pkmn_showdown=lambda: print("Mock callback: Export All to Showdown"),
+            flex_pokemon_collection=lambda: print("Mock callback: Flex Collection"),
+            eff_chart=ankimon_objects.get('eff_chart'),
+            gen_id_chart=ankimon_objects.get('gen_id_chart'),
+            credits=ankimon_objects.get('credits'),
+            license=ankimon_objects.get('license'),
+            open_help_window=lambda connectivity: print("Help window opened"),
+            report_bug=lambda: print("Mock callback: Bug Report"),
+            rate_addon_url=lambda: print("Mock callback: Rate Addon"),
+            version_dialog=ankimon_objects.get('version_dialog'),
+            trainer_card=ankimon_objects.get('trainer_card'),
+            ankimon_tracker_window=ankimon_objects.get('ankimon_tracker_window'),
+            logger=ankimon_objects.get('logger'),
+            data_handler_window=ankimon_objects.get('data_handler_window'),
+            settings_window=ankimon_objects.get('settings_window'), # Pass the real settings_window here
+            shop_manager=ankimon_objects.get('shop_manager'),
+            pokedex_window=ankimon_objects.get('pokedex_window'),
+            ankimon_key='Ctrl+K',
+            join_discord_url=lambda: print("Mock callback: Join Discord"),
+            open_leaderboard_url=lambda: print("Mock callback: Open Leaderboard"),
+            settings_obj=ankimon_objects.get('settings_obj'),
+            addon_dir=Path(__file__).parent.parent / "src" / "Ankimon",
+            data_handler_obj=ankimon_objects.get('data_handler_obj'),
+            pokemon_pc=ankimon_objects.get('pokemon_pc'),
+        )
         print("Ankimon menu actions created successfully")
 
     except Exception as e:
@@ -303,191 +357,108 @@ def load_ankimon_menu(mw, ankimon_objects):
         import traceback
         traceback.print_exc()
 
-class FixedTestEnvironmentMainWindow:
-    """Fixed main window for the Ankimon test environment with proper HUD support"""
+from test_runner import TestRunnerGUI
+from PyQt6.QtWidgets import QMainWindow, QMenuBar, QStatusBar, QTabWidget, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTextEdit
 
+class MainApplicationWindow(QMainWindow):
     def __init__(self, ankimon_objects):
-        from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QMenuBar, QPushButton, QHBoxLayout
-        
-        self.main_window = QMainWindow()
-        self.main_window.setWindowTitle("Ankimon Test Environment - Fixed Version")
-        self.main_window.setGeometry(100, 100, 1400, 900)
+        super().__init__()
+        self.ankimon_objects = ankimon_objects
+        self.setWindowTitle("Ankimon Test Environment")
+        self.setGeometry(100, 100, 1600, 1000)
+        self.setMenuBar(QMenuBar(self))
+        self.setStatusBar(QStatusBar(self))
+        self.statusBar().showMessage("Ready")
+        self.tabs = QTabWidget()
+        self.setCentralWidget(self.tabs)
+        self.init_tabs()
+        print("MainApplicationWindow initialized")
 
-        # Create central widget with side controls
-        central_widget = QWidget()
-        self.main_window.setCentralWidget(central_widget)
-        main_layout = QHBoxLayout(central_widget)
-        
-        # Left control panel
+    def init_tabs(self):
+        self.test_launcher_tab = TestRunnerGUI()
+        self.tabs.addTab(self.test_launcher_tab, "Test Launcher")
+        self.reviewer_tab = QWidget()
+        self.init_reviewer_tab()
+        self.tabs.addTab(self.reviewer_tab, "Simulated Reviewer")
+        self.config_editor_tab = QTextEdit()
+        self.tabs.addTab(self.config_editor_tab, "Config Editor")
+        self.log_viewer_tab = QTextEdit()
+        self.log_viewer_tab.setReadOnly(True)
+        self.tabs.addTab(self.log_viewer_tab, "Log Viewer")
+
+    def init_reviewer_tab(self):
+        layout = QHBoxLayout(self.reviewer_tab)
         control_panel = QWidget()
         control_panel.setFixedWidth(300)
         control_layout = QVBoxLayout(control_panel)
-        
-        # Add control buttons
         self.start_btn = QPushButton("Start Review")
         self.next_btn = QPushButton("Next Card")
         self.hud_btn = QPushButton("Show Ankimon HUD")
         self.answer_btn = QPushButton("Show Answer")
-        
         control_layout.addWidget(self.start_btn)
         control_layout.addWidget(self.next_btn)
         control_layout.addWidget(self.hud_btn)
         control_layout.addWidget(self.answer_btn)
-        
-        # Add ease buttons
         ease_layout = QHBoxLayout()
         self.ease_btns = []
         for i, label in enumerate(["Again", "Hard", "Good", "Easy"], 1):
             btn = QPushButton(label)
             ease_layout.addWidget(btn)
             self.ease_btns.append(btn)
-        
         control_layout.addLayout(ease_layout)
         control_layout.addStretch()
-
-        # Right reviewer area
         self.reviewer_container = QWidget()
         self.reviewer_layout = QVBoxLayout(self.reviewer_container)
-
-        # Add to main layout
-        main_layout.addWidget(control_panel)
-        main_layout.addWidget(self.reviewer_container, 1)
-
-        # Setup menubar
-        self.menubar = QMenuBar(self.main_window)
-        self.main_window.setMenuBar(self.menubar)
-
-        # Store Ankimon objects
-        self.ankimon_objects = ankimon_objects
-
-        print("FixedTestEnvironmentMainWindow initialized")
+        layout.addWidget(control_panel)
+        layout.addWidget(self.reviewer_container, 1)
 
     def setup_reviewer(self, reviewer):
-        """Setup reviewer with full HUD support"""
-        # Add webviews to layout
         self.reviewer_layout.addWidget(reviewer.web.qwebengine_view)
         reviewer.bottom.web.qwebengine_view.setMaximumHeight(100)
         self.reviewer_layout.addWidget(reviewer.bottom.web.qwebengine_view)
-
-        # Connect buttons to reviewer actions
         self.start_btn.clicked.connect(reviewer.show)
         self.next_btn.clicked.connect(reviewer.nextCard)
         self.answer_btn.clicked.connect(reviewer._showAnswer)
-        
-        # Connect ease buttons
         for i, btn in enumerate(self.ease_btns, 1):
             btn.clicked.connect(lambda checked, ease=i: reviewer._answerCard(ease))
-
-        # Connect the reviewer to Ankimon's HUD system
-        if 'reviewer_obj' in self.ankimon_objects:
-            reviewer_manager = self.ankimon_objects['reviewer_obj']
-            
-            def trigger_hud_update():
-                """Trigger HUD update"""
-                try:
-                    if hasattr(reviewer_manager, 'update_life_bar'):
-                        # Create a mock card for the update
-                        from mock_anki.collection import MockCard
-                        mock_card = MockCard(1, "Sample Question", "Sample Answer")
-                        reviewer_manager.update_life_bar(reviewer, mock_card, 3)
-                        print("HUD update triggered successfully")
-                except Exception as e:
-                    print(f"Error triggering HUD: {e}")
-
-            # Connect HUD button
-            self.hud_btn.clicked.connect(trigger_hud_update)
-            
-            # Store the trigger function in reviewer for later use
-            reviewer.trigger_hud_update = trigger_hud_update
-
-        print("Reviewer setup with HUD integration complete")
-
-    def show(self):
-        self.main_window.show()
-
-    @property
-    def menuBar(self):
-        return self.main_window.menuBar()
+        print("Reviewer setup in tab complete")
 
 def main():
-    print("=== Fixed Ankimon Test Environment Starting ===")
+    print("=== Ankimon Test Environment Starting ===")
+    # Add src to sys.path early
+    src_path = Path(__file__).parent.parent / "src"
+    if str(src_path) not in sys.path:
+        sys.path.insert(0, str(src_path))
 
-    # 1. Import PyQt6 widgets and create QApplication FIRST
-    from PyQt6.QtWidgets import QApplication
-    from PyQt6.QtGui import QIcon
-    from PyQt6.QtCore import Qt
-    from PyQt6.QtWebEngineWidgets import QWebEngineView
-    from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings
-
-    app = QApplication(sys.argv)
-
-    # 2. Setup mocks and global mw
+    # Mocks must be set up before QApplication is instantiated
     setup_anki_mocks()
+    from PyQt6.QtWidgets import QApplication
+    app = QApplication(sys.argv)
     mw = setup_global_mw()
-
-    # 3. Load Ankimon objects
     ankimon_objects = load_ankimon_singletons()
     if not ankimon_objects:
-        print("Failed to load Ankimon objects, creating minimal fallback")
-        ankimon_objects = {}
+        print("Failed to load Ankimon objects, exiting.")
+        sys.exit(1)
 
-    # 4. Create fixed main window
-    main_window = FixedTestEnvironmentMainWindow(ankimon_objects)
+    main_window = MainApplicationWindow(ankimon_objects)
+    mw.form = main_window
 
-    # 5. Setup reviewer with enhanced mocks
+    # Setup reviewer
     from mock_aqt.reviewer import EnhancedMockReviewer
     from mock_anki.collection import MockScheduler
-
-    ankimon_root = Path(__file__).parent.parent
-    reviewer = EnhancedMockReviewer(None)
-    reviewer.web.ankimon_root = ankimon_root
-    reviewer.bottom.web.ankimon_root = ankimon_root
-
-    # Connect reviewer to mw
-    mw.form = main_window
-    mw.col.sched = MockScheduler(mw)
+    reviewer = EnhancedMockReviewer(mw, main_window)
     mw.reviewer = reviewer
-    reviewer.mw = mw
-
-    # Setup reviewer in main window with HUD integration
+    mw.col.sched = MockScheduler(mw)
     main_window.setup_reviewer(reviewer)
 
-    # 6. Load Ankimon menu
+    # Load menu
     load_ankimon_menu(mw, ankimon_objects)
-
-    # Add Ankimon menu to menubar if it exists
     if hasattr(mw, 'pokemenu') and mw.pokemenu:
-        main_window.menuBar.addMenu(mw.pokemenu)
+        main_window.menuBar().addMenu(mw.pokemenu)
         print("Ankimon menu added to menubar")
 
-    # 7. Add fallback test menu
-    test_menu = main_window.menuBar.addMenu("Test Controls")
-    
-    # Battle demonstration action
-    def demo_battle():
-        print("=== Battle Demo ===")
-        reviewer.show()
-        if hasattr(reviewer, 'trigger_hud_update'):
-            reviewer.trigger_hud_update()
-        print("Battle demo started - you should see Pokemon HUD!")
-    
-    demo_action = test_menu.addAction("Demo Battle with HUD")
-    demo_action.triggered.connect(demo_battle)
-
-    # Show main window
     main_window.show()
-
-    print("\n=== Fixed Ankimon Test Environment Ready ===")
-    print("Available features:")
-    print("- Full Ankimon menu system")
-    print("- Pokemon battle HUD overlay") 
-    print("- Interactive reviewer with card progression")
-    print("- Test Controls menu for demonstrations")
-    print("\nClick 'Demo Battle with HUD' to see the full Pokemon experience!")
-    
-    if ankimon_objects and 'main_pokemon' in ankimon_objects:
-        print(f"Ready to battle with {ankimon_objects['main_pokemon'].name}!")
-
+    print("\n=== Ankimon Test Environment Ready ===")
     sys.exit(app.exec())
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
+from .reviewer import EnhancedMockReviewer # Expose EnhancedMockReviewer
 
 class MockCollection:
     def __init__(self):
