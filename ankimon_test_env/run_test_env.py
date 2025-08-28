@@ -84,7 +84,7 @@ except ImportError as e:
     class QMenu(QWidget):
         def __init__(self, title): self._title = title; print(f"Placeholder QMenu init: {title}")
         def addAction(self, action): print(f"Placeholder QMenu addAction: {action}")
-        def text(self): return self._title
+        def text(self): return self._text
 
     class QAction:
         def __init__(self, text, parent=None): self._text = text; print(f"Placeholder QAction init: {text}")
@@ -119,7 +119,7 @@ except ImportError as e:
     class MockMenu(QWidget):
         def __init__(self, title): self._title = title; print(f"MockMenu init: {title}")
         def addAction(self, action): print(f"MockMenu addAction: {action}")
-        def text(self): return self._title
+        def text(self): return self._text
 
     # Define QStatusBar placeholder
     class QStatusBar(QWidget):
