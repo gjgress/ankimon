@@ -132,23 +132,26 @@ class MockScheduler:
             MockCard(4, "What is the smallest prime number?", "2"),
             MockCard(5, "What is the color of the sky?", "Blue"),
         ]
+        self._current_card_index = -1 # Start before the first card
         self.new_count = len(self._queue)
         self.learning_count = 0
         self.review_count = 0
-        self.current_card_index = -1
+        # self.current_card_index will be reset by startReview
 
-    def get_next_card(self):
-        self.current_card_index += 1
-        if self.current_card_index < len(self._queue):
-            return self._queue[self.current_card_index]
+    def getCard(self):
+        self._current_card_index += 1
+        if self._current_card_index < len(self._queue):
+            card = self._queue[self._current_card_index]
+            print(f"[MOCK Scheduler] Retrieved card {card.id}: {card.question()}")
+            return card
         else:
             print("[MOCK Scheduler] No more cards in the queue.")
             return None
 
     def startReview(self):
-        print("[MOCK Scheduler] startReview() called.")
+        print("[MOCK Scheduler] startReview() called. Resetting card index.")
+        self._current_card_index = -1 # Reset for a new review session
         # The reviewer's show method will handle getting the first card
-        self.mw.reviewer.show()
 
     def answerButtons(self, card):
         return 4 # Simulate 4 answer buttons
@@ -200,11 +203,12 @@ class MockScheduler:
 
 
 class Collection:
-    def __init__(self):
+    def __init__(self, mw_instance=None): # Accept mw_instance
         print("Mock anki.Collection initialized.")
+        self.mw = mw_instance # Store mw_instance
         self._notes = []
         self.conf = {} # Initialize config
-        self.sched = None 
+        self.sched = MockScheduler(mw_instance=self.mw) # Instantiate scheduler here, pass mw
 
     def get_config(self, key):
         print(f"Mock anki.Collection: get_config called for {key}")

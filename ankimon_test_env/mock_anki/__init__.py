@@ -154,17 +154,17 @@ class MockReviewerWindow(QMainWindow):
 
 # Mock Anki Main Window (mw) object for the test environment
 class MockAnkiMainWindow:
-    def __init__(self):
-        # Use our mock reviewer window as the form
-        self.form = MockReviewerWindow()
+    def __init__(self, addon_dir=None): # Accept addon_dir
+        # Use our mock reviewer window as the form, passing mw_instance for full context
+        self.form = MockReviewerWindow(mw_instance=self)
         # The reviewer itself is the main window in this mock context
         self.reviewer = self.form
-        self.col = Collection()
-        self.addonManager = None # Mock AddonManager if needed
+        self.col = Collection(mw_instance=self) # Pass self to collection for scheduler
+        self.addonManager = AddonManager(addon_dir=addon_dir) # Pass addon_dir to AddonManager
         self.pm = ProfileManager()
         # Link the app to our reviewer window
         self.app = QApplication.instance() if QApplication.instance() else QApplication([])
-        self.app.win = self.form
+        self.app.win = self.form # Ensure app.win points to the form
 
         # The pokemenu will be set by menu_buttons.py when it's called
         self.pokemenu = None
@@ -210,14 +210,36 @@ qconnect = aqt_utils.qconnect
 # Mocking QKeySequence for shortcuts.
 
 # Placeholder for other mock classes if needed by Ankimon's initialization
+import json
+import os # Added for os.path operations
+
 class AddonManager:
-    def __init__(self):
+    def __init__(self, addon_dir=None):
         print("MockAddonManager initialized.")
+        self.addon_dir = addon_dir if addon_dir is not None else ""
+        self._config_cache = {}
+
     def getConfig(self, addon_id):
-        print(f"MockAddonManager: getConfig called for {addon_id}")
-        return {} # Return empty dict for mock
+        # Assuming Ankimon's config is at 'addon_dir/config.json'
+        if addon_id not in self._config_cache:
+            config_path = os.path.join(self.addon_dir, "config.json")
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        self._config_cache[addon_id] = json.load(f)
+                    print(f"MockAddonManager: Loaded config for '{addon_id}' from '{config_path}'")
+                except Exception as e:
+                    print(f"MockAddonManager: Failed to load config for '{addon_id}' from '{config_path}': {e}")
+                    self._config_cache[addon_id] = {} # Fallback to empty config on error
+            else:
+                print(f"MockAddonManager: Config file not found at '{config_path}' for addon '{addon_id}'.")
+                self._config_cache[addon_id] = {} # Fallback to empty config if not found
+        return self._config_cache[addon_id]
+
     def writeConfig(self, addon_id, config):
-        print(f"MockAddonManager: Writing config for {addon_id}: {config}")
+        # In a mock, we only update the in-memory cache
+        print(f"MockAddonManager: Writing config for '{addon_id}': {config}")
+        self._config_cache[addon_id] = config
 
 class Dialog:
     def __init__(self, parent=None):

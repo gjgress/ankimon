@@ -6,6 +6,9 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
+# Define the Ankimon addon directory for easy access
+ANKIMON_ADDON_DIR = Path(__file__).parent.parent / "src" / "Ankimon"
+
 def setup_anki_mocks():
     """Set up comprehensive Anki/AQT mocks in sys.modules"""
     print("Setting up Anki/AQT mocks...")
@@ -89,6 +92,14 @@ def setup_anki_mocks():
     mock_aqt.gui_hooks.reviewer_did_answer_card = MockHook("reviewer_did_answer_card")
     mock_aqt.gui_hooks.theme_did_change = MockHook("theme_did_change")
 
+    # Add general Anki hooks (not specific to GUI hooks)
+    # Ankimon sometimes uses anki.hooks.addHook directly, so mock this as well.
+    mock_anki.hooks.profile_did_open = MockHook("profile_did_open")
+    mock_anki.hooks.profile_will_close = MockHook("profile_will_close")
+    mock_anki.hooks.reviewer_did_show_question = MockHook("reviewer_did_show_question")
+    mock_anki.hooks.reviewer_did_show_answer = MockHook("reviewer_did_show_answer")
+    # Add other common anki.hooks as needed for Ankimon.
+
 
     # Mock Qt classes
     from PyQt6.QtWidgets import (
@@ -168,44 +179,25 @@ def setup_anki_mocks():
 
     print("Anki/AQT mocks injected into sys.modules")
 
+from Ankimon import singletons # To avoid circular dependency with aqt.mw setup if Ankimon is imported early
+
 def setup_global_mw():
     """Set up the global mw object that Ankimon expects"""
-    from PyQt6.QtWidgets import QMainWindow, QMenuBar, QVBoxLayout, QWidget
-    from mock_anki.collection import Collection
-
-    class MockMainWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-            self.form = QWidget()
-            self.setCentralWidget(self.form)
-            self.form.vbox = QVBoxLayout(self.form)
-            self.menubar = QMenuBar()
-            self.form.menubar = self.menubar
-            self.setMenuBar(self.menubar)
-
-    mw = MockMainWindow()
-    mw.col = Collection()
-    # Determine the Ankimon path to read config.json
-    ankimon_path = Path(__file__).parent.parent / "src" / "Ankimon"
-    user_files_path = ankimon_path / "user_files"
-    config_path = user_files_path / "config.json"
-
-    mock_config_content = {}
-    if config_path.exists():
-        with open(config_path, 'r', encoding='utf-8') as f:
-            mock_config_content = json.load(f)
-    else:
-        print(f"Warning: Mock config file not found at {config_path}. Using empty config.")
-
-    mw.addonManager = MagicMock()
-    mw.addonManager.getConfig.return_value = mock_config_content # Make getConfig return the file content
-    mw.addonManager.addonFromModule.return_value = "ankimon"
-
-    mw.pm = MagicMock()
-    mw.pm.name = "test-profile"
-    mw.pm.profileFolder.return_value = str(Path(__file__).parent / "profile")
-
     from PyQt6.QtWidgets import QApplication
+    from ankimon_test_env.mock_anki.__init__ import MockAnkiMainWindow # Import our specific mock
+    from ankimon_test_env.run_test_env import ANKIMON_ADDON_DIR # Access the global addon dir
+
+    # Instantiate our custom MockAnkiMainWindow, passing the addon directory
+    mw = MockAnkiMainWindow(addon_dir=str(ANKIMON_ADDON_DIR))
+    
+    # The form and reviewer of MockAnkiMainWindow are already set up correctly
+    # We need to ensure the mw.form (which is the MockReviewerWindow) has access to mw
+    # to correctly set up the reviewer itself. This is handled by passing self to MockReviewerWindow
+
+    # The config.json loading for mw.addonManager.getConfig is handled internally by MockAddonManager
+    # which is instantiated inside MockAnkiMainWindow using ANKIMON_ADDON_DIR.
+
+    # Ensure mw.app is set, as Ankimon might expect it for global QApplication access
     mw.app = QApplication.instance() or QApplication(sys.argv)
 
     # Set in modules

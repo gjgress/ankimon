@@ -1,9 +1,21 @@
 
 var button_place = document.getElementById('outer');
-button_place.innerHTML += `<button id="playButton" onclick="toggleSound()"></button>`;
-button_place.innerHTML += `<button id="skipButton" onclick="skipSound()"></button>`;
-button_place.innerHTML += `<input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">`;
+if (button_place) { // Only modify if 'outer' element exists
+    button_place.innerHTML += `<button id="playButton" onclick="toggleSound()"></button>`;
+    button_place.innerHTML += `<button id="skipButton" onclick="skipSound()"></button>`;
+    button_place.innerHTML += `<input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">`;
+} else {
+    console.warn("Element with ID 'outer' not found. Music player buttons may not be initialized.");
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if ambientSound element exists before proceeding
+    var ambientSound = document.getElementById('ambientSound');
+    if (!ambientSound) {
+        console.warn("Audio element with ID 'ambientSound' not found. Ambient sounds will not play.");
+        return; // Exit if the audio element is not present
+    }
+
     var songs = [
         'ambient-sound1.mp3',
         'ambient-sound2.mp3',

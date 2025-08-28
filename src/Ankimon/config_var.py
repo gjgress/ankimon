@@ -11,18 +11,85 @@ except ImportError:
     # If aqt is not available, we are likely in the test environment.
     # In this case, we need to mock the config.
     # We'll use a mock Settings object that can provide default values.
+import aqt # Required to access aqt.mw.addonManager
+import os
+import json
+
+ADDON_ID = "Ankimon" # Assuming Ankimon's addon ID, ensure this matches actual addon ID
+
     print("Running in test environment, mocking config.")
     class MockSettings:
         def __init__(self):
-            # Simulate a config dictionary with default values
-            self._config = {
-                "gui.pop_up_dialog_message_on_defeat": True,
+            self._config = {}
+            # Try to load config from the mock addon manager
+            loaded_config = {}
+            if hasattr(aqt, 'mw') and hasattr(aqt.mw, 'addonManager') and aqt.mw.addonManager:
+                try:
+                    loaded_config = aqt.mw.addonManager.getConfig(ADDON_ID)
+                    if loaded_config:
+                        print(f"MockSettings: Loaded config from mock addonManager for {ADDON_ID}.")
+                    else:
+                        print("MockSettings: Addon config was empty from mock addonManager, using defaults.")
+                except Exception as e:
+                    print(f"MockSettings: Error loading config from mock addonManager: {e}, using defaults.")
+            else:
+                print("MockSettings: aqt.mw or addonManager not available, using hardcoded defaults.")
+
+            # Define comprehensive default values, mirroring src\Ankimon\config.json
+            default_config = {
+                "battle.dmg_in_reviewer": True,
+                "battle.automatic_battle": 0,
+                "battle.cards_per_round": 2,
+                "battle.daily_average": 100,
+                "battle.card_max_time": 60,
+                "controls.pokemon_buttons": True,
+                "controls.defeat_key": "5",
+                "controls.catch_key": "6",
+                "controls.key_for_opening_closing_ankimon": "Ctrl+N",
+                "controls.allow_to_choose_moves": False,
+                "gui.animate_time": True,
+                "gui.gif_in_collection": True,
+                "gui.styling_in_reviewer": True,
+                "gui.hp_bar_config": True,
+                "gui.pop_up_dialog_message_on_defeat": False,
+                "gui.review_hp_bar_thickness": 2,
+                "gui.reviewer_image_gif": False,
                 "gui.reviewer_text_message_box": True,
-                "gui.reviewer_text_message_box_time": 5000, # 5 seconds in ms
-                "gui.reviewer_image_gif": True,
-                "gui.show_mainpkmn_in_reviewer": 1, # normal
+                "gui.reviewer_text_message_box_time": 3,
+                "gui.show_mainpkmn_in_reviewer": 1,
+                "gui.view_main_front": True,
                 "gui.xp_bar_config": True,
-                "gui.review_hp_bar_thickness": 3, # 12px
+                "gui.xp_bar_location": 2,
+                "audio.sound_effects": False,
+                "audio.sounds": True,
+                "audio.battle_sounds": False,
+                "misc.gen1": True,
+                "misc.gen2": True,
+                "misc.gen3": True,
+                "misc.gen4": True,
+                "misc.gen5": True,
+                "misc.gen6": True,
+                "misc.gen7": False,
+                "misc.gen8": False,
+                "misc.gen9": False,
+                "misc.remove_level_cap": False,
+                "misc.leaderboard": False,
+                "misc.language": 9,
+                "misc.ssh": True,
+                "misc.YouShallNotPass_Ankimon_News": False,
+                "misc.discord_rich_presence": False,
+                "misc.discord_rich_presence_text": 1,
+                "misc.show_tip_on_startup": True,
+                "misc.last_tip_index": 0,
+                "trainer.name": "Ash",
+                "trainer.sprite": "ash",
+                "trainer.id": 0,
+                "trainer.cash": 0
+            }
+
+            # Merge loaded config with defaults, loaded config takes precedence
+            self._config.update(default_config)
+            self._config.update(loaded_config) # Overwrite defaults with actual loaded values
                 "gui.hp_bar_config": 3, # 12px
                 "gui.xp_bar_location": 2, # bottom
                 "gui.animate_time": True,
