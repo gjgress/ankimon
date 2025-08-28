@@ -17,8 +17,8 @@ class MockSchedulingStates:
         self.current = MockCurrentState()
 
 class MockCard:
-    def __init__(self, question="Mock Question", answer="Mock Answer"):
-        self.id = 123 # Default ID
+    def __init__(self, id: int, question: str, answer: str):
+        self.id = id
         self._question = question
         self._answer = answer
         self._note = MockNote()
@@ -123,12 +123,14 @@ class MockV3CardInfo:
         else: return "EASY"
 
 class MockScheduler:
-    def __init__(self, mw_instance): # Accept mw_instance
-        self.mw = mw_instance # Store mw_instance
+    def __init__(self, mw_instance):
+        self.mw = mw_instance
         self._queue = [
-            MockCard("What is 2+2?", "4"),
-            MockCard("What is the capital of France?", "Paris"),
-            MockCard("What is the largest planet?", "Jupiter"),
+            MockCard(1, "What is 2+2?", "4"),
+            MockCard(2, "What is the capital of France?", "Paris"),
+            MockCard(3, "What is the largest planet?", "Jupiter"),
+            MockCard(4, "What is the smallest prime number?", "2"),
+            MockCard(5, "What is the color of the sky?", "Blue"),
         ]
         self.new_count = len(self._queue)
         self.learning_count = 0
@@ -145,11 +147,8 @@ class MockScheduler:
 
     def startReview(self):
         print("[MOCK Scheduler] startReview() called.")
-        card = self.get_next_card()
-        if card:
-            self.mw.reviewer._showQuestion(card) # Use self.mw
-        else:
-            self.mw.reviewer.web.setHtml("<h1>Review complete!</h1>") # Use self.mw
+        # The reviewer's show method will handle getting the first card
+        self.mw.reviewer.show()
 
     def answerButtons(self, card):
         return 4 # Simulate 4 answer buttons
@@ -191,15 +190,8 @@ class MockScheduler:
 class Collection:
     def __init__(self):
         print("Mock anki.Collection initialized.")
-        self._cards = [
-            MockCard("What is 2+2?", "4"),
-            MockCard("What is the capital of France?", "Paris"),
-            MockCard("What is the largest planet?", "Jupiter"),
-        ]
         self._notes = []
         self.conf = {} # Initialize config
-        # The scheduler needs a reference to the main window to interact with the reviewer
-        # We'll pass it during the setup phase in run_test_env.py
         self.sched = None 
 
     def get_config(self, key):

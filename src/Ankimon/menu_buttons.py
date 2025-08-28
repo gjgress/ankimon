@@ -1,22 +1,13 @@
 import sys
-print("---- Python version:", sys.version)
-try:
-    import PyQt6
-    print("PyQt6 path:", PyQt6.__file__)
-    from PyQt6.QtGui import QAction
-    print("QAction exists?:", 'QAction' in dir(PyQt6.QtGui))
-except Exception as e:
-    print("PyQt6 import or QAction error:", e)
 
 from typing import Callable
 from pathlib import Path
 from typing import Union
 
 from aqt.qt import *
+from aqt import mw
 from PyQt6.QtWidgets import QMenu
 from PyQt6.QtGui import QAction, QKeySequence
-# Removed: from aqt import mw  # The main window object
-# Removed: from aqt.utils import qconnect # qconnect is now imported from mock_anki
 
 from .gui_classes.choose_trainer_sprite import TrainerSpriteDialog
 from .pyobj.trainer_card_window import TrainerCardGUI
@@ -138,7 +129,15 @@ def create_menu_actions(
 
         # Achievements
         def show_achievements_window():
-            from .pyobj.achievements_dialog import AchievementsDialog
+            try:
+                from .pyobj.achievements_dialog import AchievementsDialog
+            except ImportError as e:
+                print(f"[DEBUG] ImportError: Could not import AchievementsDialog: {e}")
+                return # Stop execution if import fails
+            except Exception as e: # Catch any other unexpected errors during import
+                print(f"[DEBUG] Unexpected error during AchievementsDialog import: {e}")
+                return
+
             if not hasattr(mw, "_achievements_dialog") or mw._achievements_dialog is None:
                 mw._achievements_dialog = AchievementsDialog(addon_dir, data_handler_obj)
             mw._achievements_dialog.setWindowModality(Qt.WindowModality.NonModal)
@@ -254,8 +253,8 @@ def create_menu_actions(
 
         tracker_window_action = QAction(mw.translator.translate("ankimon_tracker_button"), mw)
         tracker_window_action.setMenuRole(QAction.MenuRole.NoRole)
-        tracker_window_action.triggered.connect(ankimon_tracker_window.toggle_window)
         tracker_window_action.setShortcut(QKeySequence("Ctrl+Shift+K"))
+        tracker_window_action.triggered.connect(ankimon_tracker_window.toggle_window)
         # Show the Settings window
         debug_menu.addAction(tracker_window_action)
 
