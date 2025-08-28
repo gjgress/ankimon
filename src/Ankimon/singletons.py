@@ -17,7 +17,7 @@ import uuid
 
 from aqt import mw
 
-from .pyobj.collection_dialog import PokemonCollectionDialog
+from Ankimon.pyobj.collection_dialog import PokemonCollectionDialog
 from .pyobj.ankimon_tracker import AnkimonTracker
 from .pyobj.settings import Settings
 from .pyobj.settings_window import SettingsWindow
