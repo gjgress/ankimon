@@ -17,8 +17,8 @@ class MockSchedulingStates:
         self.current = MockCurrentState()
 
 class MockCard:
-    def __init__(self, card_id, question="Mock Question", answer="Mock Answer"):
-        self.id = card_id
+    def __init__(self, question="Mock Question", answer="Mock Answer"):
+        self.id = 123 # Default ID
         self._question = question
         self._answer = answer
         self._note = MockNote()
@@ -123,19 +123,33 @@ class MockV3CardInfo:
         else: return "EASY"
 
 class MockScheduler:
-    def __init__(self):
+    def __init__(self, mw_instance): # Accept mw_instance
+        self.mw = mw_instance # Store mw_instance
         self._queue = [
-            MockCard(1, "What is 2+2?", "4"),
-            MockCard(2, "What is the capital of France?", "Paris"),
-            MockCard(3, "What is the largest planet?", "Jupiter"),
+            MockCard("What is 2+2?", "4"),
+            MockCard("What is the capital of France?", "Paris"),
+            MockCard("What is the largest planet?", "Jupiter"),
         ]
         self.new_count = len(self._queue)
         self.learning_count = 0
         self.review_count = 0
+        self.current_card_index = -1
 
-    def get_queued_cards(self):
-        # Simulate a single card in the queue
-        return MockQueuedCards(self.new_count, self.learning_count, self.review_count)
+    def get_next_card(self):
+        self.current_card_index += 1
+        if self.current_card_index < len(self._queue):
+            return self._queue[self.current_card_index]
+        else:
+            print("[MOCK Scheduler] No more cards in the queue.")
+            return None
+
+    def startReview(self):
+        print("[MOCK Scheduler] startReview() called.")
+        card = self.get_next_card()
+        if card:
+            self.mw.reviewer._showQuestion(card) # Use self.mw
+        else:
+            self.mw.reviewer.web.setHtml("<h1>Review complete!</h1>") # Use self.mw
 
     def answerButtons(self, card):
         return 4 # Simulate 4 answer buttons
@@ -151,7 +165,8 @@ class MockScheduler:
             card._lapses += 1
             card._ivl = 1
             card._due = 0 # Due immediately
-            self._queue.insert(0, card) # Re-add to front of queue
+            # Re-add to front of queue for simplicity in mock
+            self._queue.insert(0, card)
             self.learning_count += 1
         elif ease == 2: # Hard
             card._ivl = max(1, int(card._ivl * 1.2))
@@ -177,13 +192,15 @@ class Collection:
     def __init__(self):
         print("Mock anki.Collection initialized.")
         self._cards = [
-            MockCard(1, "What is 2+2?", "4"),
-            MockCard(2, "What is the capital of France?", "Paris"),
-            MockCard(3, "What is the largest planet?", "Jupiter"),
+            MockCard("What is 2+2?", "4"),
+            MockCard("What is the capital of France?", "Paris"),
+            MockCard("What is the largest planet?", "Jupiter"),
         ]
         self._notes = []
         self.conf = {} # Initialize config
-        self.sched = MockScheduler() # Initialize scheduler
+        # The scheduler needs a reference to the main window to interact with the reviewer
+        # We'll pass it during the setup phase in run_test_env.py
+        self.sched = None 
 
     def get_config(self, key):
         print(f"Mock anki.Collection: get_config called for {key}")

@@ -3,17 +3,24 @@ import types
 import unittest
 from unittest.mock import patch, MagicMock
 import os
+import glob
 from pathlib import Path
+import shutil
+import atexit
+import json
+import base64
 
-# --- Mocking PyQt6 components ---
-# Using actual PyQt6 classes if available, otherwise fallbacks.
+# --- PyQt6 Imports ---
+# Ensure a consistent import order for Qt components
 try:
     from PyQt6.QtWidgets import (
         QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QMainWindow,
         QMenuBar, QMenu, QAction, QFrame, QHBoxLayout, QSizePolicy
     )
     from PyQt6.QtCore import Qt, QUrl, QTimer, pyqtSignal
-    from PyQt6.QtGui import QFont, QColor
+    from PyQt6.QtGui import QFont, QColor, QKeySequence, QPixmap, QFontDatabase, QGuiApplication
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings
     PYQT6_AVAILABLE = True
     print("PyQt6 found. Using actual Qt classes where possible in mocks.")
 except ImportError:
@@ -77,7 +84,7 @@ except ImportError:
 
     class QMenuBar(QWidget):
         def __init__(self): print("Placeholder QMenuBar init")
-        def addMenu(self, title): return MockMenu(title)
+        def addMenu(self, title): return MockMenu(title) # MockMenu is defined below
 
     class QMenu(QWidget):
         def __init__(self, title): self._title = title; print(f"Placeholder QMenu init: {title}")
@@ -113,6 +120,59 @@ except ImportError:
         def quit(self): pass
         def exec(self): print("Placeholder QApplication exec"); return 0
 
+    # Define MockMenu here as it's used by QMenuBar placeholder
+    class MockMenu(QWidget):
+        def __init__(self, title): self._title = title; print(f"MockMenu init: {title}")
+        def addAction(self, action): print(f"MockMenu addAction: {action}")
+        def text(self): return self._title
+
+    # Define QStatusBar placeholder
+    class QStatusBar(QWidget):
+        def __init__(self): print("Placeholder QStatusBar init")
+        def showMessage(self, message, timeout=0): print(f"Placeholder QStatusBar showMessage: {message}")
+
+    # Define MockMainWindow placeholder
+    class MockMainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.mw = self
+            self.form = QWidget()
+            self.setCentralWidget(self.form)
+            self.form.vbox = QVBoxLayout(self.form)
+
+            self.col = DummyCallable()
+            self.col.conf = {}
+            # The scheduler needs a reference to the main window to interact with the reviewer
+            self.col.sched = MockScheduler(self.mw) 
+
+            self.reviewer = MockReviewer(parent=self.form) # Pass form as parent
+            self.form.vbox.addWidget(self.reviewer.web) # Add reviewer's webview to main window layout
+
+            self.addonManager = MockAddonManager(Path(__file__).parent.parent.resolve())
+            self.pm = DummyCallable()
+            self.pm.name = "test-profile"
+            self.menubar = self.menuBar()
+            self.form.menubar = self.menubar
+            # Use the placeholder QMenu defined above
+            self.pokemenu = QMenu("Ankimon (Mock)", self)
+            self.menubar.addMenu(self.pokemenu)
+            start_review_action = QAction("Start Review (Mock)", self)
+            start_review_action.triggered.connect(self._start_mock_review)
+            self.pokemenu.addAction(start_review_action)
+
+        def _start_mock_review(self):
+            print("Starting mock review!")
+            # Hide other widgets if any, and show reviewer's webview
+            self.reviewer.web.show()
+            # Trigger the scheduler to get a card
+            self.col.sched.startReview()
+
+        def __getattr__(self, name):
+            if name.startswith("__"):
+                raise AttributeError
+            return DummyCallable()
+
+
 # --- Mocking Anki/AQT specific modules ---
 # Import the mock implementations provided earlier.
 try:
@@ -125,7 +185,7 @@ except ImportError as e:
     print("Please ensure mock files are correctly placed and accessible.")
     # Define dummy classes if imports fail, to allow script execution to continue
     class MockAnkiCollection:
-        def __init__(self): print("Dummy MockAnkiCollection initialized."); self.sched = MockScheduler()
+        def __init__(self): print("Dummy MockAnkiCollection initialized."); self.sched = MockScheduler(None) # Pass None initially
         def get_config(self, key, default=None): return default
         def set_config(self, key, value): pass
         def sched_ver(self): return 3
@@ -157,11 +217,12 @@ except ImportError as e:
         def has_tag(self, tag): return False
         def fields(self): return self._fields
     class MockScheduler:
-        def __init__(self): self._cards_in_queue = [MockCard(1)]; self.new_count = 1; self.learning_count = 0; self.review_count = 0
+        def __init__(self, mw_instance): self.mw = mw_instance; self._cards_in_queue = [MockCard(1)]; self.new_count = 1; self.learning_count = 0; self.review_count = 0
         def get_queued_cards(self): return MockQueuedCards([MockCard(1)])
         def answerButtons(self, card): return 4
         def describe_next_states(self, states): return ["Again", "Hard", "Good", "Easy"]
         def answerCard(self, card, ease): print(f"Dummy MockScheduler answerCard: {card.id}, ease {ease}")
+        def startReview(self): print("[MOCK Scheduler] startReview() called."); card = MockCard(1); self.mw.reviewer._showQuestion(card) if self.mw and self.mw.reviewer else print("Cannot start review: mw or reviewer not available.")
     class MockQueuedCards:
         def __init__(self, cards): self.cards = cards
         def top_card(self): return self.cards[0] if self.cards else None
@@ -222,7 +283,8 @@ def setup_ankiaqt_mocks():
     mock_aqt.qt.QtWidgets.QAction = QAction
     mock_aqt.qt.QtWidgets.QMenu = QMenu
     mock_aqt.qt.QtWidgets.QMenuBar = QMenuBar
-    mock_aqt.qt.QtWidgets.QStatusBar = QStatusBar
+    # Use the placeholder QStatusBar defined in the except block if PyQt6 is not available
+    mock_aqt.qt.QtWidgets.QStatusBar = QStatusBar if PYQT6_AVAILABLE else QStatusBar
     mock_aqt.qt.QtWidgets.QDialog = QDialog
     mock_aqt.qt.QtWidgets.QVBoxLayout = QVBoxLayout
     mock_aqt.qt.QtWidgets.QLabel = QLabel
@@ -235,9 +297,9 @@ def setup_ankiaqt_mocks():
     mock_aqt.qt.QtWidgets.QColor = QColor
 
     mock_aqt.qt.QtWebEngineWidgets = types.ModuleType("aqt.qt.QtWebEngineWidgets")
-    mock_aqt.qt.QtWebEngineWidgets.QWebEngineView = QWidget # Use placeholder if PyQt6 not available
-    mock_aqt.qt.QtWebEngineWidgets.QWebEnginePage = QWidget
-    mock_aqt.qt.QtWebEngineWidgets.QWebEngineSettings = QWidget
+    mock_aqt.qt.QtWebEngineWidgets.QWebEngineView = QWebEngineView
+    mock_aqt.qt.QtWebEngineWidgets.QWebEnginePage = QWebEnginePage
+    mock_aqt.qt.QtWebEngineWidgets.QWebEngineSettings = QWebEngineSettings
 
     sys.modules["anki"] = mock_anki
     sys.modules["anki.collection"] = mock_anki.collection
@@ -269,13 +331,13 @@ def load_ankimon_addon():
     Imports and executes the Ankimon add-on's __init__.py to set up menus, hooks, etc.
     """
     global ANKIMON_ADDON_MODULE
+    global mw # Access the global mw to check for menus
     print("\n--- Loading Ankimon Add-on Initialization ---")
     try:
         # --- IMPORTANT ---
         # This import path assumes your Ankimon code is structured as:
         # your_project_root/src/Ankimon/__init__.py
         # Adjust the path if your structure is different.
-        # We need to ensure the 'src' directory is in the Python path.
         
         # Add 'src' to sys.path if it's not already there
         src_path = Path(__file__).parent.parent / 'src'
@@ -295,8 +357,9 @@ def load_ankimon_addon():
         # Check if Ankimon menu was added (assuming __init__.py does this)
         if mw and hasattr(mw, 'menu_bar') and mw.menu_bar:
             found_menu = False
-            for menu_title in mw.menu_bar.menus:
-                if "Ankimon" in menu_title: # Check for "Ankimon (Test)" or similar
+            # Iterate through the menus added to the menubar
+            for menu in mw.menu_bar.findChildren(QMenu):
+                if "Ankimon" in menu.title(): # Check for "Ankimon (Test)" or similar
                     found_menu = True
                     print("Verified: Ankimon menu found in mock main window.")
                     break
@@ -314,54 +377,11 @@ def load_ankimon_addon():
         import traceback
         traceback.print_exc()
 
-# --- Global variables for test environment ---
-app_instance = None
-mw = None
-mock_collection = None
-mock_reviewer = None
-
-# --- Test Flow Functions ---
-def start_review_session():
-    """
-    Initiates the review session using the mock reviewer.
-    This is called when the "Open Reviewer" menu action is triggered.
-    """
-    global mock_reviewer, mock_collection, mw
-
-    print("\n--- Starting Review Session ---")
-
-    if not mock_collection:
-        print("Creating mock collection for review session...")
-        mock_collection = MockAnkiCollection()
-
-    if not mw:
-        print("Creating mock main window for review session...")
-        mw = MockMainWindow()
-        mw.show() # Show the main window
-
-    if not mock_reviewer:
-        print("Instantiating mock reviewer...")
-        # Pass the mock main window and mock collection to the reviewer
-        mock_reviewer = MockAqtReviewer(mw=mw, collection=mock_collection)
-
-    # Simulate the add-on's action to open the reviewer
-    mock_reviewer.show()
-
-    # Connect to signals for demonstration
-    # These print statements confirm that signals are being emitted and received.
-    if hasattr(mock_reviewer.reviewer_window, 'question_shown'):
-        mock_reviewer.reviewer_window.question_shown.connect(lambda: print("Signal Received: Question Shown"))
-    if hasattr(mock_reviewer.reviewer_window, 'answer_shown'):
-        mock_reviewer.reviewer_window.answer_shown.connect(lambda: print("Signal Received: Answer Shown"))
-    if hasattr(mock_reviewer.reviewer_window, 'card_answered'):
-        mock_reviewer.reviewer_window.card_answered.connect(lambda ease: print(f"Signal Received: Card Answered with Ease: {ease}"))
-
-    print("Review session initiated. Please interact with the mock reviewer window.")
-    print("You can manually click 'Show Answer' and then the ease buttons.")
+# --- Main Test Environment ---
 
 def run_test_environment():
     """
-    Sets up the mock environment, loads the add-on, and starts the Qt event loop.
+    Sets up and runs the Ankimon test environment.
     """
     global app_instance, mw
 
@@ -386,11 +406,15 @@ def run_test_environment():
     mw.show()
     print("\n--- Test Environment Setup Complete ---")
     print("Ankimon menu should be visible in the mock main window.")
-    print("Click 'Ankimon (Test)' -> 'Open Reviewer' to start a mock review session.")
+    print("Click 'Ankimon (Mock)' -> 'Start Review (Mock)' to start a mock review session.")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
+
     run_test_environment()
 
     print("\nStarting Qt event loop...")
     # Run the Qt application's event loop
-    sys.exit(app_instance.exec())
+    sys.exit(app.exec())
