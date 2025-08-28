@@ -224,6 +224,7 @@ pokecollection_win = PokemonCollectionDialog(
     test_window=test_window,
     settings_obj=settings_obj,
     main_pokemon=main_pokemon,
+    parent=mw.form,
 )
 
 pokemon_pc = PokemonPC(
