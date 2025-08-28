@@ -184,8 +184,6 @@ def setup_anki_mocks():
 
     print("Anki/AQT mocks injected into sys.modules")
 
-from Ankimon import singletons # To avoid circular dependency with aqt.mw setup if Ankimon is imported early
-
 def setup_global_mw():
     """Set up the global mw object that Ankimon expects"""
     from PyQt6.QtWidgets import QApplication
