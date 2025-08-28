@@ -28,6 +28,32 @@ except ImportError:
     print("PyQt6 not found. Mocks will use placeholder classes. Please install PyQt6 (`pip install PyQt6`).")
 
     # Define placeholder classes if PyQt6 is not installed
+    class DummyCallable:
+        def __call__(self, *args, **kwargs):
+            return self
+        def __getattr__(self, name):
+            if name.startswith("__"):
+                raise AttributeError
+            return self
+
+    class MockWebEngineView:
+        def setHtml(self, html):
+            print(f"Placeholder QWebEngineView setHtml: {html[:50]}...")
+        def show(self):
+            print("Placeholder QWebEngineView show")
+
+    class MockReviewer:
+        def __init__(self, parent=None):
+            print("Placeholder MockReviewer init")
+            self.web = MockWebEngineView()
+        def _showQuestion(self, card):
+            print(f"Placeholder MockReviewer _showQuestion for card: {card.id}")
+            self.web.setHtml(f"<h1>Question: {card.question()}</h1>")
+
+    class MockAddonManager:
+        def __init__(self, path):
+            print(f"Placeholder MockAddonManager init with path: {path}")
+
     class QWidget:
         def __init__(self, parent=None): print("Placeholder QWidget init")
         def setLayout(self, layout): print("Placeholder QWidget setLayout")
