@@ -23,33 +23,7 @@ except ImportError as e:
     PYQT6_AVAILABLE = False
     print("PyQt6 not found. Mocks will use placeholder classes. Please install PyQt6 (`pip install PyQt6`).")
 
-    # Define placeholder classes if PyQt6 is not installed
-    class DummyCallable:
-        def __call__(self, *args, **kwargs):
-            return self
-        def __getattr__(self, name):
-            if name.startswith("__"):
-                raise AttributeError
-            return self
-
-    class MockWebEngineView:
-        def setHtml(self, html):
-            print(f"Placeholder QWebEngineView setHtml: {html[:50]}...")
-        def show(self):
-            print("Placeholder QWebEngineView show")
-
-    class MockReviewer:
-        def __init__(self, parent=None):
-            print("Placeholder MockReviewer init")
-            self.web = MockWebEngineView()
-        def _showQuestion(self, card):
-            print(f"Placeholder MockReviewer _showQuestion for card: {card.id}")
-            self.web.setHtml(f"<h1>Question: {card.question()}</h1>")
-
-    class MockAddonManager:
-        def __init__(self, path):
-            print(f"Placeholder MockAddonManager init with path: {path}")
-
+    # Define placeholder classes for basic Qt widgets if PyQt6 is not installed
     class QWidget:
         def __init__(self, parent=None): print("Placeholder QWidget init")
         def setLayout(self, layout): print("Placeholder QWidget setLayout")
@@ -153,46 +127,51 @@ except ImportError as e:
         def __init__(self): print("Placeholder QStatusBar init")
         def showMessage(self, message, timeout=0): print(f"Placeholder QStatusBar showMessage: {message}")
 
-    # Define MockMainWindow placeholder
-    class MockMainWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-            self.mw = self
-            self.form = QWidget()
-            self.setCentralWidget(self.form)
-            self.form.vbox = QVBoxLayout(self.form)
+    # Define MockMenu here as it's used by QMenuBar placeholder
+    class MockMenu(QWidget):
+        def __init__(self, title): self._title = title; print(f"MockMenu init: {title}")
+        def addAction(self, action): print(f"MockMenu addAction: {action}")
+        def text(self): return self._text
 
-            self.col = DummyCallable()
-            self.col.conf = {}
-            # The scheduler needs a reference to the main window to interact with the reviewer
-            self.col.sched = MockScheduler(self.mw) 
+    # Define QStatusBar placeholder
+    class QStatusBar(QWidget):
+        def __init__(self): print("Placeholder QStatusBar init")
+        def showMessage(self, message, timeout=0): print(f"Placeholder QStatusBar showMessage: {message}")
 
-            self.reviewer = MockReviewer(parent=self.form) # Pass form as parent
-            self.form.vbox.addWidget(self.reviewer.web) # Add reviewer's webview to main window layout
+# --- Helper Mock Classes (Always Defined) ---
+# These are essential mock components for the Ankimon test environment
+# that are not directly tied to PyQt6's import status but rather provide
+# a consistent mock interface.
 
-            self.addonManager = MockAddonManager(Path(__file__).parent.parent.resolve())
-            self.pm = DummyCallable()
-            self.pm.name = "test-profile"
-            self.menubar = self.menuBar()
-            self.form.menubar = self.menubar
-            # Use the placeholder QMenu defined above
-            self.pokemenu = QMenu("Ankimon (Mock)", self)
-            self.menubar.addMenu(self.pokemenu)
-            start_review_action = QAction("Start Review (Mock)", self)
-            start_review_action.triggered.connect(self._start_mock_review)
-            self.pokemenu.addAction(start_review_action)
+class DummyCallable:
+    """A mock object that can be called and has any attribute accessible."""
+    def __call__(self, *args, **kwargs):
+        return self
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError
+        return self
 
-        def _start_mock_review(self):
-            print("Starting mock review!")
-            # Hide other widgets if any, and show reviewer's webview
-            self.reviewer.web.show()
-            # Trigger the scheduler to get a card
-            self.col.sched.startReview()
+class MockWebEngineView:
+    """A mock for QWebEngineView to capture HTML output."""
+    def setHtml(self, html):
+        print(f"Placeholder QWebEngineView setHtml: {html[:50]}...")
+    def show(self):
+        print("Placeholder QWebEngineView show")
 
-        def __getattr__(self, name):
-            if name.startswith("__"):
-                raise AttributeError
-            return DummyCallable()
+class MockReviewer:
+    """A mock for Anki's Reviewer that uses a mock web view."""
+    def __init__(self, parent=None):
+        print("Placeholder MockReviewer init")
+        self.web = MockWebEngineView()
+    def _showQuestion(self, card):
+        print(f"Placeholder MockReviewer _showQuestion for card: {card.id}")
+        self.web.setHtml(f"<h1>Question: {card.question()}</h1>")
+
+class MockAddonManager:
+    """A mock for Anki's AddonManager."""
+    def __init__(self, path):
+        print(f"Placeholder MockAddonManager init with path: {path}")
 
 # --- Mocking Anki/AQT specific modules ---
 # Import the mock implementations provided earlier.
@@ -260,6 +239,52 @@ except ImportError as e:
     class MockSignal:
         def connect(self, slot): print(f"Dummy MockSignal connect: {slot}")
         def emit(self): print("Dummy MockSignal emit")
+
+# Define MockMainWindow here, after all necessary base classes and helper mocks are available.
+class MockMainWindow(QMainWindow):
+    """
+    A comprehensive mock for Anki's main window,
+    integrating various mock components for the test environment.
+    """
+    def __init__(self):
+        super().__init__()
+        self.mw = self
+        self.form = QWidget()
+        self.setCentralWidget(self.form)
+        self.form.vbox = QVBoxLayout(self.form)
+
+        # Initialize collection and scheduler. MockScheduler needs a reference to mw.
+        self.col = DummyCallable() # Using DummyCallable as a general mock object
+        self.col.conf = {}
+        # Ensure MockScheduler is correctly initialized with self.mw
+        self.col.sched = MockScheduler(self.mw) 
+
+        self.reviewer = MockReviewer(parent=self.form) # Use the now globally defined MockReviewer
+        self.form.vbox.addWidget(self.reviewer.web) # Add reviewer's webview to main window layout
+
+        self.addonManager = MockAddonManager(Path(__file__).parent.parent.resolve()) # Use globally defined MockAddonManager
+        self.pm = DummyCallable()
+        self.pm.name = "test-profile"
+        self.menubar = self.menuBar()
+        self.form.menubar = self.menubar
+        # Use the placeholder QMenu defined above (or real QMenu if PyQt6 is available)
+        self.pokemenu = QMenu("Ankimon (Mock)", self)
+        self.menubar.addMenu(self.pokemenu)
+        start_review_action = QAction("Start Review (Mock)", self)
+        start_review_action.triggered.connect(self._start_mock_review)
+        self.pokemenu.addAction(start_review_action)
+
+    def _start_mock_review(self):
+        print("Starting mock review!")
+        # Hide other widgets if any, and show reviewer's webview
+        self.reviewer.web.show()
+        # Trigger the scheduler to get a card
+        self.col.sched.startReview()
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError
+        return DummyCallable() # Use globally defined DummyCallable
 
 # --- Setup Anki/AQT Mocks for sys.modules ---
 def setup_ankiaqt_mocks():
