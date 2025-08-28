@@ -187,6 +187,18 @@ class MockScheduler:
 
         print(f"MockScheduler: Card {card.id} new ivl: {card._ivl}, due: {card._due}")
 
+    def get_next_card(self):
+        """Get the next card to review"""
+        self.current_card_index += 1
+        if self.current_card_index < len(self._queue):
+            card = self._queue[self.current_card_index]
+            print(f"MockScheduler: Retrieved card {card.id}: {card.question()}")
+            return card
+        else:
+            print("[MOCK Scheduler] No more cards in the queue.")
+            return None
+
+
 class Collection:
     def __init__(self):
         print("Mock anki.Collection initialized.")

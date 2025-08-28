@@ -2,1039 +2,320 @@ import sys
 import os
 import types
 import json
-import base64
-import shutil
-import atexit
-import glob
 from pathlib import Path
-from unittest.mock import MagicMock # Import MagicMock
-
-# # Add the project root to sys.path to ensure imports work correctly
-# project_root = Path(__file__).parent.parent.resolve()
-# if str(project_root) not in sys.path:
-#     sys.path.insert(0, str(project_root))
-#     print(f"Added project root '{project_root}' to sys.path.")
-
-# --- PyQt6 Imports ---
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu, QDialog, QGridLayout, QFrame, QHBoxLayout, QStatusBar, QSizePolicy
+from unittest.mock import MagicMock
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QLabel, QPushButton,
+    QMainWindow, QMenuBar, QMenu, QDialog, QGridLayout, QFrame,
+    QHBoxLayout, QStatusBar, QSizePolicy
+)
 from PyQt6.QtGui import QAction, QKeySequence, QPixmap, QFont, QFontDatabase, QGuiApplication, QColor
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineSettings
+from mock_anki.collection import Collection, MockScheduler
 
-# --- Helper Mock Classes (Always Defined) ---
-# These are essential mock components for the Ankimon test environment
-# that are not directly tied to PyQt6's import status but rather provide
-# a consistent mock interface.
+def setup_anki_mocks():
+    """Set up comprehensive Anki/AQT mocks in sys.modules"""
+    print("Setting up Anki/AQT mocks...")
 
-class DummyCallable:
-    """A mock object that can be called and has any attribute accessible."""
-    def __call__(self, *args, **kwargs):
-        return self
-    def __getattr__(self, name):
-        if name.startswith("__"):
-            raise AttributeError
-        return self
+    from PyQt6.QtWidgets import (
+        QApplication, QWidget, QMainWindow, QMenu, QMenuBar, QDialog, QVBoxLayout,
+        QHBoxLayout, QLabel, QPushButton, QFrame
+    )
 
-class MockWebEngineView:
-    """A mock for QWebEngineView to capture HTML output."""
-    def setHtml(self, html):
-        print(f"Placeholder QWebEngineView setHtml: {html[:50]}...")
-    def show(self):
-        print("Placeholder QWebEngineView show")
-
-class MockReviewer:
-    """A mock for Anki's Reviewer that uses a mock web view."""
-    def __init__(self, parent=None):
-        print("Placeholder MockReviewer init")
-        self.web = MockWebEngineView()
-    def _showQuestion(self, card):
-        print(f"Placeholder MockReviewer _showQuestion for card: {card.id}")
-        self.web.setHtml(f"<h1>Question: {card.question()}</h1>")
-
-class MockAddonManager:
-    """A mock for Anki's AddonManager."""
-    def __init__(self, path):
-        print(f"Placeholder MockAddonManager init with path: {path}")
-
-# --- Mocking Anki/AQT specific modules ---
-# Import the mock implementations provided earlier.
-# try:
-#     from ankimon_test_env.mock_anki.collection import Collection as MockAnkiCollection
-#     from ankimon_test_env.mock_anki.collection import MockCard, MockNote, MockScheduler
-#     from ankimon_test_env.mock_aqt.reviewer import Reviewer as MockAqtReviewer
-#     from ankimon_test_env.mock_aqt.reviewer import MockReviewerWindow # Import the window class directly
-# except ImportError as e:
-#     print(f"Error importing mock modules: {e}")
-#     print("Please ensure mock files are correctly placed and accessible.")
-#     # Define dummy classes if imports fail, to allow script execution to continue
-#     class MockAnkiCollection:
-#         def __init__(self):
-#             print("Dummy MockAnkiCollection initialized.")
-#             self.sched = MockScheduler(None) # Pass None initially
-#         def get_config(self, key, default=None):
-#             return default
-#         def set_config(self, key, value):
-#             pass
-#         def sched_ver(self):
-#             return 3
-#         def v3_scheduler(self):
-#             return True
-#         def get_card(self, card_id):
-#             return MockCard(card_id)
-#         def get_card_info(self, card_id):
-#             return None
-#         def search_cards(self, query):
-#             return []
-#         def get_deck_names(self):
-#             return {"1": "Default"}
-#         def get_deck_id(self, deck_name):
-#             return 1
-#         def get_deck_by_id(self, deck__id):
-#             return {"name": "Default"}
-#         def create_note(self, note_type_name, fields):
-#             return MockNote()
-#         def create_card(self, note, template_index=0):
-#             return MockCard()
-
-#     class MockAqtReviewer:
-#         def __init__(self, mw, collection):
-#             print("Dummy MockAqtReviewer initialized.")
-#             self.reviewer_window = MockReviewerWindow(mw, collection)
-#         def show(self):
-#             print("Dummy MockAqtReviewer: show called.")
-#             self.reviewer_window.show()
-#         def exec(self):
-#             print("Dummy MockAqtReviewer: exec called.")
-#             return 0
-#         def load_cards(self):
-#             print("Dummy MockAqtReviewer: load_cards called.")
-#             self.reviewer_window.load_next_card()
-#         def answer_card(self, ease):
-#             print(f"Dummy MockAqtReviewer: answer_card called with ease {ease}.")
-#             self.reviewer_window.answer_card(ease)
-#         def show_answer(self):
-#             print("Dummy MockAqtReviewer: show_answer called.")
-#             self.reviewer_window.show_answer()
-
-#     class MockCard:
-#         def __init__(self, card_id, question="Mock Q", answer="Mock A"):
-#             self.id = card_id
-#             self._question = question
-#             self._answer = answer
-#         def question(self):
-#             return self._question
-#         def answer(self):
-#             return self._answer
-#         def note(self):
-#             return MockNote()
-#     class MockNote:
-#         def __init__(self, note_id=123, fields=None):
-#             self.id = note_id
-#             self._fields = fields if fields else ["F1", "F2"]
-#         def has_tag(self, tag):
-#             return False
-#         def fields(self):
-#             return self._fields
-#     class MockScheduler:
-#         def __init__(self, mw_instance):
-#             self.mw = mw_instance
-#             self._cards_in_queue = [MockCard(1)]
-#             self.new_count = 1
-#             self.learning_count = 0
-#             self.review_count = 0
-#         def get_queued_cards(self):
-#             return MockQueuedCards([MockCard(1)])
-#         def answerButtons(self, card):
-#             return 4
-#         def describe_next_states(self, states):
-#             return ["Again", "Hard", "Good", "Easy"]
-#         def answerCard(self, card, ease):
-#             print(f"Dummy MockScheduler answerCard: {card.id}, ease {ease}")
-#         def startReview(self):
-#             print("[MOCK Scheduler] startReview() called.")
-#             card = MockCard(1)
-#             self.mw.reviewer._showQuestion(card) if self.mw and self.mw.reviewer else print("Cannot start review: mw or reviewer not available.")
-#     class MockQueuedCards:
-#         def __init__(self, cards):
-#             self.cards = cards
-#         def top_card(self):
-#             return self.cards[0] if self.cards else None
-#     class MockReviewerWindow:
-#         def __init__(self, mw, collection):
-#             print("Dummy MockReviewerWindow init")
-#             self.mw = mw
-#             self.collection = collection
-#         def load_next_card(self):
-#             print("Dummy MockReviewerWindow load_next_card")
-#         def show_answer(self):
-#             print("Dummy MockReviewerWindow show_answer")
-#         def answer_card(self, ease):
-#             print(f"Dummy MockReviewerWindow answer_card: {ease}")
-#         def show(self):
-#             print("Dummy MockReviewerWindow show")
-#         def exec(self):
-#             print("Dummy MockReviewerWindow exec")
-#             return 0
-#         def question_shown(self):
-#             return MockSignal()
-#         def answer_shown(self):
-#             return MockSignal()
-#         def card_answered(self):
-#             return MockSignal()
-#     class MockSignal:
-#         def connect(self, slot):
-#             print(f"Dummy MockSignal connect: {slot}")
-#         def emit(self):
-#             print("Dummy MockSignal emit")
-
-# Define MockMainWindow here, after all necessary base classes and helper mocks are available.
-class MockMainWindow(QMainWindow):
-    """
-    A comprehensive mock for Anki's main window,
-    integrating various mock components for the test environment.
-    """
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Minimal PyQt6 Window")
-        self.setGeometry(100, 100, 800, 600)
-
-# --- Setup Anki/AQT Mocks for sys.modules ---
-def setup_ankiaqt_mocks():
-    """
-    Creates and injects mock versions of anki and aqt modules into sys.modules
-    to prevent ImportErrors during testing.
-    """
-    print("Setting up anki/aqt mocks...")
-
-    # mock_anki = types.ModuleType("anki")
-    # mock_anki.collection = types.ModuleType("anki.collection")
-    # mock_anki.sched = types.ModuleType("anki.sched")
-    # mock_anki.utils = types.ModuleType("anki.utils")
-    # mock_anki.collection.Collection = MockAnkiCollection
-    # mock_anki.collection.Card = MockCard
-    # mock_anki.collection.Note = MockNote
-
-    # mock_aqt = types.ModuleType("aqt")
-    # mock_aqt.gui_hooks = types.ModuleType("aqt.gui_hooks")
-    # mock_aqt.main = types.ModuleType("aqt.main")
-    # mock_aqt.forms = types.ModuleType("aqt.forms")
-    # mock_aqt.forms.reviewer = types.ModuleType("aqt.forms.reviewer")
-    # mock_aqt.forms.reviewer.Reviewer = MockAqtReviewer
-
-    # mock_aqt.dialogs = types.ModuleType("aqt.dialogs")
-    # mock_aqt.dialogs.showInfo = lambda msg: print(f"Mock aqt.dialogs.showInfo: {msg}")
-    # mock_aqt.dialogs.showWarning = lambda msg: print(f"Mock aqt.dialogs.showWarning: {msg}")
-
-    # mock_aqt.utils = types.ModuleType("aqt.utils")
-    # mock_aqt.utils.maybeHook = lambda x: x
-
-    # mock_aqt.browser = types.ModuleType("aqt.browser")
-    # mock_aqt.browser.AnkiBrowser = MagicMock()
-
-    # mock_aqt.qt = types.ModuleType("aqt.qt")
-    # mock_aqt.qt.QtCore = types.ModuleType("aqt.qt.QtCore")
-    # mock_aqt.qt.QtGui = types.ModuleType("aqt.qt.QtGui")
-    # mock_aqt.qt.QtWidgets = types.ModuleType("aqt.qt.QtWidgets")
-    # mock_aqt.qt.QtWidgets.QApplication = QApplication
-    # mock_aqt.qt.QtWidgets.QMainWindow = QMainWindow
-    # mock_aqt.qt.QtWidgets.QWidget = QWidget
-    # mock_aqt.qt.QtWidgets.QAction = QAction
-    # mock_aqt.qt.QtWidgets.QMenu = QMenu
-    # mock_aqt.qt.QtWidgets.QMenuBar = QMenuBar
-    # # Use the placeholder QStatusBar defined in the except block if PyQt6 is not available
-    # mock_aqt.qt.QtWidgets.QStatusBar = QStatusBar if PYQT6_AVAILABLE else QStatusBar
-    # mock_aqt.qt.QtWidgets.QDialog = QDialog
-    # mock_aqt.qt.QtWidgets.QVBoxLayout = QVBoxLayout
-    # mock_aqt.qt.QtWidgets.QLabel = QLabel
-    # mock_aqt.qt.QtWidgets.QPushButton = QPushButton
-    # mock_aqt.qt.QtWidgets.QFrame = QFrame
-    # mock_aqt.qt.QtWidgets.QHBoxLayout = QHBoxLayout
-    # mock_aqt.qt.QtWidgets.QSizePolicy = QSizePolicy
-    # mock_aqt.qt.QtWidgets.QMessageBox = MagicMock()
-    # mock_aqt.qt.QtWidgets.QFont = QFont
-    # mock_aqt.qt.QtWidgets.QColor = QColor
-
-    # mock_aqt.qt.QtWebEngineWidgets = types.ModuleType("aqt.qt.QtWebEngineWidgets")
-    # mock_aqt.qt.QtWebEngineWidgets.QWebEngineView = QWebEngineView
-    # mock_aqt.qt.QtWebEngineWidgets.QWebEnginePage = QWebEnginePage
-    # mock_aqt.qt.QtWebEngineWidgets.QWebEngineSettings = QWebEngineSettings
-
-    print("Anki/AQT mocks injected into sys.modules.")
-
-# --- Add-on Loading ---
-# This is where we'll import and execute your add-on's __init__.py
-ANKIMON_ADDON_MODULE = None # Global to hold the loaded add-on module
-
-def load_ankimon_addon():
-    """
-    Imports and executes the Ankimon add-on's __init__.py to set up menus, hooks, etc.
-    """
-    global ANKIMON_ADDON_MODULE
-    global mw # Access the global mw to check for menus
-    print("\n--- Loading Ankimon Add-on Initialization ---")
-    try:
-        # --- IMPORTANT ---
-        # This import path assumes your Ankimon code is structured as:
-        # your_project_root/src/Ankimon/__init__.py
-        # Adjust the path if your structure is different.
-        
-        # Add 'src' to sys.path if it's not already there
-        src_path = Path(__file__).parent.parent / 'src'
-        if str(src_path) not in sys.path:
-            sys.path.insert(0, str(src_path))
-            print(f"Added '{src_path}' to sys.path for add-on import.")
-
-        import Ankimon # This will execute src/Ankimon/__init__.py
-
-        ANKIMON_ADDON_MODULE = Ankimon # Store the module if needed later
-        print("Ankimon add-on __init__.py executed successfully.")
-
-        # The __init__.py file itself should handle menu creation and hook registration.
-        # We don't need to manually add menu items here if __init__.py does it.
-        # However, we can verify if the menu was created.
-
-        # Check if Ankimon menu was added (assuming __init__.py does this)
-        if mw and hasattr(mw, 'menu_bar') and mw.menu_bar:
-            found_menu = False
-            # Iterate through the menus added to the menubar
-            for menu in mw.menu_bar.findChildren(QMenu):
-                if "Ankimon" in menu.title(): # Check for "Ankimon (Test)" or similar
-                    found_menu = True
-                    print("Verified: Ankimon menu found in mock main window.")
-                    break
-            if not found_menu:
-                print("Warning: Ankimon menu not found. Ensure __init__.py creates it.")
-        else:
-            print("Warning: Mock Main Window or menu bar not available to verify Ankimon menu.")
-
-    except ImportError as e:
-        print(f"Error importing Ankimon add-on: {e}")
-        print("Please ensure 'src/Ankimon/__init__.py' is correctly placed and importable.")
-        print("Also, check that all dependencies within Ankimon's __init__.py are mocked or available.")
-    except Exception as e:
-        print(f"An unexpected error occurred during Ankimon add-on loading: {e}")
-        import traceback
-        traceback.print_exc()
-
-# --- Main Test Environment ---
-
-def run_test_environment():
-    """
-    Sets up and runs the Ankimon test environment.
-    """
-    global mw
-
-    print("\n--- Starting Test Environment Setup ---")
-
-    # Setup mocks for Anki and AQT modules BEFORE loading the add-on
-    # setup_ankiaqt_mocks()
-
-    # Create the main window (which will host menus and potentially the reviewer)
-    # mw = MockMainWindow()
-
-    # Load the add-on's initialization code
-    # load_ankimon_addon()
-
-    # Show the main window
-    # mw.show()
-
-# if __name__ == '__main__':
-#     app = QApplication.instance()
-#     if not app:
-#         app = QApplication(sys.argv)
-
-#     # Setup mocks for Anki and AQT modules BEFORE loading the add-on
-#     setup_ankiaqt_mocks()
-
-#     # Create the main window (which will host menus and potentially the reviewer)
-#     mw = MockMainWindow()
-
-#     # Load the add-on's initialization code
-#     load_ankimon_addon()
-
-#     # Show the main window
-#     mw.show()
-
-#     print("\n--- Test Environment Setup Complete ---")
-#     print("Ankimon menu should be visible in the mock main window.")
-#     print("Click 'Ankimon (Mock)' -> 'Start Review (Mock)' to start a mock review session.")
-
-#     print("\nStarting Qt event loop...")
-#     # Run the Qt application's event loop
-#     sys.exit(app.exec())
-
-
-# --- Helper Mock Classes (Always Defined) ---
-# These are essential mock components for the Ankimon test environment
-# that are not directly tied to PyQt6's import status but rather provide
-# a consistent mock interface.
-
-class DummyCallable:
-    """A mock object that can be called and has any attribute accessible."""
-    def __call__(self, *args, **kwargs):
-        return self
-    def __getattr__(self, name):
-        if name.startswith("__"):
-            raise AttributeError
-        return self
-
-class MockWebEngineView:
-    """A mock for QWebEngineView to capture HTML output."""
-    def setHtml(self, html):
-        print(f"Placeholder QWebEngineView setHtml: {html[:50]}...")
-    def show(self):
-        print("Placeholder QWebEngineView show")
-
-class MockReviewer:
-    """A mock for Anki's Reviewer that uses a mock web view."""
-    def __init__(self, parent=None):
-        print("Placeholder MockReviewer init")
-        self.web = MockWebEngineView()
-    def _showQuestion(self, card):
-        print(f"Placeholder MockReviewer _showQuestion for card: {card.id}")
-        self.web.setHtml(f"<h1>Question: {card.question()}</h1>")
-
-class MockAddonManager:
-    """A mock for Anki's AddonManager."""
-    def __init__(self, path):
-        print(f"Placeholder MockAddonManager init with path: {path}")
-
-# --- Mocking Anki/AQT specific modules ---
-# Import the mock implementations provided earlier.
-# try:
-#     from ankimon_test_env.mock_anki.collection import Collection as MockAnkiCollection
-#     from ankimon_test_env.mock_anki.collection import MockCard, MockNote, MockScheduler
-#     from ankimon_test_env.mock_aqt.reviewer import Reviewer as MockAqtReviewer
-#     from ankimon_test_env.mock_aqt.reviewer import MockReviewerWindow # Import the window class directly
-# except ImportError as e:
-#     print(f"Error importing mock modules: {e}")
-#     print("Please ensure mock files are correctly placed and accessible.")
-#     # Define dummy classes if imports fail, to allow script execution to continue
-#     class MockAnkiCollection:
-#         def __init__(self):
-#             print("Dummy MockAnkiCollection initialized.")
-#             self.sched = MockScheduler(None) # Pass None initially
-#         def get_config(self, key, default=None):
-#             return default
-#         def set_config(self, key, value):
-#             pass
-#         def sched_ver(self):
-#             return 3
-#         def v3_scheduler(self):
-#             return True
-#         def get_card(self, card_id):
-#             return MockCard(card_id)
-#         def get_card_info(self, card_id):
-#             return None
-#         def search_cards(self, query):
-#             return []
-#         def get_deck_names(self):
-#             return {"1": "Default"}
-#         def get_deck_id(self, deck_name):
-#             return 1
-#         def get_deck_by_id(self, deck__id):
-#             return {"name": "Default"}
-#         def create_note(self, note_type_name, fields):
-#             return MockNote()
-#         def create_card(self, note, template_index=0):
-#             return MockCard()
-
-#     class MockAqtReviewer:
-#         def __init__(self, mw, collection):
-#             print("Dummy MockAqtReviewer initialized.")
-#             self.reviewer_window = MockReviewerWindow(mw, collection)
-#         def show(self):
-#             print("Dummy MockAqtReviewer: show called.")
-#             self.reviewer_window.show()
-#         def exec(self):
-#             print("Dummy MockAqtReviewer: exec called.")
-#             return 0
-#         def load_cards(self):
-#             print("Dummy MockAqtReviewer: load_cards called.")
-#             self.reviewer_window.load_next_card()
-#         def answer_card(self, ease):
-#             print(f"Dummy MockAqtReviewer: answer_card called with ease {ease}.")
-#             self.reviewer_window.answer_card(ease)
-#         def show_answer(self):
-#             print("Dummy MockAqtReviewer: show_answer called.")
-#             self.reviewer_window.show_answer()
-
-#     class MockCard:
-#         def __init__(self, card_id, question="Mock Q", answer="Mock A"):
-#             self.id = card_id
-#             self._question = question
-#             self._answer = answer
-#         def question(self):
-#             return self._question
-#         def answer(self):
-#             return self._answer
-#         def note(self):
-#             return MockNote()
-#     class MockNote:
-#         def __init__(self, note_id=123, fields=None):
-#             self.id = note_id
-#             self._fields = fields if fields else ["F1", "F2"]
-#         def has_tag(self, tag):
-#             return False
-#         def fields(self):
-#             return self._fields
-#     class MockScheduler:
-#         def __init__(self, mw_instance):
-#             self.mw = mw_instance
-#             self._cards_in_queue = [MockCard(1)]
-#             self.new_count = 1
-#             self.learning_count = 0
-#             self.review_count = 0
-#         def get_queued_cards(self):
-#             return MockQueuedCards([MockCard(1)])
-#         def answerButtons(self, card):
-#             return 4
-#         def describe_next_states(self, states):
-#             return ["Again", "Hard", "Good", "Easy"]
-#         def answerCard(self, card, ease):
-#             print(f"Dummy MockScheduler answerCard: {card.id}, ease {ease}")
-#         def startReview(self):
-#             print("[MOCK Scheduler] startReview() called.")
-#             card = MockCard(1)
-#             self.mw.reviewer._showQuestion(card) if self.mw and self.mw.reviewer else print("Cannot start review: mw or reviewer not available.")
-#     class MockQueuedCards:
-#         def __init__(self, cards):
-#             self.cards = cards
-#         def top_card(self):
-#             return self.cards[0] if self.cards else None
-#     class MockReviewerWindow:
-#         def __init__(self, mw, collection):
-#             print("Dummy MockReviewerWindow init")
-#             self.mw = mw
-#             self.collection = collection
-#         def load_next_card(self):
-#             print("Dummy MockReviewerWindow load_next_card")
-#         def show_answer(self):
-#             print("Dummy MockReviewerWindow show_answer")
-#         def answer_card(self, ease):
-#             print(f"Dummy MockReviewerWindow answer_card: {ease}")
-#         def show(self):
-#             print("Dummy MockReviewerWindow show")
-#         def exec(self):
-#             print("Dummy MockReviewerWindow exec")
-#             return 0
-#         def question_shown(self):
-#             return MockSignal()
-#         def answer_shown(self):
-#             return MockSignal()
-#         def card_answered(self):
-#             return MockSignal()
-#     class MockSignal:
-#         def connect(self, slot):
-#             print(f"Dummy MockSignal connect: {slot}")
-#         def emit(self):
-#             print("Dummy MockSignal emit")
-
-# Define MockMainWindow here, after all necessary base classes and helper mocks are available.
-class MockMainWindow(QMainWindow):
-    """
-    A comprehensive mock for Anki's main window,
-    integrating various mock components for the test environment.
-    """
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Minimal PyQt6 Window")
-        self.setGeometry(100, 100, 800, 600)
-
-# --- Setup Anki/AQT Mocks for sys.modules ---
-def setup_ankiaqt_mocks():
-    """
-    Creates and injects mock versions of anki and aqt modules into sys.modules
-    to prevent ImportErrors during testing.
-    """
-    print("Setting up anki/aqt mocks...")
-
-    # mock_anki = types.ModuleType("anki")
-    # mock_anki.collection = types.ModuleType("anki.collection")
-    # mock_anki.sched = types.ModuleType("anki.sched")
-    # mock_anki.utils = types.ModuleType("anki.utils")
-    # mock_anki.collection.Collection = MockAnkiCollection
-    # mock_anki.collection.Card = MockCard
-    # mock_anki.collection.Note = MockNote
-
-    # mock_aqt = types.ModuleType("aqt")
-    # mock_aqt.gui_hooks = types.ModuleType("aqt.gui_hooks")
-    # mock_aqt.main = types.ModuleType("aqt.main")
-    # mock_aqt.forms = types.ModuleType("aqt.forms")
-    # mock_aqt.forms.reviewer = types.ModuleType("aqt.forms.reviewer")
-    # mock_aqt.forms.reviewer.Reviewer = MockAqtReviewer
-
-    # mock_aqt.dialogs = types.ModuleType("aqt.dialogs")
-    # mock_aqt.dialogs.showInfo = lambda msg: print(f"Mock aqt.dialogs.showInfo: {msg}")
-    # mock_aqt.dialogs.showWarning = lambda msg: print(f"Mock aqt.dialogs.showWarning: {msg}")
-
-    # mock_aqt.utils = types.ModuleType("aqt.utils")
-    # mock_aqt.utils.maybeHook = lambda x: x
-
-    # mock_aqt.browser = types.ModuleType("aqt.browser")
-    # mock_aqt.browser.AnkiBrowser = MagicMock()
-
-    # mock_aqt.qt = types.ModuleType("aqt.qt")
-    # mock_aqt.qt.QtCore = types.ModuleType("aqt.qt.QtCore")
-    # mock_aqt.qt.QtGui = types.ModuleType("aqt.qt.QtGui")
-    # mock_aqt.qt.QtWidgets = types.ModuleType("aqt.qt.QtWidgets")
-    # mock_aqt.qt.QtWidgets.QApplication = QApplication
-    # mock_aqt.qt.QtWidgets.QMainWindow = QMainWindow
-    # mock_aqt.qt.QtWidgets.QWidget = QWidget
-    # mock_aqt.qt.QtWidgets.QAction = QAction
-    # mock_aqt.qt.QtWidgets.QMenu = QMenu
-    # mock_aqt.qt.QtWidgets.QMenuBar = QMenuBar
-    # # Use the placeholder QStatusBar defined in the except block if PyQt6 is not available
-    # mock_aqt.qt.QtWidgets.QStatusBar = QStatusBar if PYQT6_AVAILABLE else QStatusBar
-    # mock_aqt.qt.QtWidgets.QDialog = QDialog
-    # mock_aqt.qt.QtWidgets.QVBoxLayout = QVBoxLayout
-    # mock_aqt.qt.QtWidgets.QLabel = QLabel
-    # mock_aqt.qt.QtWidgets.QPushButton = QPushButton
-    # mock_aqt.qt.QtWidgets.QFrame = QFrame
-    # mock_aqt.qt.QtWidgets.QHBoxLayout = QHBoxLayout
-    # mock_aqt.qt.QtWidgets.QSizePolicy = QSizePolicy
-    # mock_aqt.qt.QtWidgets.QMessageBox = MagicMock()
-    # mock_aqt.qt.QtWidgets.QFont = QFont
-    # mock_aqt.qt.QtWidgets.QColor = QColor
-
-    # mock_aqt.qt.QtWebEngineWidgets = types.ModuleType("aqt.qt.QtWebEngineWidgets")
-    # mock_aqt.qt.QtWebEngineWidgets.QWebEngineView = QWebEngineView
-    # mock_aqt.qt.QtWebEngineWidgets.QWebEnginePage = QWebEnginePage
-    # mock_aqt.qt.QtWebEngineWidgets.QWebEngineSettings = QWebEngineSettings
-
-    # sys.modules["anki"] = mock_anki
-    # sys.modules["anki.collection"] = mock_anki.collection
-    # sys.modules["anki.sched"] = mock_anki.sched
-    # sys.modules["anki.utils"] = mock_anki.utils
-
-    # sys.modules["aqt"] = mock_aqt
-    # sys.modules["aqt.gui_hooks"] = mock_aqt.gui_hooks
-    # sys.modules["aqt.main"] = mock_aqt.main
-    # sys.modules["aqt.forms"] = mock_aqt.forms
-    # sys.modules["aqt.forms.reviewer"] = mock_aqt.forms.reviewer
-    # sys.modules["aqt.dialogs"] = mock_aqt.dialogs
-    # sys.modules["aqt.utils"] = mock_aqt.utils
-    # sys.modules["aqt.browser"] = mock_aqt.browser
-    # sys.modules["aqt.qt"] = mock_aqt.qt
-    # sys.modules["aqt.qt.QtCore"] = mock_aqt.qt.QtCore
-    # sys.modules["aqt.qt.QtGui"] = mock_aqt.qt.QtGui
-    # sys.modules["aqt.qt.QtWidgets"] = mock_aqt.qt.QtWidgets
-    # sys.modules["aqt.qt.QtWebEngineWidgets"] = mock_aqt.qt.QtWebEngineWidgets
-
-    print("Anki/AQT mocks injected into sys.modules.")
-
-# --- Add-on Loading ---
-# This is where we'll import and execute your add-on's __init__.py
-ANKIMON_ADDON_MODULE = None # Global to hold the loaded add-on module
-
-def load_ankimon_addon():
-    """
-    Imports and executes the Ankimon add-on's __init__.py to set up menus, hooks, etc.
-    """
-    global ANKIMON_ADDON_MODULE
-    global mw # Access the global mw to check for menus
-    print("\n--- Loading Ankimon Add-on Initialization ---")
-    try:
-        # --- IMPORTANT ---
-        # This import path assumes your Ankimon code is structured as:
-        # your_project_root/src/Ankimon/__init__.py
-        # Adjust the path if your structure is different.
-        
-        # Add 'src' to sys.path if it's not already there
-        src_path = Path(__file__).parent.parent / 'src'
-        if str(src_path) not in sys.path:
-            sys.path.insert(0, str(src_path))
-            print(f"Added '{src_path}' to sys.path for add-on import.")
-
-        import Ankimon # This will execute src/Ankimon/__init__.py
-
-        ANKIMON_ADDON_MODULE = Ankimon # Store the module if needed later
-        print("Ankimon add-on __init__.py executed successfully.")
-
-        # The __init__.py file itself should handle menu creation and hook registration.
-        # We don't need to manually add menu items here if __init__.py does it.
-        # However, we can verify if the menu was created.
-
-        # Check if Ankimon menu was added (assuming __init__.py does this)
-        if mw and hasattr(mw, 'menu_bar') and mw.menu_bar:
-            found_menu = False
-            # Iterate through the menus added to the menubar
-            for menu in mw.menu_bar.findChildren(QMenu):
-                if "Ankimon" in menu.title(): # Check for "Ankimon (Test)" or similar
-                    found_menu = True
-                    print("Verified: Ankimon menu found in mock main window.")
-                    break
-            if not found_menu:
-                print("Warning: Ankimon menu not found. Ensure __init__.py creates it.")
-        else:
-            print("Warning: Mock Main Window or menu bar not available to verify Ankimon menu.")
-
-    except ImportError as e:
-        print(f"Error importing Ankimon add-on: {e}")
-        print("Please ensure 'src/Ankimon/__init__.py' is correctly placed and importable.")
-        print("Also, check that all dependencies within Ankimon's __init__.py are mocked or available.")
-    except Exception as e:
-        print(f"An unexpected error occurred during Ankimon add-on loading: {e}")
-        import traceback
-        traceback.print_exc()
-
-# --- Main Test Environment ---
-
-def run_test_environment():
-    """
-    Sets up and runs the Ankimon test environment.
-    """
-    global mw
-
-    print("\n--- Starting Test Environment Setup ---")
-
-    # Setup mocks for Anki and AQT modules BEFORE loading the add-on
-    # setup_ankiaqt_mocks()
-
-    # Create the main window (which will host menus and potentially the reviewer)
-    # mw = MockMainWindow()
-
-    # Load the add-on's initialization code
-    # load_ankimon_addon()
-
-    # Show the main window
-    # mw.show()
-
-# if __name__ == '__main__':
-#     app = QApplication.instance()
-#     if not app:
-#         app = QApplication(sys.argv)
-
-#     # Setup mocks for Anki and AQT modules BEFORE loading the add-on
-#     setup_ankiaqt_mocks()
-
-#     # Create the main window (which will host menus and potentially the reviewer)
-#     mw = MockMainWindow()
-
-#     # Load the add-on's initialization code
-#     load_ankimon_addon()
-
-#     # Show the main window
-#     mw.show()
-
-#     print("\n--- Test Environment Setup Complete ---")
-#     print("Ankimon menu should be visible in the mock main window.")
-#     print("Click 'Ankimon (Mock)' -> 'Start Review (Mock)' to start a mock review session.")
-
-#     print("\nStarting Qt event loop...")
-#     # Run the Qt application's event loop
-#     sys.exit(app.exec())
-
-# --- Helper Mock Classes (Always Defined) ---
-# These are essential mock components for the Ankimon test environment
-# that are not directly tied to PyQt6's import status but rather provide
-# a consistent mock interface.
-
-class DummyCallable:
-    """A mock object that can be called and has any attribute accessible."""
-    def __call__(self, *args, **kwargs):
-        return self
-    def __getattr__(self, name):
-        if name.startswith("__"):
-            raise AttributeError
-        return self
-
-class MockWebEngineView:
-    """A mock for QWebEngineView to capture HTML output."""
-    def setHtml(self, html):
-        print(f"Placeholder QWebEngineView setHtml: {html[:50]}...")
-    def show(self):
-        print("Placeholder QWebEngineView show")
-
-class MockReviewer:
-    """A mock for Anki's Reviewer that uses a mock web view."""
-    def __init__(self, parent=None):
-        print("Placeholder MockReviewer init")
-        self.web = MockWebEngineView()
-    def _showQuestion(self, card):
-        print(f"Placeholder MockReviewer _showQuestion for card: {card.id}")
-        self.web.setHtml(f"<h1>Question: {card.question()}</h1>")
-
-class MockAddonManager:
-    """A mock for Anki's AddonManager."""
-    def __init__(self, path):
-        print(f"Placeholder MockAddonManager init with path: {path}")
-
-# --- Mocking Anki/AQT specific modules ---
-# Import the mock implementations provided earlier.
-try:
-    from ankimon_test_env.mock_anki.collection import Collection as MockAnkiCollection
-    from ankimon_test_env.mock_anki.collection import MockCard, MockNote, MockScheduler
-    from ankimon_test_env.mock_aqt.reviewer import Reviewer as MockAqtReviewer
-    from ankimon_test_env.mock_aqt.reviewer import MockReviewerWindow # Import the window class directly
-except ImportError as e:
-    print(f"Error importing mock modules: {e}")
-    print("Please ensure mock files are correctly placed and accessible.")
-    # Define dummy classes if imports fail, to allow script execution to continue
-    class MockAnkiCollection:
-        def __init__(self): print("Dummy MockAnkiCollection initialized."); self.sched = MockScheduler(None) # Pass None initially
-        def get_config(self, key, default=None): return default
-        def set_config(self, key, value): pass
-        def sched_ver(self): return 3
-        def v3_scheduler(self): return True
-        def get_card(self, card_id): return MockCard(card_id)
-        def get_card_info(self, card_id): return None
-        def search_cards(self, query): return []
-        def get_deck_names(self): return {"1": "Default"}
-        def get_deck_id(self, deck_name): return 1
-        def get_deck_by_id(self, deck__id): return {"name": "Default"}
-        def create_note(self, note_type_name, fields): return MockNote()
-        def create_card(self, note, template_index=0): return MockCard()
-
-    class MockAqtReviewer:
-        def __init__(self, mw, collection): print("Dummy MockAqtReviewer initialized."); self.reviewer_window = MockReviewerWindow(mw, collection)
-        def show(self): print("Dummy MockAqtReviewer: show called."); self.reviewer_window.show()
-        def exec(self): print("Dummy MockAqtReviewer: exec called."); return 0
-        def load_cards(self): print("Dummy MockAqtReviewer: load_cards called."); self.reviewer_window.load_next_card()
-        def answer_card(self, ease): print(f"Dummy MockAqtReviewer: answer_card called with ease {ease}."); self.reviewer_window.answer_card(ease)
-        def show_answer(self): print("Dummy MockAqtReviewer: show_answer called."); self.reviewer_window.show_answer()
-
-    class MockCard:
-        def __init__(self, card_id, question="Mock Q", answer="Mock A"): self.id = card_id; self._question = question; self._answer = answer
-        def question(self): return self._question
-        def answer(self): return self._answer
-        def note(self): return MockNote()
-    class MockNote:
-        def __init__(self, note_id=123, fields=None): self.id = note_id; self._fields = fields if fields else ["F1", "F2"]
-        def has_tag(self, tag): return False
-        def fields(self): return self._fields
-    class MockScheduler:
-        def __init__(self, mw_instance): self.mw = mw_instance; self._cards_in_queue = [MockCard(1)]; self.new_count = 1; self.learning_count = 0; self.review_count = 0
-        def get_queued_cards(self): return MockQueuedCards([MockCard(1)])
-        def answerButtons(self, card): return 4
-        def describe_next_states(self, states): return ["Again", "Hard", "Good", "Easy"]
-        def answerCard(self, card, ease): print(f"Dummy MockScheduler answerCard: {card.id}, ease {ease}")
-        def startReview(self): print("[MOCK Scheduler] startReview() called."); card = MockCard(1); self.mw.reviewer._showQuestion(card) if self.mw and self.mw.reviewer else print("Cannot start review: mw or reviewer not available.")
-    class MockQueuedCards:
-        def __init__(self, cards): self.cards = cards
-        def top_card(self): return self.cards[0] if self.cards else None
-    class MockReviewerWindow:
-        def __init__(self, mw, collection): print("Dummy MockReviewerWindow init"); self.mw = mw; self.collection = collection
-        def load_next_card(self): print("Dummy MockReviewerWindow load_next_card")
-        def show_answer(self): print("Dummy MockReviewerWindow show_answer")
-        def answer_card(self, ease): print(f"Dummy MockReviewerWindow answer_card: {ease}")
-        def show(self): print("Dummy MockReviewerWindow show")
-        def exec(self): print("Dummy MockReviewerWindow exec"); return 0
-        def question_shown(self): return MockSignal()
-        def answer_shown(self): return MockSignal()
-        def card_answered(self): return MockSignal()
-    class MockSignal:
-        def connect(self, slot): print(f"Dummy MockSignal connect: {slot}")
-        def emit(self): print("Dummy MockSignal emit")
-
-# Define MockMainWindow here, after all necessary base classes and helper mocks are available.
-class MockMainWindow(QMainWindow):
-    """
-    A comprehensive mock for Anki's main window,
-    integrating various mock components for the test environment.
-    """
-    def __init__(self):
-        super().__init__()
-        self.mw = self
-        self.form = QWidget()
-        self.setCentralWidget(self.form)
-        self.form.vbox = QVBoxLayout(self.form)
-
-        # Initialize collection and scheduler. MockScheduler needs a reference to mw.
-        self.col = MockAnkiCollection() # Use the actual mock collection
-        self.col.sched = MockScheduler(self) # Pass self (mw) to the scheduler
-
-        self.reviewer = MockAqtReviewer(self, self.col) # Use the actual mock reviewer
-        self.form.vbox.addWidget(self.reviewer.web.qwebengine_view) # Add reviewer's QWebEngineView to main window layout
-
-        self.addonManager = MockAddonManager(Path(__file__).parent.parent.resolve()) # Use globally defined MockAddonManager
-        self.pm = DummyCallable()
-        self.pm.name = "test-profile"
-        self.menubar = self.menuBar()
-        self.form.menubar = self.menubar
-        # Use the placeholder QMenu defined above (or real QMenu if PyQt6 is available)
-        self.pokemenu = QMenu("Ankimon (Mock)", self)
-        self.menubar.addMenu(self.pokemenu)
-        start_review_action = QAction("Start Review (Mock)", self)
-        start_review_action.triggered.connect(self._start_mock_review)
-        self.pokemenu.addAction(start_review_action)
-
-    def _start_mock_review(self):
-        print("Starting mock review!")
-        # Hide other widgets if any, and show reviewer's webview
-        self.reviewer.web.qwebengine_view.show()
-        # Trigger the scheduler to get a card
-        self.col.sched.startReview()
-
-    def __getattr__(self, name):
-        if name.startswith("__"):
-            raise AttributeError
-        return DummyCallable() # Use globally defined DummyCallable
-
-# --- Setup Anki/AQT Mocks for sys.modules ---
-def setup_ankiaqt_mocks():
-    """
-    Creates and injects mock versions of anki and aqt modules into sys.modules
-    to prevent ImportErrors during testing.
-    """
-    print("Setting up anki/aqt mocks...")
-
+    # Create anki module and submodules
     mock_anki = types.ModuleType("anki")
     mock_anki.collection = types.ModuleType("anki.collection")
+    mock_anki.cards = types.ModuleType("anki.cards")
+    mock_anki.notes = types.ModuleType("anki.notes")
     mock_anki.sched = types.ModuleType("anki.sched")
     mock_anki.utils = types.ModuleType("anki.utils")
-    mock_anki.collection.Collection = MockAnkiCollection
-    mock_anki.collection.Card = MockCard
-    mock_anki.collection.Note = MockNote
+    mock_anki.hooks = types.ModuleType("anki.hooks")
 
+    # *** Import only after QApplication created in main()!
+    from mock_anki.collection import Collection, MockCard, MockNote, MockScheduler
+    mock_anki.collection.Collection = Collection
+    mock_anki.cards.Card = MockCard
+    mock_anki.notes.Note = MockNote
+
+    # Create aqt module and submodules
     mock_aqt = types.ModuleType("aqt")
-    mock_aqt.gui_hooks = types.ModuleType("aqt.gui_hooks")
     mock_aqt.main = types.ModuleType("aqt.main")
-    mock_aqt.forms = types.ModuleType("aqt.forms")
-    mock_aqt.forms.reviewer = types.ModuleType("aqt.forms.reviewer")
-    mock_aqt.forms.reviewer.Reviewer = MockAqtReviewer
-
-    mock_aqt.dialogs = types.ModuleType("aqt.dialogs")
-    mock_aqt.dialogs.showInfo = lambda msg: print(f"Mock aqt.dialogs.showInfo: {msg}")
-    mock_aqt.dialogs.showWarning = lambda msg: print(f"Mock aqt.dialogs.showWarning: {msg}")
-
+    mock_aqt.reviewer = types.ModuleType("aqt.reviewer")
     mock_aqt.utils = types.ModuleType("aqt.utils")
-    mock_aqt.utils.maybeHook = lambda x: x
-
-    mock_aqt.browser = types.ModuleType("aqt.browser")
-    mock_aqt.browser.AnkiBrowser = MagicMock()
-
+    mock_aqt.gui_hooks = types.ModuleType("aqt.gui_hooks")
     mock_aqt.qt = types.ModuleType("aqt.qt")
-    mock_aqt.qt.QtCore = types.ModuleType("aqt.qt.QtCore")
-    mock_aqt.qt.QtGui = types.ModuleType("aqt.qt.QtGui")
-    mock_aqt.qt.QtWidgets = types.ModuleType("aqt.qt.QtWidgets")
-    mock_aqt.qt.QtWidgets.QApplication = QApplication
-    mock_aqt.qt.QtWidgets.QMainWindow = QMainWindow
-    mock_aqt.qt.QtWidgets.QWidget = QWidget
-    mock_aqt.qt.QtWidgets.QAction = QAction
-    mock_aqt.qt.QtWidgets.QMenu = QMenu
-    mock_aqt.qt.QtWidgets.QMenuBar = QMenuBar
-    # Use the placeholder QStatusBar defined in the except block if PyQt6 is not available
-    mock_aqt.qt.QtWidgets.QStatusBar = QStatusBar if PYQT6_AVAILABLE else QStatusBar
-    mock_aqt.qt.QtWidgets.QDialog = QDialog
-    mock_aqt.qt.QtWidgets.QVBoxLayout = QVBoxLayout
-    mock_aqt.qt.QtWidgets.QLabel = QLabel
-    mock_aqt.qt.QtWidgets.QPushButton = QPushButton
-    mock_aqt.qt.QtWidgets.QFrame = QFrame
-    mock_aqt.qt.QtWidgets.QHBoxLayout = QHBoxLayout
-    mock_aqt.qt.QtWidgets.QSizePolicy = QSizePolicy
-    mock_aqt.qt.QtWidgets.QMessageBox = MagicMock()
-    mock_aqt.qt.QtWidgets.QFont = QFont
-    mock_aqt.qt.QtWidgets.QColor = QColor
+    mock_aqt.webview = types.ModuleType("aqt.webview")
+    mock_aqt.operations = types.ModuleType("aqt.operations")
+    mock_aqt.operations.scheduling = types.ModuleType("aqt.operations.scheduling")
 
-    mock_aqt.qt.QtWebEngineWidgets = types.ModuleType("aqt.qt.QtWebEngineWidgets")
-    mock_aqt.qt.QtWebEngineWidgets.QWebEngineView = QWebEngineView
-    mock_aqt.qt.QtWebEngineWidgets.QWebEnginePage = QWebEnginePage
-    mock_aqt.qt.QtWebEngineWidgets.QWebEngineSettings = QWebEngineSettings
+    # Add reviewer class after QApplication started, see main()
+    from mock_aqt.reviewer import MockReviewer
+    mock_aqt.reviewer.Reviewer = MockReviewer
 
-    sys.modules["anki"] = mock_anki
-    sys.modules["anki.collection"] = mock_anki.collection
-    sys.modules["anki.sched"] = mock_anki.sched
-    sys.modules["anki.utils"] = mock_anki.utils
+    # Mock aqt.utils functions
+    def mock_qconnect(signal, slot):
+        try:
+            signal.connect(slot)
+        except Exception as e:
+            print(f"MockQConnect error: {e}")
 
-    sys.modules["aqt"] = mock_aqt
-    sys.modules["aqt.gui_hooks"] = mock_aqt.gui_hooks
-    sys.modules["aqt.main"] = mock_aqt.main
-    sys.modules["aqt.forms"] = mock_aqt.forms
-    sys.modules["aqt.forms.reviewer"] = mock_aqt.forms.reviewer
-    sys.modules["aqt.dialogs"] = mock_aqt.dialogs
-    sys.modules["aqt.utils"] = mock_aqt.utils
-    sys.modules["aqt.browser"] = mock_aqt.browser
-    sys.modules["aqt.qt"] = mock_aqt.qt
-    sys.modules["aqt.qt.QtCore"] = mock_aqt.qt.QtCore
-    sys.modules["aqt.qt.QtGui"] = mock_aqt.qt.QtGui
-    sys.modules["aqt.qt.QtWidgets"] = mock_aqt.qt.QtWidgets
-    sys.modules["aqt.qt.QtWebEngineWidgets"] = mock_aqt.qt.QtWebEngineWidgets
+    mock_aqt.utils.qconnect = mock_qconnect
+    mock_aqt.utils.showWarning = lambda msg: print(f"MockWarning: {msg}")
+    mock_aqt.utils.showInfo = lambda msg: print(f"MockInfo: {msg}")
+    mock_aqt.utils.openLink = lambda url: print(f"MockOpenLink: {url}")
 
-    print("Anki/AQT mocks injected into sys.modules.")
+    # Mock GUI hooks - create empty lists that add-ons can append to
+    mock_hooks = [
+        'reviewer_did_show_question', 'reviewer_did_show_answer', 'reviewer_will_answer_card',
+        'reviewer_did_answer_card', 'card_will_show', 'reviewer_will_end',
+        'reviewer_will_show_context_menu', 'reviewer_will_init_answer_buttons'
+    ]
 
-# --- Add-on Loading ---
-# This is where we'll import and execute your add-on's __init__.py
-ANKIMON_ADDON_MODULE = None # Global to hold the loaded add-on module
+    for hook_name in mock_hooks:
+        setattr(mock_aqt.gui_hooks, hook_name, [])
 
-def load_ankimon_addon():
-    """
-    Imports and executes the Ankimon add-on's __init__.py to set up menus, hooks, etc.
-    """
-    global ANKIMON_ADDON_MODULE
-    global mw # Access the global mw to check for menus
-    print("\n--- Loading Ankimon Add-on Initialization ---")
+    # Mock Qt classes
+    from PyQt6.QtWidgets import (
+        QApplication, QWidget, QMainWindow, QMenu, QMenuBar, QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+    )
+    from PyQt6.QtGui import QAction, QKeySequence
+    mock_aqt.qt.QApplication = QApplication
+    mock_aqt.qt.QMainWindow = QMainWindow
+    mock_aqt.qt.QWidget = QWidget
+    mock_aqt.qt.QAction = QAction
+    mock_aqt.qt.QMenu = QMenu
+    mock_aqt.qt.QMenuBar = QMenuBar
+    mock_aqt.qt.QDialog = QDialog
+    mock_aqt.qt.QVBoxLayout = QVBoxLayout
+    mock_aqt.qt.QHBoxLayout = QHBoxLayout
+    mock_aqt.qt.QLabel = QLabel
+    mock_aqt.qt.QPushButton = QPushButton
+    mock_aqt.qt.QFrame = QFrame
+    mock_aqt.qt.QKeySequence = QKeySequence
+
+    # Inject into sys.modules
+    modules_to_inject = {
+        "anki": mock_anki,
+        "anki.collection": mock_anki.collection,
+        "anki.cards": mock_anki.cards,
+        "anki.notes": mock_anki.notes,
+        "anki.sched": mock_anki.sched,
+        "anki.utils": mock_anki.utils,
+        "anki.hooks": mock_anki.hooks,
+        "aqt": mock_aqt,
+        "aqt.main": mock_aqt.main,
+        "aqt.reviewer": mock_aqt.reviewer,
+        "aqt.utils": mock_aqt.utils,
+        "aqt.gui_hooks": mock_aqt.gui_hooks,
+        "aqt.qt": mock_aqt.qt,
+        "aqt.webview": mock_aqt.webview,
+        "aqt.operations": mock_aqt.operations,
+        "aqt.operations.scheduling": mock_aqt.operations.scheduling,
+    }
+
+    for module_name, module_obj in modules_to_inject.items():
+        sys.modules[module_name] = module_obj
+
+    print("Anki/AQT mocks injected into sys.modules")
+
+
+def create_mock_objects_for_ankimon():
+    """Create mock objects that Ankimon's menu system expects"""
+
+    class MockObject:
+        def __init__(self, name="MockObject"):
+            self.name = name
+        def __call__(self, *args, **kwargs):
+            print(f"{self.name} called with args: {args}, kwargs: {kwargs}")
+            return self
+        def __getattr__(self, name):
+            return MockObject(f"{self.name}.{name}")
+        def show(self):
+            print(f"{self.name}.show() called")
+        def exec(self):
+            print(f"{self.name}.exec() called")
+            return True
+        def show_window(self):
+            print(f"{self.name}.show_window() called")
+        def open_dynamic_window(self):
+            print(f"{self.name}.open_dynamic_window() called - Starting reviewer")
+            if hasattr(sys.modules.get('aqt'), 'mw') and sys.modules['aqt'].mw:
+                sys.modules['aqt'].mw.reviewer.show()
+        def toggle_window(self):
+            print(f"{self.name}.toggle_window() called")
+
+    mock_objects = {
+        'database_complete': True,
+        'online_connectivity': False,
+        'pokecollection_win': None,
+        'item_window': MockObject("ItemWindow"),
+        'test_window': MockObject("TestWindow"),
+        'achievement_bag': MockObject("AchievementWindow"),
+        'open_team_builder': MockObject("open_team_builder"),
+        'export_to_pkmn_showdown': MockObject("export_to_pkmn_showdown"),
+        'export_all_pkmn_showdown': MockObject("export_all_pkmn_showdown"),
+        'flex_pokemon_collection': MockObject("flex_pokemon_collection"),
+        'eff_chart': MockObject("EffChart"),
+        'gen_id_chart': MockObject("GenIDChart"),
+        'credits': MockObject("Credits"),
+        'license': MockObject("License"),
+        'open_help_window': MockObject("open_help_window"),
+        'report_bug': MockObject("report_bug"),
+        'rate_addon_url': MockObject("rate_addon_url"),
+        'version_dialog': MockObject("VersionDialog"),
+        'trainer_card': MockObject("TrainerCard"),
+        'ankimon_tracker_window': MockObject("AnkimonTrackerWindow"),
+        'logger': MockObject("Logger"),
+        'data_handler_window': MockObject("DataHandlerWindow"),
+        'settings_window': MockObject("SettingsWindow"),
+        'shop_manager': MockObject("ShopManager"),
+        'pokedex_window': MockObject("PokedexWindow"),
+        'ankimon_key': 'Ctrl+K',
+        'join_discord_url': MockObject("join_discord_url"),
+        'open_leaderboard_url': MockObject("open_leaderboard_url"),
+        'settings_obj': MockObject("Settings"),
+        'addon_dir': Path(__file__).parent.parent / "src" / "Ankimon",
+        'data_handler_obj': MockObject("DataHandler"),
+        'pokemon_pc': MockObject("PokemonPC"),
+    }
+    return mock_objects
+
+def setup_global_mw(main_window, reviewer):
+    """Set up the global mw object that Ankimon expects"""
+    mw = type('MockMainWindow', (), {})()
+    mw.form = main_window
+    mw.col = Collection()
+    mw.col.sched = MockScheduler(mw)
+    mw.reviewer = reviewer
+    mw.addonManager = type('MockAddonManager', (), {
+        'getConfig': lambda self, addon_id: {},
+        'writeConfig': lambda self, addon_id, config: print(f"Writing config for {addon_id}: {config}")
+    })()
+    mw.pm = type('MockProfileManager', (), {
+        'openProfile': lambda self, name: print(f"Opening profile: {name}")
+    })()
+    from PyQt6.QtWidgets import QApplication, QMenu
+    mw.app = QApplication.instance()
     try:
-        # --- IMPORTANT ---
-        # This import path assumes your Ankimon code is structured as:
-        # your_project_root/src/Ankimon/__init__.py
-        # Adjust the path if your structure is different.
-        
-        # Add 'src' to sys.path if it's not already there
-        src_path = Path(__file__).parent.parent / 'src'
-        if str(src_path) not in sys.path:
-            sys.path.insert(0, str(src_path))
-            print(f"Added '{src_path}' to sys.path for add-on import.")
-
-        import Ankimon # This will execute src/Ankimon/__init__.py
-
-        ANKIMON_ADDON_MODULE = Ankimon # Store the module if needed later
-        print("Ankimon add-on __init__.py executed successfully.")
-
-        # The __init__.py file itself should handle menu creation and hook registration.
-        # We don't need to manually add menu items here if __init__.py does it.
-        # However, we can verify if the menu was created.
-
-        # Check if Ankimon menu was added (assuming __init__.py does this)
-        if mw and hasattr(mw, 'menu_bar') and mw.menu_bar:
-            found_menu = False
-            # Iterate through the menus added to the menubar
-            for menu in mw.menu_bar.findChildren(QMenu):
-                if "Ankimon" in menu.title(): # Check for "Ankimon (Test)" or similar
-                    found_menu = True
-                    print("Verified: Ankimon menu found in mock main window.")
-                    break
-            if not found_menu:
-                print("Warning: Ankimon menu not found. Ensure __init__.py creates it.")
-        else:
-            print("Warning: Mock Main Window or menu bar not available to verify Ankimon menu.")
-
-    except ImportError as e:
-        print(f"Error importing Ankimon add-on: {e}")
-        print("Please ensure 'src/Ankimon/__init__.py' is correctly placed and importable.")
-        print("Also, check that all dependencies within Ankimon's __init__.py are mocked or available.")
+        settings_mock = type('MockSettings', (), {
+            'get': lambda self, key, default=None: 9 if key == "misc.language" else default
+        })()
+        mw.translator = type('MockTranslator', (), {
+            'translate': lambda self, key: key.replace("_", " ").title()
+        })()
+        mw.pokemenu = QMenu('Ankimon', main_window)
+        print("Mock mw object configured with translator and pokemenu")
     except Exception as e:
-        print(f"An unexpected error occurred during Ankimon add-on loading: {e}")
+        print(f"Error setting up translator/menu: {e}")
+    return mw
+
+def load_ankimon_addon(mw):
+    """Load and initialize Ankimon addon"""
+    print("\n--- Loading Ankimon Add-on ---")
+    try:
+        ankimon_path = Path(__file__).parent.parent / "src" / "Ankimon"
+        if str(ankimon_path) not in sys.path:
+            sys.path.insert(0, str(ankimon_path))
+            print(f"Added Ankimon path to sys.path: {ankimon_path}")
+        sys.modules['aqt'].mw = mw
+        sys.modules['aqt.main'].mw = mw
+        try:
+            from menu_buttons import create_menu_actions
+            print("Successfully imported menu_buttons")
+            mock_objects = create_mock_objects_for_ankimon()
+            create_menu_actions(**mock_objects)
+            if mw.pokemenu:
+                mw.form.menubar.addMenu(mw.pokemenu)
+                print("Ankimon menu added to menubar")
+        except ImportError as e:
+            print(f"Could not import menu_buttons: {e}")
+            print("Adding fallback menu...")
+        test_menu = mw.form.menubar.addMenu("Review")
+        start_action = test_menu.addAction("Start Review")
+        start_action.triggered.connect(mw.reviewer.show)
+        print("Ankimon integration completed")
+    except Exception as e:
+        print(f"Error during Ankimon integration: {e}")
         import traceback
         traceback.print_exc()
+        test_menu = mw.form.menubar.addMenu("Test")
+        start_action = test_menu.addAction("Start Review (Fallback)")
+        start_action.triggered.connect(mw.reviewer.show)
+        print("Fallback menu added")
 
-# --- Main Test Environment ---
+class TestEnvironmentMainWindow(QMainWindow):
+    """Main window for the Ankimon test environment"""
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Ankimon Test Environment - Reviewer")
+        self.setGeometry(100, 100, 1200, 800)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+        self.reviewer_container = QWidget()
+        self.reviewer_layout = QVBoxLayout(self.reviewer_container)
+        layout.addWidget(self.reviewer_container)
+        self.menubar = QMenuBar(self)
+        self.setMenuBar(self.menubar)
+        print("TestEnvironmentMainWindow initialized")
+    def setup_reviewer(self, reviewer):
+        self.reviewer_layout.addWidget(reviewer.web.qwebengine_view)
+        reviewer.bottom.web.qwebengine_view.setMaximumHeight(100)
+        self.reviewer_layout.addWidget(reviewer.bottom.web.qwebengine_view)
+        print("Reviewer setup in main window")
 
+def main():
+    print("=== Ankimon Test Environment Starting ===")
 
+    # [1] Import PyQt6 widgets and create QApplication FIRST.
+    app = QApplication(sys.argv)
 
-if __name__ == '__main__':
-    app = QApplication.instance()
-    if not app:
-        app = QApplication(sys.argv)
+    # [2] Now that Qt classes are available, do *all* subclassing *here*:
 
-    # Setup mocks for Anki and AQT modules BEFORE loading the add-on
-    # setup_ankiaqt_mocks()
+    class TestEnvironmentMainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.setWindowTitle("Ankimon Test Environment - Reviewer")
+            self.setGeometry(100, 100, 1200, 800)
+            central_widget = QWidget()
+            self.setCentralWidget(central_widget)
+            layout = QVBoxLayout(central_widget)
+            self.reviewer_container = QWidget()
+            self.reviewer_layout = QVBoxLayout(self.reviewer_container)
+            layout.addWidget(self.reviewer_container)
+            self.menubar = QMenuBar(self)
+            self.setMenuBar(self.menubar)
+            print("TestEnvironmentMainWindow initialized")
+        def setup_reviewer(self, reviewer):
+            self.reviewer_layout.addWidget(reviewer.web.qwebengine_view)
+            reviewer.bottom.web.qwebengine_view.setMaximumHeight(100)
+            self.reviewer_layout.addWidget(reviewer.bottom.web.qwebengine_view)
+            print("Reviewer setup in main window")
 
-    # Create the main window (which will host menus and potentially the reviewer)
-    mw = MockMainWindow()
+    # Now import your mocks (which may reference PyQt classes)
+    setup_anki_mocks()
+    from mock_aqt.reviewer import MockReviewer
+    from mock_anki.collection import MockScheduler, Collection
 
-    # Load the add-on's initialization code
-    # load_ankimon_addon()
+    main_window = TestEnvironmentMainWindow()
+    ankimon_root = Path(__file__).parent.parent
+    reviewer = MockReviewer(None)
+    reviewer.web.ankimon_root = ankimon_root
+    reviewer.bottom.web.ankimon_root = ankimon_root
+    main_window.setup_reviewer(reviewer)
+    mw = setup_global_mw(main_window, reviewer)
+    reviewer.mw = mw
+    load_ankimon_addon(mw)
+    main_window.show()
 
-    # Show the main window
-    mw.show()
+    print("\n=== Ankimon Test Environment Ready ===")
+    print("Use 'Review > Start Review' or 'Ankimon' menu to begin card review")
+    print("Expected workflow: Question -> Show Answer -> Ease buttons -> Next card")
+    print("The Ankimon HUD should appear as an overlay on the card content")
 
-    print("\n--- Test Environment Setup Complete ---")
-    print("Ankimon menu should be visible in the mock main window.")
-    print("Click 'Ankimon (Mock)' -> 'Start Review (Mock)' to start a mock review session.")
-
-    print("\nStarting Qt event loop...")
-    # Run the Qt application's event loop
     sys.exit(app.exec())
 
+if __name__ == "__main__":
+    main()

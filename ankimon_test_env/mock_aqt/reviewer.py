@@ -1,158 +1,219 @@
 import json
 from typing import Any, Callable
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtCore import QUrl
+from PyQt6.QtWebEngineCore import QWebEnginePage
+from PyQt6.QtCore import QUrl, pyqtSlot
+from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from pathlib import Path
-from mock_anki.collection import MockCard, MockQueuedCards, MockQueuedCard, MockSchedulingStates, MockCurrentState, MockNote, MockProgress, MockTimer, MockV3CardInfo, MockScheduler # Updated import
+from mock_anki.collection import MockCard, MockScheduler
 
 class MockWebview:
+    """Mock for aqt.webview.AnkiWebView"""
+    
     def __init__(self, mw, ankimon_root, name="", parent=None):
         self.mw = mw
         self.name = name
         self._bridge_command_handler: Callable[[str], None] | None = None
         self.allow_drops = False
-        
-        # The actual QWebEngineView instance
-        self.qwebengine_view = QWebEngineView(parent)
         self.ankimon_root = ankimon_root
-        self.web_assets_path = QUrl.fromLocalFile(str(Path(self.ankimon_root) / "src" / "Ankimon" / "aqt" / "data" / "web") + "/")
-        self.qwebengine_view.setHtml("<h1>Mock Webview: Initializing...</h1>", self.web_assets_path)
-        self.qwebengine_view.hide()
-
-    def stdHtml(self, html: str, css: list[str], js: list[str], context: Any):
-        print(f"MockWebview ({self.name}): stdHtml called.")
-        print(f"  HTML (truncated): {html[:200]}...")
-        print(f"  CSS: {css}")
-        print(f"  JS: {js}")
-        print(f"  Context: {context.__class__.__name__}")
-        self._current_html = html
-        self._current_css = css
-        self._current_js = js
-        self._current_context = context
         
-        # Set HTML on the actual QWebEngineView
-        self.qwebengine_view.setHtml(html, self.web_assets_path)
-
-    def set_bridge_command(self, handler: Callable[[str], None], context: Any):
-        print(f"MockWebview ({self.name}): set_bridge_command called with handler {handler.__name__} and context {context.__class__.__name__}")
-        self._bridge_command_handler = handler
-        # Connect the QWebEngineView's bridge to our handler
-        self.qwebengine_view.page().setHtml(self._current_html, self.web_assets_path) # Re-set HTML to ensure bridge is active
-        self.qwebengine_view.page().javaScriptMessageReceived.connect(self._js_message_received)
-
-    def _js_message_received(self, message: str):
-        # This method will be called when JavaScript sends a message via pycmd
-        print(f"MockWebview ({self.name}): JavaScript message received: {message}")
-        if self._bridge_command_handler:
-            self._bridge_command_handler(message)
-
-    def eval(self, js_code: str):
-        print(f"MockWebview ({self.name}): eval called with JS: {js_code[:200]}...")
-        self.qwebengine_view.page().runJavaScript(js_code)
-
-    def evalWithCallback(self, js_code: str, callback: Callable[[Any], None]):
-        print(f"MockWebview ({self.name}): evalWithCallback called with JS: {js_code[:200]}... and callback {callback.__name__}")
-        self.qwebengine_view.page().runJavaScript(js_code, callback)
-
-    def show(self):
-        self.qwebengine_view.show()
-
-    def hide(self):
-        self.qwebengine_view.hide()
-
-class ReviewerBottomBar:
-    def __init__(self, reviewer):
-        self.reviewer = reviewer
-
-class Reviewer:
-    def __init__(self, mw) -> None:
-        self.mw = mw
-        # Pass the parent (mw.form) to MockWebview for proper QWebEngineView parenting
-        self.web = MockWebview(self.mw, "main", parent=self.mw.form)
-        self.bottom = ReviewerBottomBar(self) # This will be replaced by a proper BottomBar mock later
-        self.card: MockCard | None = None
-        self.state: str | None = None
-        self._answeredIds: list = []
-        self._v3 = None # Placeholder for V3CardInfo
-
-    def show(self) -> None:
-        print("Reviewer: show() called")
-        self.mw.setStateShortcuts([]) # Placeholder
-        self.web.set_bridge_command(self._linkHandler, self)
-        # Assuming bottom.web exists and has set_bridge_command
-        self.mw.bottomWeb.set_bridge_command(self._linkHandler, ReviewerBottomBar(self))
-        self.nextCard()
-
-    def nextCard(self) -> None:
-        print("Reviewer: nextCard() called")
-        # Simulate getting a card from the scheduler
-        self.card = self.mw.col.sched.get_next_card()
-        if self.card:
-            self._v3 = MockV3CardInfo(self.card) # Initialize _v3
-            self._initWeb()
-            self._showQuestion()
-        else:
-            print("Reviewer: No more cards from scheduler.")
-            self.web.qwebengine_view.setHtml("<h1>No more cards to review!</h1>")
-
-    def _initWeb(self) -> None:
-        print("Reviewer: _initWeb() called")
-        self.web.stdHtml(
-            self.revHtml(self.card), # Updated call
-            css=["css/reviewer.css"],
-            js=["js/mathjax.js", "js/vendor/mathjax/tex-chtml-full.js", "js/reviewer.js"],
-            context=self,
+        # Create the actual QWebEngineView
+        self.qwebengine_view = QWebEngineView(parent)
+        self.web_assets_path = QUrl.fromLocalFile(
+            str(Path(self.ankimon_root) / "src" / "Ankimon" / "aqt" / "data" / "web") + "/"
         )
-        self.mw.bottomWeb.stdHtml(
-            self._bottomHTML(),
+        
+        # No explicit bridge setup needed, pycmd is in HTML
+        
+        print(f"MockWebview '{name}' initialized with assets path: {self.web_assets_path}")
+    
+    def stdHtml(self, html, css=None, js=None, context=None):
+        """Load HTML with CSS and JS assets similar to Anki's stdHtml"""
+        css = css or []
+        js = js or []
+        
+        # Build full HTML with assets
+        full_html = self._build_full_html(html, css, js)
+        self.setHtml(full_html)
+        
+        print(f"MockWebview.stdHtml called with HTML length: {len(html)}")
+        return self
+    
+    def _build_full_html(self, body_html, css_files, js_files):
+        """Build complete HTML document with CSS and JS"""
+        # CSS links
+        css_links = ""
+        for css_file in css_files:
+            css_path = Path(self.ankimon_root) / "src" / "Ankimon" / "aqt" / "data" / "web" / css_file
+            if css_path.exists():
+                css_links += f'<link rel="stylesheet" href="file://{css_path}">\n'
+            else:
+                print(f"Warning: CSS file not found: {css_path}")
+        
+        # JS scripts
+        js_scripts = ""
+        for js_file in js_files:
+            js_path = Path(self.ankimon_root) / "src" / "Ankimon" / "aqt" / "data" / "web" / js_file
+            if js_path.exists():
+                js_scripts += f'<script src="file://{js_path}"></script>\n'
+            else:
+                print(f"Warning: JS file not found: {js_path}")
+        
+        # Complete HTML document
+        full_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ankimon Reviewer</title>
+    {css_links}
+</head>
+<body class="ankidesktop">
+    {body_html}
+    {js_scripts}
+    <script>
+        window.pycmd = function(cmd) {{
+            console.log('pycmd called with:', cmd);
+            if (window.bridge) {{
+                window.bridge.onMessage(cmd);
+            }}
+        }};
+        window.bridgeCommand = window.pycmd; // Alias for compatibility
+
+        // Set up bridge communication
+        window.bridge = {{
+            onMessage: function(cmd) {{
+                console.log('Bridge received:', cmd);
+                // Send to Python via Qt
+                if (window.qt && window.qt.webChannelTransport) {{
+                    // WebChannel approach
+                }} else {{
+                    // Fallback - we'll handle this in Python
+                    document.title = 'pycmd:' + cmd;
+                }}
+            }}
+        }};
+        
+        console.log('Ankimon reviewer webview initialized');
+    </script>
+</body>
+</html>
+        """
+        return full_html
+    
+    def setHtml(self, html, base_url=None):
+        """Set HTML content"""
+        if base_url is None:
+            base_url = self.web_assets_path
+        self.qwebengine_view.setHtml(html, base_url)
+        print(f"MockWebview.setHtml called with {len(html)} characters")
+    
+    def eval(self, js_code):
+        """Execute JavaScript code"""
+        print(f"MockWebview.eval: {js_code[:100]}...")
+        self.qwebengine_view.page().runJavaScript(js_code)
+    
+    def set_bridge_command(self, handler, context=None):
+        """Set the Python handler for pycmd calls"""
+        self._bridge_command_handler = handler
+        print(f"Bridge command handler set: {handler.__name__ if handler else None}")
+        
+        # Monitor title changes for pycmd communication
+        self.qwebengine_view.titleChanged.connect(self._handle_title_change)
+    
+    def _handle_title_change(self, title):
+        """Handle pycmd communication via title changes"""
+        if title.startswith('pycmd:') and self._bridge_command_handler:
+            cmd = title[6:]  # Remove 'pycmd:' prefix
+            print(f"Handling pycmd: {cmd}")
+            self._bridge_command_handler(cmd)
+
+class MockReviewer:
+    """High-fidelity mock of aqt.reviewer.Reviewer"""
+    
+    def __init__(self, mw):
+        self.mw = mw
+        self.card = None
+        self.previous_card = None
+        self.state = "initial"  # "question", "answer", "transition"
+        self._answeredIds = []
+        
+        # Create web views
+        self.web = MockWebview(mw, Path(__file__).parent.parent.parent, "reviewer", None)
+        self.bottom = type('Bottom', (), {})()  # Simple namespace
+        self.bottom.web = MockWebview(mw, Path(__file__).parent.parent.parent, "reviewer-bottom", None)
+        
+        # Set up bridge handlers
+        self.web.set_bridge_command(self._linkHandler, self)
+        self.bottom.web.set_bridge_command(self._linkHandler, self)
+        
+        print("MockReviewer initialized")
+    
+    def show(self):
+        """Show the reviewer and start review session"""
+        print("MockReviewer.show() called")
+        self.state = "transition"
+        
+        # Initialize web views with HTML
+        self._initWeb()
+        
+        # Get first card and show question
+        self.nextCard()
+    
+    def _initWeb(self):
+        """Initialize web views with base HTML, CSS, and JS"""
+        print("MockReviewer._initWeb() called")
+        
+        # Main reviewer HTML
+        main_html = self.revHtml()
+        self.web.stdHtml(
+            main_html,
+            css=["css/reviewer.css", "css/reviewer-bottom.css"],
+            js=["js/reviewer.js", "js/reviewer-bottom.js"],
+            context=self
+        )
+        
+        # Bottom bar HTML  
+        bottom_html = self._bottomHTML()
+        self.bottom.web.stdHtml(
+            bottom_html,
             css=["css/toolbar-bottom.css", "css/reviewer-bottom.css"],
             js=["js/vendor/jquery.min.js", "js/reviewer-bottom.js"],
-            context=ReviewerBottomBar(self),
+            context=self
         )
-
-    def revHtml(self, card: MockCard) -> str:
-        print("Reviewer: revHtml() called")
-        # Basic HTML structure, similar to real Anki
-        # Simulate rendering card fields
-        question_html = card.question()
-        answer_html = card.answer()
-
-        return """
-<div id="_mark" hidden>&#x2605;</div>
-<div id="_flag" hidden>&#x2691;</div>
-<div id="qa">
-    <div id="question">{question_html}</div>
-    <div id="answer" style="display: none;">{answer_html}</div>
-</div>
-<script>
-function pycmd(cmd) {
-    qt.webChannelTransport.send(cmd);
-}
-function showQuestion() {
-    document.getElementById('question').style.display = 'block';
-    document.getElementById('answer').style.display = 'none';
-}
-function showAnswer() {
-    document.getElementById('question').style.display = 'none';
-    document.getElementById('answer').style.display = 'block';
-}
-</script>
-""".format(question_html=question_html, answer_html=answer_html)
-
-    def _bottomHTML(self) -> str:
-        print("Reviewer: _bottomHTML() called")
-        # Basic HTML for the bottom bar
-        return """
+    
+    def revHtml(self):
+        """Generate main reviewer HTML similar to Anki's revHtml()"""
+        # Get any extra HTML from collection config
+        extra = self.mw.col.get_config("reviewExtra") or ""
+        
+        # Add Ankimon HUD container to extra
+        ankimon_hud = '<div id="ankimon-hud"></div>'
+        extra = ankimon_hud + extra
+        
+        html = f"""
+<div id="_mark" hidden>★</div>
+<div id="_flag" hidden>🚩</div>
+<div id="qa"></div>
+{extra}
+        """
+        return html
+    
+    def _bottomHTML(self):
+        """Generate bottom toolbar HTML similar to Anki's _bottomHTML()"""
+        time_taken = self.card.time_taken() // 1000 if self.card else 0
+        
+        html = f"""
 <center id=outer>
-<table id=innertable width=100%% cellspacing=0 cellpadding=0>
+<table id=innertable width=100% cellspacing=0 cellpadding=0>
 <tr>
 <td align=start valign=top class=stat>
-<button title="Edit" onclick="pycmd('edit');">Edit</button></td>
+<button title="Edit (E)" onclick="pycmd('edit');">Edit</button></td>
 <td align=center valign=top id=middle>
 </td>
 <td align=end valign=top class=stat>
-<button title="More" onclick="pycmd('more');">
-More
+<button title="More (M)" onclick="pycmd('more');">
+More ▼
 <span id=time class=stattxt></span>
 </button>
 </td>
@@ -160,95 +221,227 @@ More
 </table>
 </center>
 <script>
-function pycmd(cmd) {
-    qt.webChannelTransport.send(cmd);
-}
-function showQuestion(html, maxTime) {
-    document.getElementById('middle').innerHTML = html;
-}
-function showAnswer(html, stopTimerOnAnswer) {
-    document.getElementById('middle').innerHTML = html;
-}
+time = {time_taken};
+timerStopped = false;
 </script>
-"""
-
-    def _showQuestion(self) -> None:
-        print("Reviewer: _showQuestion() called")
+        """
+        return html
+    
+    def nextCard(self):
+        """Get and display the next card"""
+        print("MockReviewer.nextCard() called")
+        
+        # Get next card from scheduler
+        if hasattr(self.mw.col, 'sched') and self.mw.col.sched:
+            next_card = self.mw.col.sched.get_next_card()
+            if next_card:
+                self.card = next_card
+                self._showQuestion()
+            else:
+                self._noMoreCards()
+        else:
+            print("Warning: No scheduler available")
+    
+    def _showQuestion(self):
+        """Display the question side of the current card"""
+        if not self.card:
+            return
+        
+        print(f"MockReviewer._showQuestion() for card {self.card.id}")
         self.state = "question"
-        q = self.card.question()
-        # Simulate card text preparation and hooks
-        q = self._mungeQA(q)
-        # In real Anki, this would involve gui_hooks.card_will_show
-        bodyclass = "card-ord-0" # Placeholder
-        a = self.card.answer() # Get answer for JS eval
-        self.web.eval(f"_showQuestion({json.dumps(q)}, {json.dumps(a)}, '{bodyclass}');")
+        
+        # Get question HTML
+        question_html = self.card.question()
+        
+        # Execute JavaScript to show question
+        js_code = f"""
+if (typeof showQuestion === 'function') {{
+    showQuestion(`{self._escape_js(question_html)}`, 0);
+}} else {{
+    if (document.getElementById('qa')) {{
+        document.getElementById('qa').innerHTML = `{self._escape_js(question_html)}`;
+    }}
+}}
+        """
+        self.web.eval(js_code)
+        
+        # Show the "Show Answer" button
         self._showAnswerButton()
-
-    def _showAnswer(self) -> None:
-        print("Reviewer: _showAnswer() called")
+        
+        # Inject Ankimon HUD if available
+        self._injectAnkimonHUD()
+    
+    def _showAnswer(self):
+        """Display the answer side of the current card"""
+        if not self.card:
+            return
+        
+        print(f"MockReviewer._showAnswer() for card {self.card.id}")
         self.state = "answer"
-        a = self.card.answer()
-        a = self._mungeQA(a)
-        self.web.eval(f"_showAnswer({json.dumps(a)});")
+        
+        # Get answer HTML
+        answer_html = self.card.answer()
+        
+        # Execute JavaScript to show answer
+        js_code = f"""
+if (typeof showAnswer === 'function') {{
+    showAnswer(`{self._escape_js(answer_html)}`, true);
+}} else {{
+    if (document.getElementById('qa')) {{
+        document.getElementById('qa').innerHTML = `{self._escape_js(answer_html)}`;
+    }}
+}}
+        """
+        self.web.eval(js_code)
+        
+        # Show ease buttons
         self._showEaseButtons()
-
-    def _mungeQA(self, buf: str) -> str:
-        # Simplified version of the real _mungeQA
-        # In real Anki, this handles type-in-the-answer fields and media
-        return buf
-
-    def _showAnswerButton(self) -> None:
-        print("Reviewer: _showAnswerButton() called")
-        middle = """
-<button title="Show Answer" id="ansbut" onclick='pycmd("ans");'>Show Answer<span class=stattxt></span></button>
-"""
-        self.mw.bottomWeb.eval(f"showQuestion({json.dumps(middle)}, 0);")
-
-    def _showEaseButtons(self) -> None:
-        print("Reviewer: _showEaseButtons() called")
-        middle = self._answerButtons()
-        conf = {"stopTimerOnAnswer": False} # Placeholder for deck config
-        self.mw.bottomWeb.eval(f"showAnswer({json.dumps(middle)}, {json.dumps(conf['stopTimerOnAnswer'])});")
-
-    def _answerButtons(self) -> str:
-        print("Reviewer: _answerButtons() called")
-        # Simplified answer buttons
-        return """
-<center><table cellpadding=0 cellspacing=0><tr>
-<td align=center><button data-ease="1" onclick='pycmd("ease1");'>Again</button></td>
-<td align=center><button data-ease="2" onclick='pycmd("ease2");'>Hard</button></td>
-<td align=center><button data-ease="3" onclick='pycmd("ease3");'>Good</button></td>
-<td align=center><button data-ease="4" onclick='pycmd("ease4");'>Easy</button></td>
-</tr></table></center>
-"""
-
-    def _linkHandler(self, url: str) -> None:
-        print(f"Reviewer: _linkHandler() called with URL: {url}")
+    
+    def _showAnswerButton(self):
+        """Show the 'Show Answer' button"""
+        button_html = '<button id="ansbut" onclick="pycmd(\'ans\');">Show Answer</button>'
+        js_code = f"if (document.getElementById('middle')) {{ document.getElementById('middle').innerHTML = `{button_html}`; }}"
+        self.bottom.web.eval(js_code)
+    
+    def _showEaseButtons(self):
+        """Show ease rating buttons (Again/Hard/Good/Easy)"""
+        if not self.card or not hasattr(self.mw.col, 'sched'):
+            return
+        
+        # Get number of buttons from scheduler
+        button_count = self.mw.col.sched.answerButtons(self.card)
+        
+        # Generate buttons based on count
+        if button_count == 2:
+            buttons = [
+                (1, "Again"),
+                (2, "Good")
+            ]
+        elif button_count == 3:
+            buttons = [
+                (1, "Again"),
+                (2, "Good"), 
+                (3, "Easy")
+            ]
+        else:  # 4 buttons
+            buttons = [
+                (1, "Again"),
+                (2, "Hard"),
+                (3, "Good"),
+                (4, "Easy")
+            ]
+        
+        # Generate button HTML
+        button_html = ""
+        for ease, label in buttons:
+            button_html += f'<button data-ease="{ease}" onclick="pycmd(\'ease{ease}\');">{label}</button>'
+        
+        # Insert buttons
+        js_code = f"if (document.getElementById('middle')) {{ document.getElementById('middle').innerHTML = `{button_html}`; }}"
+        self.bottom.web.eval(js_code)
+    
+    def _answerCard(self, ease):
+        """Handle answering a card with the given ease"""
+        if not self.card:
+            return
+        
+        print(f"MockReviewer._answerCard() ease={ease} for card {self.card.id}")
+        
+        # Add to answered cards list
+        self._answeredIds.append(self.card.id)
+        self.previous_card = self.card
+        
+        # Update scheduler
+        if hasattr(self.mw.col, 'sched') and self.mw.col.sched:
+            self.mw.col.sched.answerCard(self.card, ease)
+        
+        # Move to next card
+        self.nextCard()
+    
+    def _noMoreCards(self):
+        """Handle case when no more cards are available"""
+        print("MockReviewer._noMoreCards() - Review session complete")
+        self.card = None
+        self.state = "complete"
+        
+        # Show completion message
+        completion_html = "<div>Review Complete!<br>No more cards to review.</div>"
+        js_code = f"if (document.getElementById('qa')) {{ document.getElementById('qa').innerHTML = `{completion_html}`; }}"
+        self.web.eval(js_code)
+        
+        # Clear bottom buttons
+        js_code = "document.getElementById('middle').innerHTML = '';"
+        self.bottom.web.eval(js_code)
+    
+    def _linkHandler(self, url):
+        """Handle pycmd calls from JavaScript"""
+        print(f"MockReviewer._linkHandler received: {url}")
+        
         if url == "ans":
-            print("  -> Handling 'ans' (Show Answer)")
+            # Show Answer button clicked
             self._showAnswer()
         elif url.startswith("ease"):
-            ease = int(url[4:])
-            print(f"  -> Handling 'ease{ease}' (Answer Card with ease {ease})")
-            self._answerCard(ease)
+            # Ease button clicked
+            try:
+                ease = int(url[4:])  # Extract number from "ease1", "ease2", etc.
+                self._answerCard(ease)
+            except (ValueError, IndexError):
+                print(f"Invalid ease command: {url}")
         elif url == "edit":
-            print("  -> Handling 'edit' (Edit Current)")
-            # self.mw.onEditCurrent() # Placeholder
+            print("Edit button clicked (not implemented)")
         elif url == "more":
-            print("  -> Handling 'more' (Show Context Menu)")
-            # self.showContextMenu() # Placeholder
-        elif url.startswith("play:"):
-            print(f"  -> Handling 'play:' (Play Audio: {url[5:]})")
-            # play_clicked_audio(url, self.card) # Placeholder
-        elif url == "statesMutated":
-            print("  -> Handling 'statesMutated'")
-            # self._states_mutated = True # Placeholder
+            print("More button clicked (not implemented)")
         else:
-            print(f"  -> Unrecognized Anki link: {url}")
-
-    def _answerCard(self, ease: int) -> None:
-        print(f"Reviewer: _answerCard() called with ease: {ease}")
-        # Simulate answering the card and moving to the next
-        self.mw.col.sched.answerCard(self.card, ease) # Call the scheduler's answerCard
-        self._answeredIds.append(self.card.id)
-        self.nextCard()
+            print(f"Unknown pycmd: {url}")
+    
+    def _injectAnkimonHUD(self):
+        """Inject Ankimon HUD CSS and elements if available"""
+        try:
+            # Try to import Ankimon's HUD creation functions
+            # This would be dynamically loaded based on the actual add-on
+            
+            # For now, inject a basic HUD structure
+            hud_css = """
+            <style>
+            #ankimon-hud {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                pointer-events: none;
+                z-index: 9999;
+            }
+            #ankimon-hud > * {
+                pointer-events: auto;
+            }
+            </style>
+            """
+            
+            js_code = f"""
+            // Inject Ankimon HUD CSS
+            var style = document.createElement('style');
+            style.textContent = `{hud_css.replace('`', '\\`')}`;
+            document.head.appendChild(style);
+            
+            // Create HUD container if it doesn't exist
+            if (!document.getElementById('ankimon-hud')) {{
+                var hud = document.createElement('div');
+                hud.id = 'ankimon-hud';
+                document.body.appendChild(hud);
+                console.log('Ankimon HUD container created');
+            }}
+            """
+            
+            self.web.eval(js_code)
+            print("Ankimon HUD injected")
+            
+        except Exception as e:
+            print(f"Failed to inject Ankimon HUD: {e}")
+    
+    def _escape_js(self, text):
+        """Escape text for safe insertion into JavaScript"""
+        if not text:
+            return ""
+        # Basic escaping - in production you'd want more robust escaping
+        return text.replace('`', '\\`').replace('\\', '\\\\').replace('\n', '\\n').replace('\r', '\\r')
