@@ -74,6 +74,7 @@ class BuildInfo:
 class ProfileManager:
     def __init__(self):
         print("MockProfileManager initialized.")
+        self.name = "test_profile" # Mock profile name
     def openProfile(self, profile_name):
         print(f"MockProfileManager: Opening profile '{profile_name}'")
 
