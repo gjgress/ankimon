@@ -162,7 +162,7 @@ test_window = TestWindow(
     settings_obj=settings_obj,
     ankimon_tracker_obj=ankimon_tracker_obj,
     translator=translator,
-    parent=mw,
+    parent=mw.form, # Use mw.form which is a QWidget, not mw itself
     )
 
 achievement_bag = AchievementWindow()
