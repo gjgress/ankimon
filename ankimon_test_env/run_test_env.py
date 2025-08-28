@@ -6,6 +6,11 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
+# Add src to sys.path early so Ankimon modules can be imported
+src_path = Path(__file__).parent.parent / "src"
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
 # Define the Ankimon addon directory for easy access
 ANKIMON_ADDON_DIR = Path(__file__).parent.parent / "src" / "Ankimon"
 
