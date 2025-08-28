@@ -6,8 +6,11 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
-# Add src to sys.path early so Ankimon modules can be imported
-src_path = Path(__file__).parent.parent / "src"
+# Add project root and src to sys.path to allow for absolute imports
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+src_path = project_root / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
@@ -187,8 +190,7 @@ def setup_anki_mocks():
 def setup_global_mw():
     """Set up the global mw object that Ankimon expects"""
     from PyQt6.QtWidgets import QApplication
-    from ankimon_test_env.mock_anki.__init__ import MockAnkiMainWindow # Import our specific mock
-    from ankimon_test_env.run_test_env import ANKIMON_ADDON_DIR # Access the global addon dir
+    from ankimon_test_env.mock_anki import MockAnkiMainWindow # Import our specific mock
 
     # Instantiate our custom MockAnkiMainWindow, passing the addon directory
     mw = MockAnkiMainWindow(addon_dir=str(ANKIMON_ADDON_DIR))
