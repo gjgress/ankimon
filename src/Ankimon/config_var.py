@@ -17,8 +17,8 @@ import json
 
 ADDON_ID = "Ankimon" # Assuming Ankimon's addon ID, ensure this matches actual addon ID
 
-    print("Running in test environment, mocking config.")
-    class MockSettings:
+print("Running in test environment, mocking config.")
+class MockSettings:
         def __init__(self):
             self._config = {}
             # Try to load config from the mock addon manager
@@ -90,29 +90,6 @@ ADDON_ID = "Ankimon" # Assuming Ankimon's addon ID, ensure this matches actual a
             # Merge loaded config with defaults, loaded config takes precedence
             self._config.update(default_config)
             self._config.update(loaded_config) # Overwrite defaults with actual loaded values
-                "gui.hp_bar_config": 3, # 12px
-                "gui.xp_bar_location": 2, # bottom
-                "gui.animate_time": True,
-                "gui.view_main_front": True,
-                "gui.gif_in_collection": True,
-                "gui.styling_in_reviewer": True,
-                "battle.automatic_battle": 0,
-                "battle.dmg_in_reviewer": False,
-                "battle.cards_per_round": 5,
-                "misc.leaderboard": False,
-                "misc.ankiweb_sync": False,
-                "misc.YouShallNotPass_Ankimon_News": False,
-                "misc.remove_level_cap": False,
-                "misc.ssh": True,
-                "misc.language": 9, # Default language
-                "controls.key_for_opening_closing_ankimon": "Ctrl+Shift+A",
-                "controls.defeat_key": 5,
-                "controls.catch_key": 6,
-                "controls.pokemon_buttons": True,
-                "audio.sound_effects": False,
-                "audio.sounds": [],
-                "audio.battle_sounds": [],
-            }
 
         def get(self, key, default=None):
             # Return the value from our mock config, or the default if not found
