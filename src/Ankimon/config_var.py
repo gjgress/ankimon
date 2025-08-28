@@ -1,107 +1,99 @@
 import platform
 import sys
 
-# Attempt to import mw from aqt, but provide a fallback for the test environment
-try:
-    from aqt import mw
-    # If mw is available, it means we are running in a real Anki environment.
-    # We can then try to get the config.
-    config = mw.addonManager.getConfig(__name__)
-except ImportError:
-    # If aqt is not available, we are likely in the test environment.
-    # In this case, we need to mock the config.
-    # We'll use a mock Settings object that can provide default values.
-import aqt # Required to access aqt.mw.addonManager
 import os
 import json
 
-ADDON_ID = "Ankimon" # Assuming Ankimon's addon ID, ensure this matches actual addon ID
+# Define ADDON_ID globally for consistent use
+ADDON_ID = "Ankimon" # Ensure this matches the actual addon ID Ankimon uses with addonManager
 
-print("Running in test environment, mocking config.")
-class MockSettings:
-        def __init__(self):
-            self._config = {}
-            # Try to load config from the mock addon manager
-            loaded_config = {}
-            if hasattr(aqt, 'mw') and hasattr(aqt.mw, 'addonManager') and aqt.mw.addonManager:
-                try:
-                    loaded_config = aqt.mw.addonManager.getConfig(ADDON_ID)
-                    if loaded_config:
-                        print(f"MockSettings: Loaded config from mock addonManager for {ADDON_ID}.")
-                    else:
-                        print("MockSettings: Addon config was empty from mock addonManager, using defaults.")
-                except Exception as e:
-                    print(f"MockSettings: Error loading config from mock addonManager: {e}, using defaults.")
+class Settings: # This class will serve as the config object for both real and mock environments
+    def __init__(self):
+        self._config = {}
+        loaded_config = {}
+        
+        # Try to load real config from Anki's addonManager
+        try:
+            from aqt import mw
+            if hasattr(mw, 'addonManager') and mw.addonManager:
+                loaded_config = mw.addonManager.getConfig(ADDON_ID)
+                if loaded_config:
+                    print(f"Settings: Loaded config from Anki's addonManager for {ADDON_ID}.")
+                else:
+                    print(f"Settings: Addon config was empty from Anki's addonManager, using defaults for {ADDON_ID}.")
             else:
-                print("MockSettings: aqt.mw or addonManager not available, using hardcoded defaults.")
+                print("Settings: aqt.mw or addonManager not fully available, using hardcoded defaults.")
+        except ImportError:
+            # This is expected in the test environment before mocks are fully set up.
+            print("Settings: aqt not available (test environment or no Anki), using hardcoded defaults.")
+        except Exception as e:
+            print(f"Settings: Error loading config from Anki's addonManager: {e}, using defaults.")
 
-            # Define comprehensive default values, mirroring src\Ankimon\config.json
-            default_config = {
-                "battle.dmg_in_reviewer": True,
-                "battle.automatic_battle": 0,
-                "battle.cards_per_round": 2,
-                "battle.daily_average": 100,
-                "battle.card_max_time": 60,
-                "controls.pokemon_buttons": True,
-                "controls.defeat_key": "5",
-                "controls.catch_key": "6",
-                "controls.key_for_opening_closing_ankimon": "Ctrl+N",
-                "controls.allow_to_choose_moves": False,
-                "gui.animate_time": True,
-                "gui.gif_in_collection": True,
-                "gui.styling_in_reviewer": True,
-                "gui.hp_bar_config": True,
-                "gui.pop_up_dialog_message_on_defeat": False,
-                "gui.review_hp_bar_thickness": 2,
-                "gui.reviewer_image_gif": False,
-                "gui.reviewer_text_message_box": True,
-                "gui.reviewer_text_message_box_time": 3,
-                "gui.show_mainpkmn_in_reviewer": 1,
-                "gui.view_main_front": True,
-                "gui.xp_bar_config": True,
-                "gui.xp_bar_location": 2,
-                "audio.sound_effects": False,
-                "audio.sounds": True,
-                "audio.battle_sounds": False,
-                "misc.gen1": True,
-                "misc.gen2": True,
-                "misc.gen3": True,
-                "misc.gen4": True,
-                "misc.gen5": True,
-                "misc.gen6": True,
-                "misc.gen7": False,
-                "misc.gen8": False,
-                "misc.gen9": False,
-                "misc.remove_level_cap": False,
-                "misc.leaderboard": False,
-                "misc.language": 9,
-                "misc.ssh": True,
-                "misc.YouShallNotPass_Ankimon_News": False,
-                "misc.discord_rich_presence": False,
-                "misc.discord_rich_presence_text": 1,
-                "misc.show_tip_on_startup": True,
-                "misc.last_tip_index": 0,
-                "trainer.name": "Ash",
-                "trainer.sprite": "ash",
-                "trainer.id": 0,
-                "trainer.cash": 0
-            }
+        # Define comprehensive default values, mirroring src\Ankimon\config.json
+        # This block needs to be accessible always, regardless of Anki/aqt availability.
+        default_config = {
+            "battle.dmg_in_reviewer": True,
+            "battle.automatic_battle": 0,
+            "battle.cards_per_round": 2,
+            "battle.daily_average": 100,
+            "battle.card_max_time": 60,
+            "controls.pokemon_buttons": True,
+            "controls.defeat_key": "5",
+            "controls.catch_key": "6",
+            "controls.key_for_opening_closing_ankimon": "Ctrl+N",
+            "controls.allow_to_choose_moves": False,
+            "gui.animate_time": True,
+            "gui.gif_in_collection": True,
+            "gui.styling_in_reviewer": True,
+            "gui.hp_bar_config": True,
+            "gui.pop_up_dialog_message_on_defeat": False,
+            "gui.review_hp_bar_thickness": 2,
+            "gui.reviewer_image_gif": False,
+            "gui.reviewer_text_message_box": True,
+            "gui.reviewer_text_message_box_time": 3,
+            "gui.show_mainpkmn_in_reviewer": 1,
+            "gui.view_main_front": True,
+            "gui.xp_bar_config": True,
+            "gui.xp_bar_location": 2,
+            "audio.sound_effects": False,
+            "audio.sounds": True,
+            "audio.battle_sounds": False,
+            "misc.gen1": True,
+            "misc.gen2": True,
+            "misc.gen3": True,
+            "misc.gen4": True,
+            "misc.gen5": True,
+            "misc.gen6": True,
+            "misc.gen7": False,
+            "misc.gen8": False,
+            "misc.gen9": False,
+            "misc.remove_level_cap": False,
+            "misc.leaderboard": False,
+            "misc.language": 9,
+            "misc.ssh": True,
+            "misc.YouShallNotPass_Ankimon_News": False,
+            "misc.discord_rich_presence": False,
+            "misc.discord_rich_presence_text": 1,
+            "misc.show_tip_on_startup": True,
+            "misc.last_tip_index": 0,
+            "trainer.name": "Ash",
+            "trainer.sprite": "ash",
+            "trainer.id": 0,
+            "trainer.cash": 0
+        }
 
-            # Merge loaded config with defaults, loaded config takes precedence
-            self._config.update(default_config)
-            self._config.update(loaded_config) # Overwrite defaults with actual loaded values
+        # Merge loaded config with defaults, loaded config takes precedence
+        self._config.update(default_config)
+        self._config.update(loaded_config) # Overwrite defaults with actual loaded values
+        
+    def get(self, key, default=None):
+        return self._config.get(key, default)
 
-        def get(self, key, default=None):
-            # Return the value from our mock config, or the default if not found
-            return self._config.get(key, default)
-
-    # Instantiate the mock settings to get config values
-    settings_instance = MockSettings()
-    config = settings_instance # Use the mock settings instance as our config object
+# Instantiate the Settings class to be the global config object for this module
+config = Settings()
 
 # Now, use the 'config' object (either real or mocked) to get values.
-# We need to ensure that if 'config' is a mock object, it behaves like a dictionary
-# or has a .get() method. The MockSettings class above provides this.
+# The config object is now ready for use by the rest of the file.
 
 # Accessing config values, ensuring they are available or have defaults
 pop_up_dialog_message_on_defeat = config.get("gui.pop_up_dialog_message_on_defeat", True)
