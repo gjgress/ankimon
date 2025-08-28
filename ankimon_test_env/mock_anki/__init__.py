@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QWidget, QMainWindow, QMenu, QMenuBar, QVBoxLayout, 
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer
 from PyQt6.QtGui import QIcon, QKeySequence
+from .collection import Collection # Import the more detailed Collection class
 
 # Mock classes for dependencies
 class Card:
@@ -82,20 +83,6 @@ class EnemyPokemon:
 class Achievements:
     pass
 
-class Collection:
-    def __init__(self):
-        print("Mock anki.Collection initialized.")
-    def get_config(self, key):
-        print(f"Mock anki.Collection: get_config called for {key}")
-        return None
-    def set_config(self, key, value):
-        print(f"Mock anki.Collection: set_config called for {key} = {value}")
-    def add_note(self, note):
-        print(f"Mock anki.Collection: add_note called for {note}")
-    def all_notes(self):
-        print("Mock anki.Collection: all_notes called")
-        return []
-
 class Hooks:
     pass
 
@@ -106,8 +93,9 @@ class MockReviewerWindow(QMainWindow):
     A mock QMainWindow to simulate Anki's main window,
     allowing for injection of Ankimon UI and menus.
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, mw_instance=None):
         super().__init__(parent)
+        self.mw = mw_instance
         self.setWindowTitle("Ankimon Test Environment")
         self.setGeometry(100, 100, 800, 600)
 
