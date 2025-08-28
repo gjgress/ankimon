@@ -12,7 +12,7 @@ from unittest.mock import MagicMock # Import MagicMock
 # --- PyQt6 Imports ---
 # Ensure a consistent import order for Qt components
 try:
-    from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu, QDialog, QGridLayout, QFrame, QHBoxLayout, QStatusBar
+    from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QMainWindow, QMenuBar, QMenu, QDialog, QGridLayout, QFrame, QHBoxLayout, QStatusBar, QSizePolicy
     from PyQt6.QtGui import QAction, QKeySequence, QPixmap, QFont, QFontDatabase, QGuiApplication
     from PyQt6.QtCore import Qt, QUrl
     from PyQt6.QtWebEngineWidgets import QWebEngineView
