@@ -364,7 +364,7 @@ class MainApplicationWindow(QMainWindow):
         super().__init__()
         self.ankimon_objects = ankimon_objects
         self.setWindowTitle("Ankimon Test Environment")
-        self.setGeometry(100, 100, 1600, 1000)
+        self.setGeometry(100, 100, 1280, 720)
         self.setMenuBar(QMenuBar(self))
         self.setStatusBar(QStatusBar(self))
         self.statusBar().showMessage("Ready")
