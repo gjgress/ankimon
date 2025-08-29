@@ -345,12 +345,14 @@ def main():
     from PyQt6.QtWidgets import QApplication
     app = QApplication(sys.argv)
     mw = setup_global_mw()
-    ankimon_objects = load_ankimon_singletons()
-    if not ankimon_objects:
-        print("Failed to load Ankimon objects, exiting.")
-        sys.exit(1)
 
-    main_window = MainApplicationWindow(ankimon_objects)
+    # Create mock data files before importing Ankimon, which loads singletons
+    create_mock_data_files()
+
+    # Import Ankimon to trigger its __init__.py, which handles all setup
+    import Ankimon
+
+    main_window = MainApplicationWindow()
     mw.form = main_window
 
     # Setup reviewer
@@ -361,8 +363,7 @@ def main():
     mw.col.sched = MockScheduler(mw)
     main_window.setup_reviewer(reviewer)
 
-    # Load menu
-    load_ankimon_menu(mw, ankimon_objects)
+    # Ankimon's __init__.py should have created the menu and attached it to mw
     if hasattr(mw, 'pokemenu') and mw.pokemenu:
         main_window.menuBar().addMenu(mw.pokemenu)
         print("Ankimon menu added to menubar")
