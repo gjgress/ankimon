@@ -407,6 +407,7 @@ class EnhancedMockReviewer:
         {ankimon_hud_html}
     </div>
     <!-- Ankimon's main JS scripts would typically be loaded here -->
+    <script src="file://{encoded_addon_dir}/user_files/web/ankimon_hud_portal.js"></script>
     <script src="file://{encoded_addon_dir}/user_files/web/player.js"></script>
     <script src="file://{encoded_addon_dir}/user_files/web/poketeam_front.js"></script>
 </body>
@@ -487,6 +488,7 @@ class EnhancedMockReviewer:
         {ankimon_hud_html}
     </div>
     <!-- Ankimon's main JS scripts would typically be loaded here -->
+    <script src="file://{encoded_addon_dir}/user_files/web/ankimon_hud_portal.js"></script>
     <script src="file://{encoded_addon_dir}/user_files/web/player.js"></script>
     <script src="file://{encoded_addon_dir}/user_files/web/poketeam_front.js"></script>
 </body>
