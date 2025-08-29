@@ -15,27 +15,9 @@ Created: 2025-06-03 (YYY-MM-DD)
 import json
 import uuid
 
-# Attempt to import mw from aqt. Provide a fallback mock for the test environment.
-try:
-    from aqt import mw
-    print("Ankimon singletons: Loaded aqt.mw from real Anki environment.")
-except ImportError:
-    print("Ankimon singletons: aqt.mw not found, creating a minimal mock for test environment.")
-    class MockMw:
-        def __init__(self):
-            # Basic mocks for attributes Ankimon might access early
-            self.col = type('MockCollection', (), {'get_config': lambda s, k: None, 'set_config': lambda s, k, v: None})()
-            self.addonManager = type('MockAddonManager', (), {'getConfig': lambda s, addon_id: {}, 'writeConfig': lambda s, addon_id, config: None})()
-            self.pm = type('MockProfileManager', (), {})()
-            self.form = type('MockForm', (), {'menuBar': lambda s: type('MockMenuBar', (), {'addMenu': lambda s, m: None})()})()
-            self.reviewer = type('MockReviewer', (), {'card': None, 'mw': self})() # Pass self for mw access
-            self.app = type('MockApp', (), {'instance': lambda s: None, 'win': None})()
-            self.pokemenu = type('MockMenu', (), {'addMenu': lambda s, t: type('MockSubMenu', (), {'addAction': lambda s, a: None})(), 'addAction': lambda s, a: None})()
-            self.translator = type('MockTranslator', (), {'translate': lambda s, t: t})() # Simple translator mock
-            print("Ankimon singletons: Minimal mock mw created.")
-    mw = MockMw()
+from aqt import mw
 
-from Ankimon.pyobj.collection_dialog import PokemonCollectionDialog
+from .pyobj.collection_dialog import PokemonCollectionDialog
 from .pyobj.ankimon_tracker import AnkimonTracker
 from .pyobj.settings import Settings
 from .pyobj.settings_window import SettingsWindow
@@ -162,7 +144,7 @@ test_window = TestWindow(
     settings_obj=settings_obj,
     ankimon_tracker_obj=ankimon_tracker_obj,
     translator=translator,
-    parent=mw.form, # Use mw.form which is a QWidget, not mw itself
+    parent=mw,
     )
 
 achievement_bag = AchievementWindow()
@@ -224,7 +206,6 @@ pokecollection_win = PokemonCollectionDialog(
     test_window=test_window,
     settings_obj=settings_obj,
     main_pokemon=main_pokemon,
-    parent=mw.form,
 )
 
 pokemon_pc = PokemonPC(
@@ -234,5 +215,4 @@ pokemon_pc = PokemonPC(
     test_window=test_window,
     settings=settings_obj,
     main_pokemon=main_pokemon,
-    parent=mw.form,
     )

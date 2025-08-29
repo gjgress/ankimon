@@ -1,9 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
     const body = document.body;
-    if (!body) {
-        console.warn("document.body not found. Cannot initialize poketeam_front.js.");
-        return;
-    }
 
     // Create the center div
     const centerDiv = document.createElement('div');
@@ -49,10 +45,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // Append the pokeball container to the center div
     centerDiv.appendChild(pokeballContainer);
 
-    // Insert the center div as the first item in the body, if body has children
-    if (body.firstChild) {
-        body.insertBefore(centerDiv, body.firstChild);
-    } else {
-        body.appendChild(centerDiv); // If no children, just append
-    }
+    // Insert the center div as the first item in the body
+    body.insertBefore(centerDiv, body.firstChild);
 });
