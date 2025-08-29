@@ -300,9 +300,7 @@ class EnhancedMockReviewer:
             js=["js/reviewer-bottom.js"]
         )
         
-        # Set up bridge commands
-        self.web.set_bridge_command(self._linkHandler, self)
-        self.bottom.web.set_bridge_command(self._linkHandler, self)
+        # Bridge commands are now set in __init__ after webview creation.
 
     def show(self):
         """Start the review session"""
