@@ -209,13 +209,15 @@ class AddonManager:
         self._config_cache = {}
 
     def getConfig(self, addon_id):
-        # Assuming Ankimon's config is at 'addon_dir/config.json'
+        # Load config from 'meta.json' as requested for the test environment
         if addon_id not in self._config_cache:
-            config_path = os.path.join(self.addon_dir, "config.json")
+            config_path = os.path.join(self.addon_dir, "meta.json")
             if os.path.exists(config_path):
                 try:
                     with open(config_path, 'r', encoding='utf-8') as f:
-                        self._config_cache[addon_id] = json.load(f)
+                        meta_json = json.load(f)
+                        # The actual configuration is under the "config" key in meta.json
+                        self._config_cache[addon_id] = meta_json.get("config", {})
                     print(f"MockAddonManager: Loaded config for '{addon_id}' from '{config_path}'")
                 except Exception as e:
                     print(f"MockAddonManager: Failed to load config for '{addon_id}' from '{config_path}': {e}")
@@ -223,7 +225,7 @@ class AddonManager:
             else:
                 print(f"MockAddonManager: Config file not found at '{config_path}' for addon '{addon_id}'.")
                 self._config_cache[addon_id] = {} # Fallback to empty config if not found
-        return self._config_cache[addon_id]
+        return self._config_cache.get(addon_id, {})
 
     def writeConfig(self, addon_id, config):
         # In a mock, we only update the in-memory cache
