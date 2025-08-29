@@ -147,7 +147,6 @@ def setup_anki_mocks():
     from PyQt6.QtWebEngineCore import QWebEnginePage
     mock_aqt.webview.AnkiWebView = QWebEngineView
     mock_aqt.webview.WebContent = MagicMock()
-    mock_aqt.webview.AnkiWebView.setHtml = lambda self, html: print("Mock AnkiWebView.setHtml called")
 
 
     # Mock aqt.sound
