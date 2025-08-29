@@ -87,6 +87,9 @@ def setup_anki_mocks():
                 except:
                     pass # Anki ignores hook errors
 
+        def run(self, *args, **kwargs):
+            self(*args, **kwargs)
+
     mock_aqt.gui_hooks.addon_config_editor_will_display_json = MockHook("addon_config_editor_will_display_json")
     mock_aqt.gui_hooks.addon_config_editor_will_save_json = MockHook("addon_config_editor_will_save_json")
     mock_aqt.gui_hooks.sync_did_finish = MockHook("sync_did_finish")
