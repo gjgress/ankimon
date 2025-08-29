@@ -1,5 +1,25 @@
 # mock_anki/__init__.py
 from typing import Union, Optional
+
+class BaseMock:
+    """A base class for mocks that logs calls to unimplemented methods."""
+    def __init__(self, *args, **kwargs):
+        # Suppress arguments if the child class doesn't have its own __init__
+        pass
+
+    def __getattr__(self, name):
+        if name.startswith('__') and name.endswith('__'):
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+        print(f"ANKIMON MOCK WARNING: Unimplemented attribute accessed: {type(self).__name__}.{name}")
+
+        def _unimplemented_method(*args, **kwargs):
+            print(f"ANKIMON MOCK WARNING: Unimplemented method called: {type(self).__name__}.{name}")
+            # Return another mock object to allow method chaining
+            return BaseMock()
+
+        return _unimplemented_method
+
 from PyQt6.QtWidgets import QWidget, QMainWindow, QMenu, QMenuBar, QVBoxLayout, QApplication, QDialog
 from PyQt6.QtGui import QAction
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer
@@ -7,24 +27,24 @@ from PyQt6.QtGui import QIcon, QKeySequence
 from .collection import Collection # Import the more detailed Collection class
 
 # Mock classes for dependencies
-class Card:
+class Card(BaseMock):
     pass
 
-class MockPokemonCollectionDialog:
+class MockPokemonCollectionDialog(BaseMock):
     def __init__(self, settings_obj=None, data_handler_obj=None):
         print("MockPokemonCollectionDialog initialized.")
         self.settings_obj = settings_obj
         self.data_handler_obj = data_handler_obj
 
-class Card:
+class Card(BaseMock):
     pass
 
-class MockTestWindow:
+class MockTestWindow(BaseMock):
     def __init__(self, parent=None):
         print("MockTestWindow initialized.")
         self.parent = parent
 
-class MockAchievementWindow:
+class MockAchievementWindow(BaseMock):
     def __init__(self, addon_dir=None, data_handler_obj=None):
         print("MockAchievementWindow initialized.")
         self.addon_dir = addon_dir
@@ -32,22 +52,22 @@ class MockAchievementWindow:
     def show(self):
         print("MockAchievementWindow shown.")
 
-class MockItemWindow:
+class MockItemWindow(BaseMock):
     def __init__(self, settings_obj=None):
         print("MockItemWindow initialized.")
         self.settings_obj = settings_obj
 
-class MockDataHandler:
+class MockDataHandler(BaseMock):
     def __init__(self):
         print("MockDataHandler initialized.")
 
-class MockShowInfoLogger:
+class MockShowInfoLogger(BaseMock):
     def __init__(self):
         print("MockShowInfoLogger initialized.")
     def showInfo(self, message):
         print(f"MockShowInfoLogger: {message}")
 
-class MockSettings:
+class MockSettings(BaseMock):
     def __init__(self):
         print("MockSettings initialized.")
     # Add any methods or attributes that Ankimon's code might call on a settings object
@@ -57,7 +77,7 @@ class MockSettings:
     def set(self, key, value):
         print(f"MockSettings: set called for {key} = {value}")
 
-class AnkiUtils:
+class AnkiUtils(BaseMock):
     def __init__(self):
         print("MockAnkiUtils initialized.")
     def is_win(self):
@@ -65,26 +85,26 @@ class AnkiUtils:
     def isWin(self): # Alias for is_win
         return True
 
-class BuildInfo:
+class BuildInfo(BaseMock):
     def __init__(self):
         print("MockAnkiBuildInfo initialized.")
     def version(self):
         return "MockVersion"
 
-class ProfileManager:
+class ProfileManager(BaseMock):
     def __init__(self):
         print("MockProfileManager initialized.")
         self.name = "test_profile" # Mock profile name
     def openProfile(self, profile_name):
         print(f"MockProfileManager: Opening profile '{profile_name}'")
 
-class EnemyPokemon:
+class EnemyPokemon(BaseMock):
     pass
 
-class Achievements:
+class Achievements(BaseMock):
     pass
 
-class Hooks:
+class Hooks(BaseMock):
     pass
 
 # --- Mock Reviewer and MainWindow for Test Environment ---
@@ -168,7 +188,7 @@ class MockAnkiMainWindow:
 # Mock classes from aqt.qt and aqt.utils if they are directly used by Ankimon code
 # For example, if Ankimon directly imports from aqt.qt:
 # Mocking aqt.utils functions if they are called directly
-class MockAqtUtils:
+class MockAqtUtils(BaseMock):
     def qconnect(self, signal, slot):
         # In a real scenario, this would handle signal connections.
         # For mocks, we can just connect directly if the signal is a PyQt signal.
@@ -239,7 +259,7 @@ class AddonManager:
             return os.path.dirname(self.addon_dir)
         return ""
 
-class Dialog:
+class Dialog(BaseMock):
     def __init__(self, parent=None):
         self.parent = parent
         self.window_title = self.__class__.__name__
@@ -255,7 +275,7 @@ class Dialog:
         print(f"MockDialog '{self.window_title}' exec called.")
         return QDialog.DialogCode.Accepted # Simulate successful execution
 
-class MainWindow: # This is a mock for Anki's actual MainWindow, not the test env's
+class MainWindow(BaseMock): # This is a mock for Anki's actual MainWindow, not the test env's
     def __init__(self, app=None):
         self.app = app
         self.col = Collection()
@@ -268,20 +288,20 @@ class MainWindow: # This is a mock for Anki's actual MainWindow, not the test en
         self.game_menu = None
         print("MockAnkiMainWindow (for Ankimon's internal use) initialized.")
 
-class Utils:
+class Utils(BaseMock):
     def __init__(self):
         pass
     def showWarning(self, msg):
         print(f"MockAnkiUtils.showWarning: {msg}")
 
-class QWebEngineSettings:
+class QWebEngineSettings(BaseMock):
     pass
 
-class Reviewer: # This is a mock for Anki's actual Reviewer, not the test env's
+class Reviewer(BaseMock): # This is a mock for Anki's actual Reviewer, not the test env's
     def __init__(self):
         print("MockAnkiReviewer initialized.")
 
-class DialogManager:
+class DialogManager(BaseMock):
     def __init__(self):
         print("DialogManager initialized.")
     def open(self, dialog_class, parent=None):
@@ -292,7 +312,7 @@ class DialogManager:
         instance.show() # Simulate showing the dialog
         return instance
 
-class Menu:
+class Menu(BaseMock):
     def __init__(self, title):
         self.title = title
         self.actions = []
