@@ -93,6 +93,7 @@ class EnhancedMockWebview:
 <head>
     <meta charset="utf-8">
     <title>Ankimon Test Environment</title>
+    <style>button {{ cursor: pointer; }}</style>
     {css_links}
     {pycmd_script}
 </head>
@@ -395,6 +396,7 @@ class EnhancedMockReviewer:
     <link rel="stylesheet" type="text/css" href="file://{encoded_addon_dir}/user_files/web/styles.css">
     <style>
         body {{ font-family: sans-serif; text-align: center; margin: 0; padding: 0; }}
+        button {{ cursor: pointer; }}
         #qa {{ display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; }}
         #ankimon-hud {{ border: 2px solid lightgray; }}
     </style>
@@ -474,6 +476,7 @@ class EnhancedMockReviewer:
     <link rel="stylesheet" type="text/css" href="file://{encoded_addon_dir}/user_files/web/styles.css">
     <style>
         body {{ font-family: sans-serif; text-align: center; margin: 0; padding: 0; }}
+        button {{ cursor: pointer; }}
         #qa {{ display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; }}
         #ankimon-hud {{ border: 2px solid lightgray; }}
     </style>
