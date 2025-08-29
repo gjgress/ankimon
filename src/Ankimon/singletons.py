@@ -234,4 +234,5 @@ pokemon_pc = PokemonPC(
     test_window=test_window,
     settings=settings_obj,
     main_pokemon=main_pokemon,
+    parent=mw.form,
     )
