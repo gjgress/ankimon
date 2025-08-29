@@ -9,7 +9,7 @@ from aqt import mw
 from PyQt6.QtWidgets import QMenu
 from PyQt6.QtGui import QAction, QKeySequence
 
-from .gui_classes.choose_trainer_sprite import TrainerSpriteDialog
+from Ankimon.gui_classes.choose_trainer_sprite import TrainerSpriteDialog
 from .pyobj.trainer_card_window import TrainerCardGUI
 from .gui_classes.pokemon_team_window import PokemonTeamDialog
 from .gui_classes.check_files import FileCheckerApp
@@ -305,4 +305,4 @@ def create_menu_actions(
     downloader_action.triggered.connect(show_agreement_and_download_dialog)
     help_menu.addAction(downloader_action)
 
-    mw.form.menubar.addMenu(mw.pokemenu)
+    mw.form.menuBar().addMenu(mw.pokemenu)
