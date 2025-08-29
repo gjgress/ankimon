@@ -74,7 +74,7 @@ class DataHandler:
         Ensures no duplicate IDs are assigned.
         """
         if not isinstance(pokemon_list, list):
-            return
+            raise ValueError("Expected list of Pokémon dictionaries")
 
         unique_ids = set()
         for idx, entry in enumerate(pokemon_list):

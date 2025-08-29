@@ -260,14 +260,6 @@ def create_mock_data_files():
         else:
             print(f"Warning: '{filename}' not found in ResetFiles. A default empty file may be created if necessary.")
 
-    # Now, create config.obf from the mock meta.json
-    from Ankimon.pyobj.ankimon_sync import AnkimonDataSync
-    sync_handler = AnkimonDataSync()
-    sync_handler._save_obfuscated_config()
-    print("Created mock config.obf from meta.json")
-
-
-
 from test_runner import TestRunnerGUI
 from PyQt6.QtWidgets import QMainWindow, QMenuBar, QStatusBar, QTabWidget, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTextEdit
 
