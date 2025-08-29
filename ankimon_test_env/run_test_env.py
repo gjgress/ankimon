@@ -267,107 +267,13 @@ def create_mock_data_files():
     print("Created mock config.obf from meta.json")
 
 
-def load_ankimon_singletons():
-    """Load and create all Ankimon singleton objects"""
-    print("Loading Ankimon singletons...")
-    try:
-        src_path = Path(__file__).parent.parent / "src"
-        if str(src_path) not in sys.path:
-            sys.path.insert(0, str(src_path))
-
-        create_mock_data_files()
-
-        # Now, import the singletons
-        from Ankimon import singletons
-        print("Successfully imported Ankimon.singletons")
-        return {
-            'settings_obj': singletons.settings_obj,
-            'settings_window': singletons.settings_window,
-            'translator': singletons.translator,
-            'logger': singletons.logger,
-            'main_pokemon': singletons.main_pokemon,
-            'enemy_pokemon': singletons.enemy_pokemon,
-            'trainer_card': singletons.trainer_card,
-            'ankimon_tracker_obj': singletons.ankimon_tracker_obj,
-            'test_window': singletons.test_window,
-            'achievement_bag': singletons.achievement_bag,
-            'data_handler_obj': singletons.data_handler_obj,
-            'data_handler_window': singletons.data_handler_window,
-            'shop_manager': singletons.shop_manager,
-            'ankimon_tracker_window': singletons.ankimon_tracker_window,
-            'pokedex_window': singletons.pokedex_window,
-            'reviewer_obj': singletons.reviewer_obj,
-            'eff_chart': singletons.eff_chart,
-            'gen_id_chart': singletons.gen_id_chart,
-            'license': singletons.license,
-            'credits': singletons.credits,
-            'version_dialog': singletons.version_dialog,
-            'item_window': singletons.item_window,
-            'pokecollection_win': singletons.pokecollection_win,
-            'pokemon_pc': singletons.pokemon_pc,
-        }
-
-    except Exception as e:
-        print(f"Error loading Ankimon singletons: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
-
-def load_ankimon_menu(mw, ankimon_objects):
-    """Load and initialize Ankimon menu"""
-    print("Loading Ankimon menu...")
-    try:
-        from Ankimon.menu_buttons import create_menu_actions
-        print("Successfully imported menu_buttons")
-
-        create_menu_actions(
-            database_complete=True,
-            online_connectivity=False,
-            pokecollection_win=ankimon_objects.get('pokecollection_win'),
-            item_window=ankimon_objects.get('item_window'),
-            test_window=ankimon_objects.get('test_window'),
-            achievement_bag=ankimon_objects.get('achievement_bag'),
-            open_team_builder=lambda: print("Mock callback: Team Builder"),
-            export_to_pkmn_showdown=lambda: print("Mock callback: Export to Showdown"),
-            export_all_pkmn_showdown=lambda: print("Mock callback: Export All to Showdown"),
-            flex_pokemon_collection=lambda: print("Mock callback: Flex Collection"),
-            eff_chart=ankimon_objects.get('eff_chart'),
-            gen_id_chart=ankimon_objects.get('gen_id_chart'),
-            credits=ankimon_objects.get('credits'),
-            license=ankimon_objects.get('license'),
-            open_help_window=lambda connectivity: print("Help window opened"),
-            report_bug=lambda: print("Mock callback: Bug Report"),
-            rate_addon_url=lambda: print("Mock callback: Rate Addon"),
-            version_dialog=ankimon_objects.get('version_dialog'),
-            trainer_card=ankimon_objects.get('trainer_card'),
-            ankimon_tracker_window=ankimon_objects.get('ankimon_tracker_window'),
-            logger=ankimon_objects.get('logger'),
-            data_handler_window=ankimon_objects.get('data_handler_window'),
-            settings_window=ankimon_objects.get('settings_window'), # Pass the real settings_window here
-            shop_manager=ankimon_objects.get('shop_manager'),
-            pokedex_window=ankimon_objects.get('pokedex_window'),
-            ankimon_key='Ctrl+K',
-            join_discord_url=lambda: print("Mock callback: Join Discord"),
-            open_leaderboard_url=lambda: print("Mock callback: Open Leaderboard"),
-            settings_obj=ankimon_objects.get('settings_obj'),
-            addon_dir=Path(__file__).parent.parent / "src" / "Ankimon",
-            data_handler_obj=ankimon_objects.get('data_handler_obj'),
-            pokemon_pc=ankimon_objects.get('pokemon_pc'),
-        )
-        print("Ankimon menu actions created successfully")
-
-    except Exception as e:
-        print(f"Error loading Ankimon menu: {e}")
-        import traceback
-        traceback.print_exc()
 
 from test_runner import TestRunnerGUI
 from PyQt6.QtWidgets import QMainWindow, QMenuBar, QStatusBar, QTabWidget, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QTextEdit
 
 class MainApplicationWindow(QMainWindow):
-    def __init__(self, ankimon_objects):
+    def __init__(self):
         super().__init__()
-        self.ankimon_objects = ankimon_objects
         self.setWindowTitle("Ankimon Test Environment")
         self.setGeometry(100, 100, 1280, 720)
         self.setMenuBar(QMenuBar(self))
