@@ -232,6 +232,13 @@ class AddonManager:
         print(f"MockAddonManager: Writing config for '{addon_id}': {config}")
         self._config_cache[addon_id] = config
 
+    def addonsFolder(self):
+        """Returns the path to the addons folder."""
+        # In our test setup, the addons folder is the parent of the addon_dir (e.g., src/)
+        if self.addon_dir:
+            return os.path.dirname(self.addon_dir)
+        return ""
+
 class Dialog:
     def __init__(self, parent=None):
         self.parent = parent
