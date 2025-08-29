@@ -21,14 +21,8 @@ class Reviewer_Manager:
         self.myseconds = 0
 
         # Register the functions for the hooks
-        gui_hooks.reviewer_did_show_question.append(self.show_hud_on_question)
         gui_hooks.reviewer_will_end.append(self.reviewer_reset_life_bar_inject)
         gui_hooks.reviewer_did_answer_card.append(self.update_life_bar)
-
-    def show_hud_on_question(self, card):
-        """Injects the Ankimon HUD when a card question is shown."""
-        # The 'ease' parameter is not used in update_life_bar, so we can pass a dummy value.
-        self.update_life_bar(mw.reviewer, card, 0)
 
     def reviewer_reset_life_bar_inject(self):
         self.life_bar_injected = False
