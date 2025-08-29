@@ -4,7 +4,6 @@ class DataHandlerWindow(QMainWindow):
     def __init__(self, data_handler):
         super().__init__()
         self.data_handler = data_handler
-        self.init_ui()
 
     def init_ui(self):
         self.setWindowTitle('Data Viewer')
@@ -83,4 +82,5 @@ class DataHandlerWindow(QMainWindow):
                 self.data_handler.save_file(attr_name)
 
     def show_window(self):
+        self.init_ui()
         self.show()
