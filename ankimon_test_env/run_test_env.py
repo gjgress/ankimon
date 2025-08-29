@@ -3,6 +3,7 @@ import sys
 import os
 import types
 import json
+import shutil
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -239,21 +240,25 @@ def create_mock_data_files():
             json.dump(mock_meta_content, f, indent=2)
         print(f"Created mock meta.json: {meta_path}")
 
-    # Create other data files
-    files_to_create = {
-        "mypokemon.json": [],
-        "mainpokemon.json": {},
-        "itembag.json": {},
-        "badges.json": [],
-        "team.json": [],
-    }
+    # Copy data files from ResetFiles to user_files directory
+    reset_files_path = project_root / "ResetFiles"
+    files_to_copy = [
+        "mypokemon.json",
+        "mainpokemon.json",
+        "itembag.json",
+        "badges.json",
+        "team.json",
+    ]
 
-    for filename, content in files_to_create.items():
-        filepath = user_files_path / filename
-        if not filepath.exists():
-            with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump(content, f, indent=2)
-            print(f"Created mock data file: {filepath}")
+    for filename in files_to_copy:
+        src_path = reset_files_path / filename
+        dest_path = user_files_path / filename
+        if src_path.exists():
+            # Always copy to ensure a clean state for each test run
+            shutil.copy(src_path, dest_path)
+            print(f"Copied '{filename}' from ResetFiles to user_files")
+        else:
+            print(f"Warning: '{filename}' not found in ResetFiles. A default empty file may be created if necessary.")
 
     # Now, create config.obf from the mock meta.json
     from Ankimon.pyobj.ankimon_sync import AnkimonDataSync
