@@ -78,8 +78,10 @@ def check_and_award_monthly_pokemon(logger):
         current_month_str = datetime.now().strftime("%B %Y")
         monthly_data_url = "https://raw.githubusercontent.com/h0tp-ftw/ankimon/refs/heads/main/assets/challenges/monthly_challenges.json"
         
-        response = requests.get(monthly_data_url)
+        logger.log("info", f"Fetching monthly challenge data from {monthly_data_url}")
+        response = requests.get(monthly_data_url, timeout=5)
         response.raise_for_status()
+        logger.log("info", "Successfully fetched monthly challenge data.")
         monthly_challenges = response.json()
         current_challenge = next((c for c in monthly_challenges if c.get("month") == current_month_str), None)
 

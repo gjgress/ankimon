@@ -16,6 +16,7 @@ from PyQt6.QtGui import QFontDatabase, QFont
 from . import audios
 from .pyobj.settings import Settings
 from .pyobj.InfoLogger import ShowInfoLogger
+from .singletons import logger
 from .functions.battle_functions import calculate_hp
 from .functions.pokedex_functions import find_details_move, search_pokedex
 from .pyobj.error_handler import show_warning_with_traceback
@@ -136,14 +137,16 @@ def read_local_file(file_path):
 
 # Function to check if the file exists on GitHub and read its content
 def read_github_file(url):
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        # File exists, parse the Markdown content
+    logger.log("info", f"Fetching changelog from {url}")
+    try:
+        response = requests.get(url, timeout=5)
+        response.raise_for_status()  # Raise an exception for bad status codes
+        logger.log("info", "Successfully fetched changelog.")
         content = response.text
         html_content = markdown.markdown(content)
         return content, html_content
-    else:
+    except requests.exceptions.RequestException as e:
+        logger.log("error", f"Failed to fetch changelog from {url}: {e}")
         return None, None
 
 # Function to check if the content of the two files is the same
