@@ -64,13 +64,16 @@ def add_pokemon_to_collection(new_pokemon, refresh_callback=None, parent_window=
 # --- Helper functions for Monthly Challenges ---
 
 def _get_monthly_challenge_data(url, logger):
-    """Fetches monthly challenge data from a URL, with timeout and error handling."""
+    """Fetches monthly challenge data from a URL, with a short timeout and silent error handling."""
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=2)  # Shorter timeout
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        logger.log("error", f"Failed to fetch monthly challenge data from {url}: {e}")
+        logger.log("info", f"Skipping monthly challenge check due to network error: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        logger.log("info", f"Skipping monthly challenge check due to JSON parsing error: {e}")
         return None
 
 def _should_check_award(logger):
