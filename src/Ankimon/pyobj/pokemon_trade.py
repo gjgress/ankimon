@@ -61,71 +61,100 @@ def add_pokemon_to_collection(new_pokemon, refresh_callback=None, parent_window=
     except Exception as e:
         show_warning_with_traceback(parent=parent_window, exception=e, message="Error adding Pokemon to collection")
 
-def check_and_award_monthly_pokemon(logger):
-    """Checks for and automatically awards the current monthly challenge Pokémon."""
+# --- Helper functions for Monthly Challenges ---
+
+def _get_monthly_challenge_data(url, logger):
+    """Fetches monthly challenge data from a URL, with timeout and error handling."""
     try:
-        should_check = False
-        if rate_path.is_file():
-            with open(rate_path, "r", encoding="utf-8") as f:
-                if json.load(f).get("rate_this") is True:
-                    should_check = True
-        
-        if not should_check:
-            logger.log("info", "Monthly Pokemon check skipped: user has not rated the addon.")
-            return
-
-        logger.log("info", "Checking for monthly challenge Pokemon award.")
-        current_month_str = datetime.now().strftime("%B %Y")
-        monthly_data_url = "https://raw.githubusercontent.com/h0tp-ftw/ankimon/refs/heads/main/assets/challenges/monthly_challenges.json"
-        
-        response = requests.get(monthly_data_url)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
-        monthly_challenges = response.json()
-        current_challenge = next((c for c in monthly_challenges if c.get("month") == current_month_str), None)
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.log("error", f"Failed to fetch monthly challenge data from {url}: {e}")
+        return None
 
-        if not current_challenge:
-            logger.log("info", f"No monthly challenge found for {current_month_str}.")
-            return
+def _should_check_award(logger):
+    """Checks if the monthly Pokémon award check should be performed based on rating status."""
+    if not rate_path.is_file():
+        return False
+    try:
+        with open(rate_path, "r", encoding="utf-8") as f:
+            return json.load(f).get("rate_this") is True
+    except (json.JSONDecodeError, IOError) as e:
+        logger.log("warning", f"Could not read or parse rate file at {rate_path}: {e}")
+        return False
 
-        challenge_pokemon_data = current_challenge.get("pokemon")
-        challenge_individual_id = challenge_pokemon_data.get("individual_id")
-        if not (challenge_pokemon_data and challenge_individual_id):
-            return
+def _determine_if_shiny(challenge, my_pokemon):
+    """Determines if the monthly Pokémon should be shiny based on previous challenge performance."""
+    prev_id = challenge.get("previous_challenge_individual_id")
+    threshold = challenge.get("defeat_threshold")
 
+    if not (prev_id and isinstance(threshold, int)):
+        return False
+
+    for p in my_pokemon:
+        if p.get("individual_id") == prev_id and p.get("pokemon_defeated", 0) >= threshold:
+            return True
+    return False
+
+def check_and_award_monthly_pokemon(logger):
+    """
+    Checks for and automatically awards the current monthly challenge Pokémon.
+    This function is designed to be robust and fail silently from the user's perspective,
+    while providing detailed logs for debugging.
+    """
+    if not _should_check_award(logger):
+        logger.log("info", "Monthly Pokemon check skipped: user has not rated the addon.")
+        return
+
+    logger.log("info", "Checking for monthly challenge Pokemon award.")
+    
+    monthly_data_url = "https://raw.githubusercontent.com/h0tp-ftw/ankimon/refs/heads/main/assets/challenges/monthly_challenges.json"
+    monthly_challenges = _get_monthly_challenge_data(monthly_data_url, logger)
+    if not monthly_challenges:
+        return
+
+    current_month_str = datetime.now().strftime("%B %Y")
+    current_challenge = next((c for c in monthly_challenges if c.get("month") == current_month_str), None)
+
+    if not current_challenge:
+        logger.log("info", f"No monthly challenge found for {current_month_str}.")
+        return
+
+    challenge_pokemon_data = current_challenge.get("pokemon")
+    if not isinstance(challenge_pokemon_data, dict) or "individual_id" not in challenge_pokemon_data:
+        logger.log("warning", f"Monthly challenge for {current_month_str} is missing valid pokemon data or individual_id.")
+        return
+    
+    challenge_individual_id = challenge_pokemon_data["individual_id"]
+
+    try:
         with open(mypokemon_path, "r", encoding="utf-8") as f:
             my_pokemon = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.log("error", f"Could not read or parse user's pokemon collection at {mypokemon_path}: {e}")
+        return
 
-        if any(p.get("individual_id") == challenge_individual_id for p in my_pokemon):
-            logger.log("info", f"User already has the Pokémon for {current_month_str}.")
-            return
+    if any(p.get("individual_id") == challenge_individual_id for p in my_pokemon):
+        logger.log("info", f"User already has the Pokémon for {current_month_str}.")
+        return
 
-        logger.log("info", f"Awarding Pokémon for {current_month_str}.")
-        make_shiny = False
-        prev_id = current_challenge.get("previous_challenge_individual_id")
-        threshold = current_challenge.get("defeat_threshold")
+    logger.log("info", f"Awarding Pokémon for {current_month_str}.")
+    
+    make_shiny = _determine_if_shiny(current_challenge, my_pokemon)
+    
+    new_pokemon = create_monthly_challenge_pokemon(challenge_pokemon_data, make_shiny=make_shiny)
+    add_pokemon_to_collection(new_pokemon)
 
-        if prev_id and threshold:
-            for p in my_pokemon:
-                if p.get("individual_id") == prev_id and p.get("pokemon_defeated", 0) >= threshold:
-                    make_shiny = True
-                    break
-        
-        new_pokemon = create_monthly_challenge_pokemon(challenge_pokemon_data, make_shiny=make_shiny)
-        add_pokemon_to_collection(new_pokemon)
-
-        shiny_text = " (Shiny)" if new_pokemon["shiny"] else ""
-        description = current_challenge.get("description", "")
-        message = f"Congratulations! You've received your monthly challenge Pokémon: {new_pokemon['name']}{shiny_text}!"
-        if description:
-            message += f"\n\n{description}"
-        message += "\n\nFor more information on monthly challenges and to redeem higher-tier prizes for your performance, please check the Ankimon Discord!"
-        
-        utils.showInfo(message)
-        logger.log("info", f"Successfully awarded {new_pokemon['name']}{shiny_text}.")
-
-    except Exception as e:
-        logger.log("error", f"Error in check_and_award_monthly_pokemon: {e}")
-        pass # Silently fail
+    shiny_text = " (Shiny)" if new_pokemon["shiny"] else ""
+    description = current_challenge.get("description", "")
+    message = f"Congratulations! You've received your monthly challenge Pokémon: {new_pokemon['name']}{shiny_text}!"
+    if description:
+        message += f"\n\n{description}"
+    message += "\n\nFor more information on monthly challenges and to redeem higher-tier prizes for your performance, please check the Ankimon Discord!"
+    
+    utils.showInfo(message)
+    logger.log("info", f"Successfully awarded {new_pokemon['name']}{shiny_text}.")
 
 
 class PokemonTrade:
