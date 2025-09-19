@@ -260,4 +260,4 @@ Final Instructions
 
 Remember: The goal is incremental stability improvement, not architectural revolution. Each file should be left in a better, more maintainable state than when you found it.
 
-Begin by analyzing src/Ankimon/singletons.py and creating your first progress report. Work slowly and methodically. Document everything.
+Begin by analyzing a file and creating your first progress report. Work slowly and methodically. Document everything.

@@ -152,15 +152,13 @@ The key to successful refactoring after a failed large-scale attempt is to make 
 7.  **Manual Verification**: Perform manual checks of the affected functionality in the application.
 8.  **Repeat**: Once verified, commit the change and move to the next atomic improvement.
 **Testing Checkpoints for Each File Improvement:**
-*   **Unit Tests**: If unit tests exist for the target file or its extracted components, run them. If not, consider writing minimal unit tests for the specific functionality being changed.
-*   **Integration Tests**: Run integration tests that cover the functionality of the target file and its interactions with other modules.
 *   **Application Startup**: Ensure the application still starts without errors after each change.
-*   **Core Functionality Smoke Test**: Perform a quick manual check of the most critical features related to the changed file (e.g., if `battle.py` was changed, run a battle).
+*   **Core Functionality Smoke Test**: Prompt the user to perform a quick manual check of the most critical features related to the changed file (e.g., if `battle.py` was changed, run a battle).
 **Verification Strategy:**
-*   **Automated Tests**: Prioritize writing and running automated tests.
+*   **Automated Tests**: Prioritize writing and running automated tests, e.g. automating application startup with timeout of 5.
 *   **Linting/Static Analysis**: Run `ruff check .` (or similar) after each change to catch syntax errors, unused imports, and style violations.
 *   **Type Checking**: If MyPy or a similar type checker is used, run it to ensure type consistency.
-*   **Manual QA**: For UI-related changes, manual testing is crucial.
+*   **Manual QA**: For UI-related changes, manual testing is crucial. Prompt the user on what to do.
 **Recommended Order of Operations:**
 1.  **Refactor `singletons.py`**: This is foundational. Start by extracting objects and removing `mw` injections. This will likely involve creating new factory functions or a central application context.
 2.  **Refactor `__init__.py`**: Reduce its imports.
