@@ -609,16 +609,17 @@ def save_error_code(error_code, logger=None):
         logger.log_and_showinfo("info",f"{error_fix_msg}")
 
 def get_main_pokemon_data():
-    with (open(str(mainpokemon_path), "r", encoding="utf-8") as json_file):
-        main_pokemon_datalist = json.load(json_file)
+    try:
+        with open(str(mainpokemon_path), "r", encoding="utf-8") as json_file:
+            main_pokemon_datalist = json.load(json_file)
 
-    main_pokemon_data = []
-    for main_pokemon_data in main_pokemon_datalist:
+        if not main_pokemon_datalist:
+            return None
+
+        main_pokemon_data = main_pokemon_datalist[0]
+        
         _name = main_pokemon_data["name"]
-        if not main_pokemon_data.get('nickname') or main_pokemon_data.get('nickname') is None:
-            _nickname = None
-        else:
-            _nickname = main_pokemon_data['nickname']
+        _nickname = main_pokemon_data.get('nickname')
         _id = main_pokemon_data["id"]
         _ability = main_pokemon_data["ability"]
         _type = main_pokemon_data["type"]
@@ -630,15 +631,13 @@ def get_main_pokemon_data():
         _xp = main_pokemon_data.get("xp") or main_pokemon_data["stats"].get("xp", 0)
         _ev = main_pokemon_data["ev"]
         _iv = main_pokemon_data["iv"]
-        #mainpokemon_battle_stats = mainpokemon_stats
+        
         _battle_stats = {}
         for d in [_stats, _iv, _ev]:
-            for key, value in d.items():
-                _battle_stats[key] = value
-        #mainpokemon_battle_stats += mainpokemon_iv
-        #mainpokemon_battle_stats += mainpokemon_ev
+            _battle_stats.update(d)
+
         _hp = calculate_hp(_hp_base_stat, _level, _ev, _iv)
-        _current_hp = _hp
+        _current_hp = main_pokemon_data.get("current_hp", _hp)
         _base_experience = main_pokemon_data["base_experience"]
         _growth_rate = main_pokemon_data["growth_rate"]
         _gender = main_pokemon_data["gender"]
@@ -663,6 +662,10 @@ def get_main_pokemon_data():
             _gender,
             _nickname
         )
+    except (FileNotFoundError, IndexError, json.JSONDecodeError) as e:
+        # Log the error for debugging purposes
+        print(f"Ankimon: Could not get main pokemon data: {e}")
+        return None
 
 def play_sound(enemy_pokemon_id: int, settings_obj: Settings):
     if settings_obj.get("audio.sounds", False):

@@ -345,10 +345,23 @@ aqt.gui_hooks.reviewer_did_answer_card.append(answerCard_after)
 
 #get main pokemon details:
 if database_complete:
-    try:
-        mainpokemon_name, mainpokemon_id, mainpokemon_ability, mainpokemon_type, mainpokemon_stats, mainpokemon_attacks, mainpokemon_level, mainpokemon_base_experience, mainpokemon_xp, mainpokemon_hp, mainpokemon_current_hp, mainpokemon_growth_rate, mainpokemon_ev, mainpokemon_iv, mainpokemon_evolutions, mainpokemon_battle_stats, mainpokemon_gender, mainpokemon_nickname = get_main_pokemon_data()
-        starter = True
-    except Exception:
+    main_pokemon_data = get_main_pokemon_data()
+    if main_pokemon_data:
+        try:
+            (
+                mainpokemon_name, mainpokemon_id, mainpokemon_ability, mainpokemon_type, 
+                mainpokemon_stats, mainpokemon_attacks, mainpokemon_level, 
+                mainpokemon_base_experience, mainpokemon_xp, mainpokemon_hp, 
+                mainpokemon_current_hp, mainpokemon_growth_rate, mainpokemon_ev, 
+                mainpokemon_iv, mainpokemon_evolutions, mainpokemon_battle_stats, 
+                mainpokemon_gender, mainpokemon_nickname
+            ) = main_pokemon_data
+            starter = True
+        except (ValueError, TypeError) as e:
+            logger.log("error", f"Error unpacking main pokemon data: {e}")
+            starter = False
+            mainpokemon_level = 5
+    else:
         starter = False
         mainpokemon_level = 5
     #name, id, level, ability, type, stats, enemy_attacks, base_experience, growth_rate, ev, iv, gender, battle_status, battle_stats, tier, ev_yield, shiny = generate_random_pokemon()
