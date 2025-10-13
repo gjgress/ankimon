@@ -82,6 +82,11 @@ type_icon_path_resources = addon_dir / "addon_sprites" / "Types"
 
 team_pokemon_path = addon_dir / "user_files" / "team.json"
 
+#custom css and js paths
+custom_css_path = addon_dir / "user_files" / "web" / "custom.css"
+custom_js_path = addon_dir / "user_files" / "web" / "custom.js"
+
+
 #lang routes
 lang_path = addon_dir / "lang"
 lang_path_de = addon_dir / "lang" / "de_text.json"

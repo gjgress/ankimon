@@ -216,8 +216,9 @@ def on_webview_will_set_content(web_content: WebContent, context) -> None:
         return
     ankimon_package = mw.addonManager.addonFromModule(__name__)
     web_content.js.append(f"/_addons/{ankimon_package}/user_files/web/ankimon_hud_portal.js")
-
-
+    # allows users to add custom css/js by editing these files in the web folder
+    web_content.js.append(f"/_addons/{ankimon_package}/user_files/web/custom.js")
+    web_content.css.append(f"/_addons/{ankimon_package}/user_files/web/custom.css")
 
 webview_will_set_content.append(on_webview_will_set_content)
 

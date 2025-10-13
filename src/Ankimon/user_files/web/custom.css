@@ -1,0 +1,31 @@
+
+/**
+ * Custom CSS Section
+ * 
+ * Add your custom CSS styles below this comment.
+ * This section is reserved for user-defined styles and customizations.
+ * 
+ * Example usage:
+ * - Override default component styles
+ * - Add custom animations or transitions
+ * - Define project-specific utility classes
+ * - Implement responsive design adjustments
+ */
+
+#ankimon-hud #mylife-bar, #ankimon-hud #life-bar, #ankimon-hud #xp-bar, #ankimon-hud #myxp-bar {
+    /** add important! add every css line you add here!
+    for example: background-color: red !important;
+    **/
+}
+
+#ankimon-hud #name-display, #ankimon-hud #myname-display, #ankimon-hud #hp-display, #ankimon-hud #myhp-display, #ankimon-hud #xp_text, #ankimon-hud #PokeImage, #ankimon-hud #MyPokeImage {
+    /** add important! add every css line you add here!
+    for example: color: red !important;
+    **/
+}
+
+.Ankimon {
+    /** add important! add every css line you add here!
+    for example: font-size: 20px !important;
+    **/
+}

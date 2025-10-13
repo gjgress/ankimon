@@ -1,10 +1,12 @@
+import json
+import os
+from pathlib import Path
 from aqt import gui_hooks, mw, utils
 from aqt.utils import showInfo
+from ..resources import custom_css_path, custom_js_path
 from ..functions.pokemon_functions import find_experience_for_level
 from ..business import get_image_as_base64
 from ..functions.create_css_for_reviewer import create_css_for_reviewer
-import json
-import os
 from ..functions.create_gui_functions import create_status_html
 from ..functions.pokedex_functions import get_pokemon_diff_lang_name
 
@@ -230,6 +232,12 @@ class Reviewer_Manager:
             padding: 4px 8px !important;
         }
         """
+        hud_css += Path(custom_css_path).read_text() #add custom css to other css
+        #wrap custom js in a script tag and include in dom shadow ankimon hud html
+        hud_js = """<script>"""
+        hud_js += Path(custom_js_path).read_text()
+        hud_js += """</script>"""
+        hud_html += hud_js
 
         # Use reviewer.web.eval to call the portal
         js_code = f"""
