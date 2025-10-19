@@ -1,12 +1,40 @@
 import os
 import zipfile
 import requests
-from ..resources import user_path
-from ..gui_entities import AgreementDialog
+
+from aqt.utils import showInfo
+
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QProgressBar, QLabel, QPushButton
 
+from ..resources import user_path
+from ..gui_entities import AgreementDialog
+
 class DownloadThread(QThread):
+    """
+    A QThread subclass for downloading and extracting ZIP files in the background.
+    This class downloads a ZIP file from a given URL, extracts its contents to a 
+    destination directory, and provides progress updates through Qt signals. It 
+    handles file existence checking to avoid overwriting existing files and 
+    automatically cleans up the temporary ZIP file after extraction.
+    Attributes:
+        progress_signal (pyqtSignal): Signal emitted with download progress percentage (0-100)
+        status_signal (pyqtSignal): Signal emitted with status messages during the process
+        url (str): The URL of the ZIP file to download
+        dest_dir (str): The destination directory for extracted files
+        zip_path (str): The local path where the ZIP file will be temporarily stored
+    Args:
+        url (str): The URL of the ZIP file to download
+        dest_dir (str): The destination directory where files will be extracted
+    Signals:
+        progress_signal(int): Emitted during download with progress percentage
+        status_signal(str): Emitted with status updates throughout the process
+    Example:
+        thread = DownloadThread("https://example.com/sprites.zip", "/path/to/extract")
+        thread.progress_signal.connect(update_progress_bar)
+        thread.status_signal.connect(update_status_label)
+        thread.start()
+    """
     # Define custom signals for progress and completion
     progress_signal = pyqtSignal(int)
     status_signal = pyqtSignal(str)
@@ -59,7 +87,7 @@ class DownloadDialog(QDialog):
         self.setWindowTitle('Download Progress')
         self.setGeometry(300, 300, 400, 200)
 
-        self.url = "https://github.com/Unlucky-Life/ankimon/releases/download/sprites/sprites.zip"
+        self.url = "https://github.com/Unlucky-Life/ankimon/releases/download/sprites-v1.43/sprites.zip"
         self.dest_dir = user_path
 
         self.init_ui()
@@ -99,6 +127,8 @@ class DownloadDialog(QDialog):
         if "Removed" in status:  # Re-enable the button and change text when done
             self.start_button.setEnabled(True)
             self.start_button.setText("Download Complete!")
+            showInfo("Download and extraction complete.")
+            self.close()
 
 def show_agreement_and_download_dialog():
     # Show the agreement dialog
