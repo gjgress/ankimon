@@ -1,15 +1,16 @@
 """
-This module serves as a centralized hub for initializing and managing the
-various objects and instances that constitute the Ankimon addon. It follows a
-singleton-like pattern, ensuring that key components such as the settings
-manager, logger, and data tracker are instantiated only once and are
-accessible throughout the addon.
+singletons.py
 
-This centralization is a critical aspect of the addon's architecture, as it
-streamlines the management of global state and facilitates communication
-between different modules. By consolidating the creation of these core objects,
-this module ensures a consistent and stable runtime environment for the entire
-addon.
+This module groups up some of the global variables that originally wer ein the __init__.py.
+This module, hopefully, does not have vocation to remain permanently. This is but a transition step
+in the splitting of the __init__.py file.
+
+More detailed explanation if needed:
+- Any important classes/functions
+- Special behaviors, assumptions, or usage notes
+
+Author: Axil
+Created: 2025-06-03 (YYY-MM-DD)
 """
 import json
 import uuid
