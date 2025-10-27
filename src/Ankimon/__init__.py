@@ -1,3 +1,16 @@
+"""
+This module is the main entry point for the Ankimon addon, and it plays a
+critical role in the addon's architecture. It is responsible for initializing
+all of the addon's components, setting up the necessary hooks to integrate
+with Anki, and creating the addon's menu in the Anki main window. This file is
+the glue that holds the entire addon together, ensuring that all of the
+different modules and components work together seamlessly.
+
+This module is also responsible for handling the addon's startup process,
+including checking for updates, displaying notifications, and initializing the
+addon's data files. It also includes the main event loop for the addon's
+battle system, which is triggered every time a card is reviewed.
+"""
 # -*- coding: utf-8 -*-
 
 # Ankimon

@@ -1,12 +1,26 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QTextEdit, QScrollArea
 
 class DataHandlerWindow(QMainWindow):
+    """A developer tool for inspecting the addon's data.
+
+    This window provides a read-only view of the user's collection, team,
+    items, and other data managed by the `DataHandler`. It is an essential
+    utility for debugging and ensuring data integrity, allowing for easy
+    inspection of the addon's state.
+    """
     def __init__(self, data_handler):
+        """Initializes the data viewer window.
+
+        Args:
+            data_handler: An instance of the `DataHandler` class, which
+                          provides access to the addon's data.
+        """
         super().__init__()
         self.data_handler = data_handler
         self.init_ui()
 
     def init_ui(self):
+        """Initializes the user interface of the data viewer window."""
         self.setWindowTitle('Data Viewer')
 
         # Create the central widget and the main layout
@@ -61,10 +75,17 @@ class DataHandlerWindow(QMainWindow):
         main_layout.addWidget(scroll_area)
         self.setCentralWidget(central_widget)
 
-    # Extendable function to handle files
     def handle_file(self, attr_name, scroll_layout):
-        """
-        Handles the UI setup and processing for a specific attribute.
+        """Handles the UI setup and processing for a specific data attribute.
+
+        This method dynamically creates UI elements to display the content of a
+        given attribute from the `DataHandler`. It's designed to be extendable,
+        allowing for easy addition of new data views in the future.
+
+        Args:
+            attr_name (str): The name of the attribute to be displayed.
+            scroll_layout (QVBoxLayout): The layout to which the UI elements
+                                         will be added.
         """
         if hasattr(self.data_handler, attr_name):
             # Add a label and text display for the attribute
@@ -83,4 +104,5 @@ class DataHandlerWindow(QMainWindow):
                 self.data_handler.save_file(attr_name)
 
     def show_window(self):
+        """Displays the data viewer window."""
         self.show()

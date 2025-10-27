@@ -31,7 +31,23 @@ LANG_NUMBERS = {
 }
 
 class Translator:
+    """Handles the internationalization of the Ankimon addon.
+
+    This class loads a language file based on the user's settings and provides
+    a method to retrieve translated strings. It includes a fallback mechanism
+    to English if a translation is not available in the selected language,
+    ensuring that the addon remains functional for all users.
+    """
     def __init__(self, language):
+        """Initializes the Translator and loads the appropriate language file.
+
+        Args:
+            language (str): The language code for the desired translation.
+
+        Raises:
+            Exception: If the translation file is not found or is improperly
+                       formatted.
+        """
         short_language = LANG_NUMBERS.get(int(language), 'en')
         self.filepath = LANG_PATHS.get(short_language, lang_path_en)
         try:
@@ -43,6 +59,24 @@ class Translator:
             raise Exception(f"Invalid JSON format in translation file: {self.filepath}")
 
     def translate(self, key, **kwargs):
+        """Retrieves a translated string and formats it with the given arguments.
+
+        This method looks up a translation key in the loaded language file. If
+        the key is not found, it falls back to the English translation. It
+        also supports placeholder substitution for dynamic content.
+
+        Args:
+            key (str): The key for the desired translation.
+            **kwargs: A dictionary of arguments to be formatted into the
+                      translated string.
+
+        Returns:
+            str: The translated and formatted string.
+
+        Raises:
+            Exception: If a placeholder is missing from the translation string
+                       or if the fallback translation fails.
+        """
         # Track which translation file is being used
         source_file = self.filepath
         template = self.translations.get(key, None)

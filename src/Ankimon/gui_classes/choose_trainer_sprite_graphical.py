@@ -7,7 +7,15 @@ from ..resources import trainer_sprites_path
 import os
 
 class TrainerSpriteGraphicalDialog(QDialog):
+    """A dialog for graphically choosing a trainer sprite."""
     def __init__(self, settings_obj, parent=mw):
+        """
+        Initializes the TrainerSpriteGraphicalDialog.
+
+        Args:
+            settings_obj: The settings object.
+            parent (QWidget, optional): The parent widget. Defaults to mw.
+        """
         super().__init__(parent)
         self.setWindowTitle("Choose Your Trainer Sprite")
         self.settings = settings_obj
@@ -39,6 +47,7 @@ class TrainerSpriteGraphicalDialog(QDialog):
         self.setMinimumSize(910, 600)
 
     def populate_grid(self):
+        """Populates the grid with trainer sprites."""
         col = 0
         row = 0
         last_letter = ''
@@ -75,8 +84,23 @@ class TrainerSpriteGraphicalDialog(QDialog):
                     row += 1
 
     def format_sprite_name(self, name):
+        """
+        Formats the sprite name for display.
+
+        Args:
+            name (str): The name of the sprite.
+
+        Returns:
+            str: The formatted name.
+        """
         return ' '.join(word.capitalize() for word in name.split('-'))
 
     def on_sprite_clicked(self, sprite_name):
+        """
+        Handles the event when a sprite is clicked.
+
+        Args:
+            sprite_name (str): The name of the clicked sprite.
+        """
         self.settings.set("trainer.sprite", sprite_name)
         self.accept()

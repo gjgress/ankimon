@@ -1,3 +1,16 @@
+"""
+This module defines constants used throughout the Ankimon addon.
+
+This includes:
+- `gen_ids`: A dictionary mapping Pokémon generation names to their
+             corresponding National Pokédex numbers.
+- `status_colors_label`: A dictionary defining the background and outline
+                         colors for status effect labels in the UI.
+- `status_colors_html`: A dictionary defining the background, outline, and
+                        display names for status effects in HTML components,
+                        such as the battle interface.
+"""
+
 gen_ids = {
     "gen_1": 151,
     "gen_2": 251,

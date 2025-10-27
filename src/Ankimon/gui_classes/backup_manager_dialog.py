@@ -12,6 +12,13 @@ from ..resources import addon_dir
 class BackupItemWidget(QWidget):
     """Custom widget for displaying a single backup's information."""
     def __init__(self, backup_data: dict, parent=None):
+        """
+        Initializes the BackupItemWidget.
+
+        Args:
+            backup_data (dict): A dictionary containing the backup data.
+            parent (QWidget, optional): The parent widget. Defaults to None.
+        """
         super().__init__(parent)
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(15, 10, 15, 10)
@@ -60,7 +67,15 @@ class BackupItemWidget(QWidget):
         self.setLayout(self.main_layout)
 
 class BackupManagerDialog(QDialog):
+    """A dialog window for managing backups."""
     def __init__(self, backup_manager: BackupManager, parent=None):
+        """
+        Initializes the BackupManagerDialog.
+
+        Args:
+            backup_manager (BackupManager): An instance of the BackupManager.
+            parent (QWidget, optional): The parent widget. Defaults to None.
+        """
         super().__init__(parent)
         self.backup_manager = backup_manager
         self.setWindowTitle("Ankimon Backup Manager")
@@ -70,6 +85,7 @@ class BackupManagerDialog(QDialog):
         self.refresh_backup_list()
 
     def init_ui(self):
+        """Initializes the user interface."""
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
@@ -112,6 +128,7 @@ class BackupManagerDialog(QDialog):
         self.setLayout(main_layout)
 
     def apply_stylesheet(self):
+        """Applies the stylesheet to the dialog."""
         self.setStyleSheet(f"""
             QDialog {{
                 background-color: #2a2a2a;
@@ -178,6 +195,7 @@ class BackupManagerDialog(QDialog):
         """)
 
     def refresh_backup_list(self):
+        """Refreshes the list of backups."""
         self.backup_list_widget.clear()
         backups = self.backup_manager.get_backups()
         if not backups:
@@ -195,15 +213,18 @@ class BackupManagerDialog(QDialog):
             self.backup_list_widget.setItemWidget(item, widget)
 
     def on_selection_changed(self):
+        """Handles the selection changed event."""
         has_selection = len(self.backup_list_widget.selectedItems()) > 0
         self.restore_button.setEnabled(has_selection)
         self.delete_button.setEnabled(has_selection)
 
     def create_manual_backup(self):
+        """Creates a manual backup."""
         self.backup_manager.create_backup(manual=True)
         self.refresh_backup_list()
 
     def delete_selected_backup(self):
+        """Deletes the selected backup."""
         selected_items = self.backup_list_widget.selectedItems()
         if not selected_items:
             return
@@ -223,6 +244,7 @@ class BackupManagerDialog(QDialog):
                 QMessageBox.warning(self, "Error", "Could not find path for the selected backup.")
 
     def restore_selected_backup(self):
+        """Restores the selected backup."""
         selected_items = self.backup_list_widget.selectedItems()
         if not selected_items:
             return

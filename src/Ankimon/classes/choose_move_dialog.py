@@ -6,7 +6,14 @@ from ..functions.pokedex_functions import find_details_move
 import random
 
 class MoveSelectionDialog(QDialog):
+    """A dialog window for selecting a Pokémon move."""
     def __init__(self, mainpokemon_attacks):
+        """
+        Initializes the MoveSelectionDialog.
+
+        Args:
+            mainpokemon_attacks (list): A list of moves available to the Pokémon.
+        """
         super().__init__()
 
         # Dialog settings
@@ -41,17 +48,36 @@ class MoveSelectionDialog(QDialog):
 
 
     def create_mouse_press_handler(self, index):
+        """
+        Creates a mouse press event handler for a move label.
+
+        Args:
+            index (int): The index of the move.
+
+        Returns:
+            function: A function that handles the mouse press event.
+        """
         def handle_mouse_press(event):
             self.select_move(index)
         return handle_mouse_press
 
     def select_move(self, index):
-        """Handle move selection and close the dialog."""
+        """
+        Handles the selection of a move and closes the dialog.
+
+        Args:
+            index (int): The index of the selected move.
+        """
         self.selected_move = self.mainpokemon_attacks[index]
         self.accept()
 
     def keyPressEvent(self, event):
-        """Handle keyboard shortcuts for move selection."""
+        """
+        Handles keyboard shortcuts for move selection.
+
+        Args:
+            event (QKeyEvent): The key press event.
+        """
         key = event.key()
         if Qt.Key.Key_1 <= key <= Qt.Key.Key_9:
             move_index = key - Qt.Key.Key_1  # Convert key to list index

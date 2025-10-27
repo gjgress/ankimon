@@ -1,3 +1,15 @@
+"""
+This module serves as a centralized repository for all the multiline text
+blocks, HTML templates, and CSS styles used throughout the Ankimon addon. By
+consolidating these text assets into a single location, this module helps to
+keep the main codebase clean, organized, and easy to maintain.
+
+This approach also simplifies the process of updating UI text and styles, as
+all the relevant strings are located in one convenient place. Furthermore, it
+lays the groundwork for future internationalization efforts, as it provides a
+single point of contact for all text that needs to be translated.
+"""
+
 _bottomHTML_template = """
         <center id=outer>
         <table id=innertable width=100%% cellspacing=0 cellpadding=0>

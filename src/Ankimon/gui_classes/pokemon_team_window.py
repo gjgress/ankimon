@@ -8,7 +8,16 @@ from aqt.utils import showInfo, showWarning
 from ..resources import mypokemon_path, frontdefault, team_pokemon_path
 
 class PokemonTeamDialog(QDialog):
+    """A dialog for choosing a Pokémon team."""
     def __init__(self, settings_obj, logger, parent=mw):
+        """
+        Initializes the PokemonTeamDialog.
+
+        Args:
+            settings_obj: The settings object.
+            logger: The logger object.
+            parent (optional): The parent widget. Defaults to mw.
+        """
         super().__init__(parent)
         self.setWindowTitle("Choose Your Pokémon Team (Max 6 Pokémon)")
         self.settings = settings_obj
@@ -103,14 +112,14 @@ class PokemonTeamDialog(QDialog):
         self.exec()
 
     def load_my_pokemon(self):
-        """Load the player's Pokémon data from a JSON string (in this case, hardcoded)"""
+        """Load the player's Pokémon data from a JSON file."""
         # Replace the following with the actual loading method if from a file:
         with open(mypokemon_path, "r", encoding="utf-8") as file:
             pokemon_data = json.load(file)
         return pokemon_data
 
     def load_pokemon_team(self):
-        """Load the player's Pokémon Team from a JSON string (in this case, hardcoded)"""
+        """Load the player's Pokémon Team from a JSON file."""
         with open(team_pokemon_path, "r", encoding="utf-8") as file:
             team_data = json.load(file)
 
@@ -130,7 +139,7 @@ class PokemonTeamDialog(QDialog):
         return matching_pokemon
 
     def update_team_display(self):
-        """Update the display with the player's current team"""
+        """Update the display with the player's current team."""
         # Ensure team_pokemon has 6 slots (pad with None if less than 6)
         max_pokemon_slots = 6
         self.team_pokemon = self.team_pokemon[:max_pokemon_slots]  # Trim to a max of 6 Pokémon
@@ -159,7 +168,11 @@ class PokemonTeamDialog(QDialog):
                 frame_data['sprite'].clear()  # Clear the sprite if not selected
 
     def switch_out_pokemon(self, slot):
-        """Allow the player to switch out a Pokémon for the selected slot"""
+        """Allow the player to switch out a Pokémon for the selected slot.
+
+        Args:
+            slot (int): The slot to switch out.
+        """
 
         # Create a dialog to choose a new Pokémon for the slot
         dialog = QDialog(self)
@@ -223,7 +236,13 @@ class PokemonTeamDialog(QDialog):
         dialog.exec()
 
     def confirm_switch(self, selected_index, slot, dialog):
-        """Confirm the Pokémon switch and update the team"""
+        """Confirm the Pokémon switch and update the team.
+
+        Args:
+            selected_index (int): The index of the selected Pokémon.
+            slot (int): The slot to switch out.
+            dialog (QDialog): The dialog to close.
+        """
         # Get the selected Pokémon from combo_box.itemData()
         selected_pokemon = dialog.findChild(QComboBox).itemData(selected_index)
 
@@ -236,7 +255,11 @@ class PokemonTeamDialog(QDialog):
         dialog.accept()
 
     def remove_pokemon(self, slot):
-        """Remove the Pokémon from the team and handle XP Share if necessary"""
+        """Remove the Pokémon from the team and handle XP Share if necessary.
+
+        Args:
+            slot (int): The slot to remove the Pokémon from.
+        """
         # Check if there's a Pokémon in the selected slot
         if self.team_pokemon[slot] is not None:
             # Check if the Pokémon in this slot is the one with XP Share
@@ -254,7 +277,7 @@ class PokemonTeamDialog(QDialog):
             self.update_team_display()
 
     def on_ok(self):
-        """Store the selected Pokémon team and XP Share setting, then close the dialog"""
+        """Store the selected Pokémon team and XP Share setting, then close the dialog."""
         #team = [frame_data['label'].text() for frame_data in self.pokemon_frames if frame_data['label'].text() != "Pokémon Not Selected"]
         team_data = []  # Initialize the list to store selected Pokémon
 

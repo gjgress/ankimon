@@ -14,7 +14,14 @@ from ..utils import close_anki
 from ..resources import user_path, addon_dir
 
 class BackupManager:
-    """Handles creating, managing, and restoring Ankimon backups."""
+    """A robust and feature-rich system for managing Ankimon user data backups.
+
+    This class is a critical component of the addon's data management strategy,
+    providing users with the ability to create, restore, and delete backups,
+    as well as an automated backup system that runs when Anki is closed. This
+    is essential for protecting users from data loss and for providing a
+    seamless recovery process in the event of data corruption.
+    """
 
     _OBFUSCATION_KEY = "H0tP-!s-N0t-4-C@tG!rL_v2"
     FILES_TO_BACKUP = [
@@ -31,6 +38,13 @@ class BackupManager:
     MAX_BACKUP_AGE_DAYS = 14
 
     def __init__(self, logger, settings_obj):
+        """Initializes the BackupManager.
+
+        Args:
+            logger: An instance of the logger class for recording events.
+            settings_obj: An instance of the `Settings` class for accessing
+                          user preferences.
+        """
         self.logger = logger
         self.settings_obj = settings_obj
         self.user_files_path = user_path
@@ -39,7 +53,18 @@ class BackupManager:
         self.backups_path.mkdir(exist_ok=True)
 
     def _deobfuscate_data(self, obfuscated_str: str) -> Optional[Dict[str, Any]]:
-        """De-obfuscates string back into a dictionary."""
+        """De-obfuscates the user's configuration data.
+
+        This method is used to read the obfuscated configuration file, which
+        contains sensitive user data such as the trainer's name and cash.
+
+        Args:
+            obfuscated_str (str): The obfuscated string to be de-obfuscated.
+
+        Returns:
+            dict: The de-obfuscated data as a dictionary, or None if an error
+                  occurs.
+        """
         try:
             new_separator = "---DATA_START---"
             old_separator = "\n---"
@@ -64,7 +89,16 @@ class BackupManager:
             return None
 
     def get_backups(self) -> List[Dict[str, Any]]:
-        """Returns a list of available backups with their summary stats."""
+        """Retrieves a list of all available backups.
+
+        This method scans the backup directory and reads the summary data for
+        each backup, providing a comprehensive overview of the available
+        restore points.
+
+        Returns:
+            list: A list of dictionaries, where each dictionary represents a
+                  backup and contains its summary data.
+        """
         backups = []
         for backup_dir in sorted(self.backups_path.iterdir(), reverse=True):
             if backup_dir.is_dir():
@@ -80,7 +114,16 @@ class BackupManager:
         return backups
 
     def create_backup(self, manual=False):
-        """Creates a new backup."""
+        """Creates a new backup of the user's data.
+
+        This method can be triggered manually by the user or automatically when
+        Anki is closed. It copies all of the user's data files to a new
+        timestamped directory and generates a summary of the backup.
+
+        Args:
+            manual (bool, optional): Whether the backup was initiated
+                                     manually by the user.
+        """
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         backup_dir = self.backups_path / f"backup_{timestamp}"
         
@@ -109,7 +152,20 @@ class BackupManager:
         self.cleanup_backups()
 
     def _generate_summary(self, backup_dir: Path) -> Dict[str, Any]:
-        """Generates a summary for a backup."""
+        """Generates a summary of a backup's contents.
+
+        This method reads the key data files from a backup and extracts
+        important information, such as the trainer's name, level, and the
+        number of Pokémon and items. This summary is then displayed to the user
+        in the backup manager, helping them to identify the correct backup to
+        restore.
+
+        Args:
+            backup_dir (Path): The path to the backup directory.
+
+        Returns:
+            dict: A dictionary containing the summary data.
+        """
         summary = {
             "date": backup_dir.name.replace("backup_", "").replace("_", " "),
             "main_pokemon_name": "N/A",
@@ -167,7 +223,15 @@ class BackupManager:
         return summary
 
     def restore_backup(self, backup_path_str: str):
-        """Restores a selected backup."""
+        """Restores the user's data from a selected backup.
+
+        This method overwrites the current user data with the data from the
+        selected backup. It then closes Anki to ensure that the changes are
+        applied correctly.
+
+        Args:
+            backup_path_str (str): The path to the backup to be restored.
+        """
         backup_path = Path(backup_path_str)
         if not backup_path.is_dir():
             showWarning("Selected backup path does not exist.")
@@ -197,7 +261,11 @@ class BackupManager:
             showWarning(f"Failed to restore backup: {e}")
 
     def delete_backup(self, backup_path_str: str):
-        """Deletes a selected backup."""
+        """Deletes a selected backup.
+
+        Args:
+            backup_path_str (str): The path to the backup to be deleted.
+        """
         backup_path = Path(backup_path_str)
         if not backup_path.is_dir():
             showWarning("Selected backup path does not exist.")
@@ -211,7 +279,13 @@ class BackupManager:
             showWarning(f"Failed to delete backup: {e}")
 
     def cleanup_backups(self):
-        """Deletes old backups based on retention policy."""
+        """Deletes old backups based on the defined retention policy.
+
+        This method is called after a new backup is created. It deletes
+        backups that are older than the maximum age and, if necessary, deletes
+        the oldest backups to ensure that the total number of backups does not
+        exceed the maximum limit.
+        """
         backups = sorted(self.backups_path.iterdir(), key=os.path.getmtime)
         
         # Delete backups older than MAX_BACKUP_AGE_DAYS
@@ -230,6 +304,10 @@ class BackupManager:
                 self.logger.log("info", f"Deleted oldest backup to maintain max count: {oldest_backup.name}")
 
     def on_anki_close(self):
-        """Creates a backup when Anki is about to close."""
+        """Creates a backup when Anki is closed.
+
+        This method is connected to Anki's `profile_will_close` hook, ensuring
+        that a backup is created every time the user closes their profile.
+        """
         # This logic can be expanded with the developer mode setting
         self.create_backup(manual=False)

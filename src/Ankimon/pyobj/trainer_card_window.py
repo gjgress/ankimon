@@ -6,7 +6,24 @@ from ..resources import trainer_sprites_path
 import os
 
 class TrainerCardGUI(QDialog):
+    """A dialog for displaying the user's trainer card.
+
+    This class provides a graphical representation of the user's progress and
+    accomplishments in the Ankimon addon. It displays key information such as
+    the trainer's name, ID, level, badges, and team, offering a comprehensive
+    overview of their journey.
+    """
     def __init__(self, trainer_card, settings_obj, parent=None):
+        """Initializes the trainer card dialog.
+
+        Args:
+            trainer_card: An instance of the `TrainerCard` class, which
+                          provides the data to be displayed.
+            settings_obj: An instance of the `Settings` class, which is used
+                          to retrieve user-specific settings like the trainer
+                          sprite.
+            parent (QWidget, optional): The parent widget of this dialog.
+        """
         super().__init__(parent)
         self.trainer_card = trainer_card
         self.settings = settings_obj
@@ -15,6 +32,7 @@ class TrainerCardGUI(QDialog):
         self.show()
 
     def init_ui(self):
+        """Initializes the user interface of the trainer card dialog."""
         self.setWindowTitle('Trainer Card')
         self.setFixedSize(500, 350)
 
@@ -102,7 +120,11 @@ class TrainerCardGUI(QDialog):
         main_layout.addWidget(right_widget)
 
     def update_display(self):
-        """Update all displayed information"""
+        """Updates the trainer card with the latest data.
+
+        This method is called to refresh the displayed information, ensuring
+        that the trainer card always reflects the user's current progress.
+        """
         # Update left side
         name_label = self.findChild(QLabel, "name_label")
         if name_label:
@@ -127,7 +149,7 @@ class TrainerCardGUI(QDialog):
             )
 
     def toggle_window(self):
-            """Toggle the window between open and closed states"""
+            """Toggles the visibility of the trainer card window."""
             if not self.is_open:
                 self.update_display()
                 self.show()

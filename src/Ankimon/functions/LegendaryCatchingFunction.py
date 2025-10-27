@@ -1,5 +1,13 @@
 class LegendaryCatching:
+    """Manages the complex logic of legendary Pokémon encounters.
+
+    This class is a key part of the addon's endgame content, providing a
+    challenging and rewarding experience for dedicated players. It enforces a
+    set of rules and dependencies, ensuring that legendary Pokémon can only be
+    caught in a specific order.
+    """
     def __init__(self):
+        """Initializes the legendary catching rules and dependencies."""
         # Define dependencies
         self.dependencies = {
             150: {151},  # Mewtwo requires Mew
@@ -21,12 +29,18 @@ class LegendaryCatching:
         }
 
     def can_catch(self, caught_pokemon, target_pokemon):
-        """
-        Check if a Pokémon can be caught based on what's already caught.
+        """Checks if a legendary Pokémon can be caught.
 
-        :param caught_pokemon: Set of Pokémon IDs already caught
-        :param target_pokemon: Pokémon ID to check
-        :return: True if the Pokémon can be caught, False otherwise
+        This method determines if the user has met the necessary prerequisites
+        to encounter and catch a specific legendary Pokémon.
+
+        Args:
+            caught_pokemon (set): A set of the Pokémon IDs that the user has
+                                  already caught.
+            target_pokemon (int): The ID of the legendary Pokémon to check.
+
+        Returns:
+            bool: True if the Pokémon can be caught, False otherwise.
         """
         if target_pokemon in self.mythical:
             return False  # Mythical Pokémon cannot be caught
@@ -38,11 +52,17 @@ class LegendaryCatching:
         return required.issubset(caught_pokemon)
 
     def get_catchable_pokemon(self, caught_pokemon):
-        """
-        Get a list of Pokémon IDs that can be caught based on what's already caught.
+        """Returns a set of all legendary Pokémon that are currently catchable.
 
-        :param caught_pokemon: Set of Pokémon IDs already caught
-        :return: Set of catchable Pokémon IDs
+        This method is used to determine which legendary Pokémon can be
+        encountered, based on the user's current collection.
+
+        Args:
+            caught_pokemon (set): A set of the Pokémon IDs that the user has
+                                  already caught.
+
+        Returns:
+            set: A set of the Pokémon IDs that are currently catchable.
         """
         catchable = set()
         for pokemon in self.excluded:

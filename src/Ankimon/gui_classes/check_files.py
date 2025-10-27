@@ -13,15 +13,19 @@ from aqt import mw
 from aqt.utils import showWarning
 
 def check_files_in_json(json_file=json_file_structure, root_directory=addon_dir):
-    """
-    Checks if the files listed in the JSON file exist in the root directory.
+    """Checks if the files and folders listed in a JSON manifest exist.
+
+    This function is a core utility for verifying the integrity of the addon's
+    installation, ensuring that all necessary files are present. It recursively
+    traverses the structure defined in the JSON file and compares it against
+    the actual file system.
 
     Args:
-        json_file (str): Path to the JSON file.
+        json_file (str): Path to the JSON file defining the expected structure.
         root_directory (str): The root directory to verify files against.
 
     Returns:
-        list: A list of missing files.
+        list: A list of missing file and folder paths.
     """
     def verify_files(folder_dict, current_path, missing_files):
         for child in folder_dict.get('children', []):
@@ -46,7 +50,15 @@ def check_files_in_json(json_file=json_file_structure, root_directory=addon_dir)
     return missing_files
 
 class FileCheckerApp(QDialog):
+    """A developer tool for verifying the addon's file integrity.
+
+    This dialog provides a simple graphical interface to run the
+    `check_files_in_json` function and display the results. It's an essential
+    utility for debugging and ensuring that the addon's file structure is
+    correct.
+    """
     def __init__(self):
+        """Initializes the FileCheckerApp dialog and its UI components."""
         super().__init__()
         self.setWindowTitle("File Checker")
         self.setGeometry(100, 100, 600, 400)
@@ -72,6 +84,11 @@ class FileCheckerApp(QDialog):
         self.show()
 
     def check_files(self):
+        """Handles the 'Check Files' button click event.
+
+        This method executes the file verification process and displays the
+        list of missing files or a success message in the output text area.
+        """
         json_file = self.json_file
         root_directory = self.directory
 

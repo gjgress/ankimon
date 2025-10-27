@@ -90,6 +90,59 @@ def create_menu_actions(
     pokemon_pc: PokemonPC,
     backup_manager: BackupManager,
 ):
+    """Creates and configures all of the Ankimon addon's menu actions.
+
+    This function is a crucial part of the user interface, responsible for
+    building the Ankimon menu in the Anki main window. It creates each menu
+    item, connects it to its corresponding function, and organizes the items
+    into a clear and intuitive hierarchy. This centralization of menu creation
+    ensures that the menu is both functional and easy to maintain.
+
+    Args:
+        database_complete (bool): A flag indicating if the addon's database
+                                  is fully loaded.
+        online_connectivity (bool): A flag indicating if the user has an
+                                    internet connection.
+        pokecollection_win (PokemonCollectionDialog): The Pokémon collection
+                                                      window.
+        item_window (ItemWindow): The item window.
+        test_window (TestWindow): The main battle window.
+        achievement_bag (AchievementWindow): The achievements window.
+        open_team_builder (Callable): A function to open the Pokémon Showdown
+                                      team builder.
+        export_to_pkmn_showdown (Callable): A function to export the main
+                                            Pokémon to Pokémon Showdown.
+        export_all_pkmn_showdown (Callable): A function to export all Pokémon
+                                             to Pokémon Showdown.
+        flex_pokemon_collection (Callable): A function to export the Pokémon
+                                            collection to PokePaste.
+        eff_chart (TableWidget): The type effectiveness chart.
+        gen_id_chart (IDTableWidget): The generation ID chart.
+        credits (Credits): The credits window.
+        license (License): The license window.
+        open_help_window (Callable): A function to open the help window.
+        report_bug (Callable): A function to open the bug report page.
+        rate_addon_url (Callable): A function to open the addon rating page.
+        version_dialog (Version_Dialog): The version dialog.
+        trainer_card (TrainerCard): The trainer card object.
+        ankimon_tracker_window (AnkimonTrackerWindow): The Ankimon tracker
+                                                       window.
+        logger (ShowInfoLogger): The logger object.
+        data_handler_window (DataHandlerWindow): The data handler window.
+        settings_window (SettingsWindow): The settings window.
+        shop_manager (PokemonShopManager): The shop manager.
+        pokedex_window (Pokedex): The Pokédex window.
+        ankimon_key: The hotkey for opening the Ankimon window.
+        join_discord_url (Callable): A function to open the Discord invite
+                                     link.
+        open_leaderboard_url (Callable): A function to open the leaderboard
+                                         URL.
+        settings_obj (Settings): The settings object.
+        addon_dir (Path): The addon's root directory.
+        data_handler_obj (DataHandler): The data handler object.
+        pokemon_pc (PokemonPC): The Pokémon PC window.
+        backup_manager (BackupManager): The backup manager.
+    """
     actions = []
 
     if database_complete:

@@ -8,7 +8,19 @@ from ..pyobj.error_handler import show_warning_with_traceback
 logger = mw.logger
 
 class DiscordPresence:
+    """A class to manage Discord Rich Presence."""
     def __init__(self, client_id, large_image_url, ankimon_tracker, logger, settings_obj, parent=mw):
+        """
+        Initializes the DiscordPresence object.
+
+        Args:
+            client_id (str): The Discord client ID.
+            large_image_url (str): The URL of the large image to display.
+            ankimon_tracker: The Ankimon tracker object.
+            logger: The logger object.
+            settings_obj: The settings object.
+            parent (optional): The parent widget. Defaults to mw.
+        """
         try:
             self.RPC = Presence(client_id)
             self.RPC.connect()
@@ -43,6 +55,12 @@ class DiscordPresence:
             tooltip("Error with Discord setup. Is Discord running?")
 
     def _get_special_quotes(self):
+        """
+        Returns a list of special quotes for Discord Rich Presence.
+
+        Returns:
+            list: A list of special quotes.
+        """
         return [
             f"In battle with {self.ankimon_tracker.main_pokemon.name.capitalize()} Lvl {self.ankimon_tracker.main_pokemon.level}",
             f"Currently battling {self.ankimon_tracker.enemy_pokemon.name.capitalize()} Lvl {self.ankimon_tracker.enemy_pokemon.level}",
@@ -123,8 +141,10 @@ class DiscordPresence:
 
 def check_conflicting_discord_addons():
     """
-    Check for other Anki addons that may be showing Discord status.
-    Returns a list of conflicting addon names if found.
+    Checks for other Anki addons that may be showing a Discord status.
+
+    Returns:
+        list: A list of conflicting addon names if found, otherwise an empty list.
     """
     try:
         from aqt import mw

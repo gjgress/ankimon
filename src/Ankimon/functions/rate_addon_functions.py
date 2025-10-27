@@ -22,7 +22,15 @@ from ..utils import give_item
 from ..singletons import logger, test_window
 
 def rate_this_addon():
+    """Displays a dialog prompting the user to rate the Ankimon addon.
 
+    This function checks a local JSON file to see if the user has already
+    interacted with the rating prompt. If not, it displays a modal dialog with
+    options to rate the addon, decline, or support the author. User interaction
+    is recorded to prevent the dialog from appearing again. Rating the addon
+    rewards the user with an in-game item.
+    """
+    default_data = {"rate_this": False}
     # Load rate data
     try:
         with open(rate_path, "r", encoding="utf-8") as file:
@@ -53,10 +61,12 @@ def rate_this_addon():
         dont_show_button = QPushButton("I dont want to rate this addon.")
 
         def support_button_click():
+            """Opens the author's Ko-fi page in a web browser."""
             support_url = "https://ko-fi.com/unlucky99"
             QDesktopServices.openUrl(QUrl(support_url))
 
         def thankyou_message():
+            """Displays a thank you message and a support button."""
             thankyou_window = QDialog()
             thankyou_window.setWindowTitle("Thank you !")
             thx_layout = QVBoxLayout(thankyou_window)
@@ -70,6 +80,7 @@ def rate_this_addon():
             thankyou_window.exec()
 
         def dont_show_this_button():
+            """Closes the rating window and permanently dismisses the prompt."""
             rate_window.close()
             rate_data["rate_this"] = True
             # Save the updated data back to the file
@@ -78,6 +89,7 @@ def rate_this_addon():
             logger.log_and_showinfo("info",dont_show_this_button_text)
 
         def rate_this_button():
+            """Opens the AnkiWeb rating page and rewards the user."""
             rate_window.close()
             rate_url = "https://ankiweb.net/shared/review/1908235722"
             QDesktopServices.openUrl(QUrl(rate_url))

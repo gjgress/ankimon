@@ -8,18 +8,33 @@ with open(move_names_file_path, "r", encoding="utf-8") as f:
     MOVE_NAME_LOOKUP = json.load(f)
 
 def format_move_name(move: str) -> str:
-    """
-    Look up the official move name using the normalized key.
-    Falls back to title-casing with spaces if not found.
+    """Looks up the official move name using a normalized key.
+
+    Falls back to title-casing with spaces if the move is not found.
+
+    Args:
+        move (str): The name of the move to format.
+
+    Returns:
+        str: The formatted move name.
     """
     key = move.replace(" ", "").replace("-", "").replace("_", "").lower()
     return MOVE_NAME_LOOKUP.get(key, " ".join(word.capitalize() for word in move.replace("_", " ").split()))
 
 def update_pokemon_battle_status(battle_info: dict, enemy_pokemon, main_pokemon):
-    """
-    Update Pokemon battle status and volatile status based on battle instructions.
-    HP is now handled by the main battle loop to ensure a single source of truth.
+    """Updates Pokemon battle status and volatile status based on battle instructions.
+
+    HP is handled by the main battle loop to ensure a single source of truth.
     This function now only processes status changes.
+
+    Args:
+        battle_info (dict): A dictionary containing battle instructions.
+        enemy_pokemon: The enemy Pokemon object.
+        main_pokemon: The main Pokemon object.
+
+    Returns:
+        tuple[bool, bool]: A tuple containing two booleans indicating if the enemy's
+                           and main Pokemon's statuses were changed, respectively.
     """
     if not isinstance(battle_info, dict) or 'instructions' not in battle_info:
         return False, False
@@ -129,9 +144,20 @@ def _process_battle_effects(
     current_state=None,
     changes=None
 ) -> list:
-    """
-    Process battle changes with Pokemon names and persistent effect messages.
-    This version uses the changes variable instead of instructions to generate messages.
+    """Processes battle changes to generate messages for persistent effects.
+
+    This version uses the `changes` variable instead of `instructions` to generate messages.
+
+    Args:
+        instructions (list): Kept for compatibility but not used.
+        translator: The translator object for localization.
+        main_pokemon (optional): The main Pokemon object. Defaults to None.
+        enemy_pokemon (optional): The enemy Pokemon object. Defaults to None.
+        current_state (optional): The current state of the battle. Defaults to None.
+        changes (optional): A list of changes that occurred during the turn. Defaults to None.
+
+    Returns:
+        list: A list of messages describing the battle effects.
     """
     if not changes or not isinstance(changes, list):
         return []
@@ -493,8 +519,13 @@ def _process_battle_effects(
     return effect_messages
 
 def validate_pokemon_status(pokemon):
-    """
-    Ensure Pokemon has valid battle_status and volatile_status.
+    """Ensures a Pokemon has a valid battle_status and volatile_status.
+
+    Args:
+        pokemon: The Pokemon object to validate.
+
+    Returns:
+        str: The validated battle status.
     """
 
     # Valid status codes from const.py
@@ -539,11 +570,29 @@ def process_battle_data(
     translator,
     changes
 ) -> str:
-    """
-    Generate complete battle message from battle data.
+    """Generates a complete battle message from battle data.
 
-    This function centralizes all battle message generation and now uses
-    format_move_name to display official move names.
+    This function centralizes all battle message generation and uses
+    `format_move_name` to display official move names.
+
+    Args:
+        battle_info (dict): A dictionary containing battle information.
+        multiplier (float): The damage multiplier.
+        main_pokemon: The main Pokemon object.
+        enemy_pokemon: The enemy Pokemon object.
+        user_attack (str): The attack used by the user's Pokemon.
+        enemy_attack (str): The attack used by the enemy's Pokemon.
+        dmg_from_user_move (int): The damage dealt by the user's move.
+        dmg_from_enemy_move (int): The damage dealt by the enemy's move.
+        user_hp_after (int): The user's Pokemon's HP after the turn.
+        opponent_hp_after (int): The enemy Pokemon's HP after the turn.
+        battle_status (str): The battle status of the user's Pokemon.
+        pokemon_encounter (int): The number of Pokemon encountered.
+        translator: The translator object for localization.
+        changes: A list of changes that occurred during the turn.
+
+    Returns:
+        str: The formatted battle message.
     """
 
     if not isinstance(battle_info, dict):
@@ -630,7 +679,16 @@ def process_battle_data(
 
 
 def _handle_special_battle_status(main_pokemon, battle_status: str, translator) -> str:
-    """Handle special battle status conditions using the provided constants."""
+    """Handles special battle status conditions using the provided constants.
+
+    Args:
+        main_pokemon: The main Pokemon object.
+        battle_status (str): The battle status to handle.
+        translator: The translator object for localization.
+
+    Returns:
+        str: The translated message for the special battle status.
+    """
 
     try:
 
@@ -673,6 +731,17 @@ def _handle_special_battle_status(main_pokemon, battle_status: str, translator) 
         )
 
 def calculate_hp(base_stat_hp, level, ev, iv):
+    """Calculates the HP of a Pokemon.
+
+    Args:
+        base_stat_hp (int): The base HP stat of the Pokemon.
+        level (int): The level of the Pokemon.
+        ev (dict): The effort values of the Pokemon.
+        iv (dict): The individual values of the Pokemon.
+
+    Returns:
+        int: The calculated HP of the Pokemon.
+    """
     ev_value = ev["hp"] / 4
     iv_value = iv["hp"]
     #hp = int(((iv + 2 * (base_stat_hp + ev) + 100) * level) / 100 + 10)

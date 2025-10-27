@@ -4,6 +4,15 @@ from PyQt6.QtGui import *
 from ..const import status_colors_label, status_colors_html
 
 def create_status_label(status_name):
+    """
+    Creates a QLabel for a given status name with appropriate styling.
+
+    Args:
+        status_name (str): The name of the status.
+
+    Returns:
+        QLabel: The styled QLabel for the status.
+    """
 
     # Get the colors for the given status name
     colors = status_colors_label.get(status_name.lower())
@@ -30,6 +39,18 @@ def create_status_label(status_name):
     return label
 
 def create_status_html(status_name, settings_obj, is_pokemon_owned=False, addon_package=""):
+    """
+    Creates an HTML representation of a status badge.
+
+    Args:
+        status_name (str): The name of the status.
+        settings_obj: The settings object.
+        is_pokemon_owned (bool, optional): Whether the Pokemon is owned by the player. Defaults to False.
+        addon_package (str, optional): The name of the addon package. Defaults to "".
+
+    Returns:
+        str: The HTML representation of the status badge.
+    """
     xp_bar_spacer = settings_obj.compute_special_variable('xp_bar_spacer')
     hp_bar_thickness = settings_obj.get("battle.hp_bar_thickness", 2) * 4
     show_mainpkmn_in_reviewer = int(settings_obj.get("battle.show_mainpkmn_in_reviewer", 1))

@@ -20,6 +20,15 @@ from ..pyobj.error_handler import show_warning_with_traceback
 
 
 def special_pokemon_names_for_min_level(name):
+    """
+    Normalizes special Pokémon names to match the format used in the Pokedex.
+
+    Args:
+        name (str): The name of the Pokémon.
+
+    Returns:
+        str: The normalized Pokémon name.
+    """
     if name == "flabébé":
         return "flabebe"
     elif name == "sirfetch'd":
@@ -73,6 +82,16 @@ def special_pokemon_names_for_min_level(name):
 
 
 def search_pokedex(pokemon_name, variable):
+    """
+    Searches the Pokedex for a specific attribute of a Pokémon.
+
+    Args:
+        pokemon_name (str): The name of the Pokémon to search for.
+        variable (str): The attribute to retrieve (e.g., "types", "baseStats").
+
+    Returns:
+        The value of the specified attribute, or an empty list if not found.
+    """
     try:
         pokemon_name = special_pokemon_names_for_min_level(pokemon_name)
         with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
@@ -112,6 +131,16 @@ def search_pokedex(pokemon_name, variable):
 
 
 def search_pokedex_by_name_for_id(pokemon_name, variable):
+    """
+    Searches the Pokedex for a Pokémon's ID by its name.
+
+    Args:
+        pokemon_name (str): The name of the Pokémon.
+        variable (str): The variable to retrieve (should be "num").
+
+    Returns:
+        int or None: The Pokémon's ID if found, otherwise None.
+    """
     pokemon_name = special_pokemon_names_for_min_level(pokemon_name)
     with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
@@ -124,6 +153,15 @@ def search_pokedex_by_name_for_id(pokemon_name, variable):
 
 
 def search_pokedex_by_id(pokemon_id):
+    """
+    Searches the Pokedex for a Pokémon's name by its ID.
+
+    Args:
+        pokemon_id (int): The ID of the Pokémon.
+
+    Returns:
+        str: The name of the Pokémon, or "Pokémon not found" if not found.
+    """
     with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
         for entry_name, attributes in pokedex_data.items():
@@ -133,6 +171,15 @@ def search_pokedex_by_id(pokemon_id):
 
 
 def get_mainpokemon_evo(pokemon_name):
+    """
+    Retrieves the evolution chain for a given Pokémon.
+
+    Args:
+        pokemon_name (str): The name of the Pokémon.
+
+    Returns:
+        list: A list of evolution names, or an empty list if not found.
+    """
     with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
         if pokemon_name not in pokedex_data:
@@ -143,6 +190,16 @@ def get_mainpokemon_evo(pokemon_name):
 
 
 def search_pokeapi_db(pkmn_name, variable):
+    """
+    Searches the PokeAPI database for a specific attribute of a Pokémon by name.
+
+    Args:
+        pkmn_name (str): The name of the Pokémon.
+        variable (str): The attribute to retrieve.
+
+    Returns:
+        The value of the specified attribute, or None if not found.
+    """
     with open(str(pokeapi_db_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
         for pokemon_data in pokedex_data:
@@ -153,6 +210,16 @@ def search_pokeapi_db(pkmn_name, variable):
 
 
 def search_pokeapi_db_by_id(pkmn_id, variable):
+    """
+    Searches the PokeAPI database for a specific attribute of a Pokémon by ID.
+
+    Args:
+        pkmn_id (int): The ID of the Pokémon.
+        variable (str): The attribute to retrieve.
+
+    Returns:
+        The value of the specified attribute, or None if not found.
+    """
     with open(str(pokeapi_db_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
         for pokemon_data in pokedex_data:
@@ -163,6 +230,17 @@ def search_pokeapi_db_by_id(pkmn_id, variable):
 
 # TODO change all the functions to use language as a parameter
 def get_pokemon_descriptions(species_id, language):
+    """
+    Retrieves a Pokémon's description in a specific language.
+
+    Args:
+        species_id (int): The species ID of the Pokémon.
+        language (int): The language ID for the description.
+
+    Returns:
+        str: A random description if multiple are found, or a single description if only one exists.
+             Returns "Description not found." if no description is available.
+    """
     descriptions = []  # Initialize an empty list to store matching descriptions
     with open(pokedesc_lang_path, mode="r", encoding="utf-8") as csv_file:
         csv_reader = csv.DictReader(csv_file)
@@ -187,6 +265,16 @@ def get_pokemon_descriptions(species_id, language):
 
 # TODO change all the functions to use language as a parameter
 def get_pokemon_diff_lang_name(pokemon_id: int, language: int):
+    """
+    Retrieves the name of a Pokémon in a different language.
+
+    Args:
+        pokemon_id (int): The ID of the Pokémon.
+        language (int): The language ID for the desired name.
+
+    Returns:
+        str: The Pokémon's name in the specified language, or "No Translation in this language" if not found.
+    """
     with open(pokenames_lang_path, mode="r", encoding="utf-8") as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row if there is one
@@ -199,6 +287,12 @@ def get_pokemon_diff_lang_name(pokemon_id: int, language: int):
 
 
 def extract_ids_from_file():
+    """
+    Extracts all unique Pokémon IDs from the user's collection.
+
+    Returns:
+        list: A sorted list of unique Pokémon IDs.
+    """
     try:
         filename = mypokemon_path
         with open(filename, "r", encoding="utf-8") as file:
@@ -278,6 +372,15 @@ def get_all_pokemon_moves(pk_name, level):
 
 
 def find_details_move(move_name: str):
+    """
+    Finds the details of a move from the moves database.
+
+    Args:
+        move_name (str): The name of the move to find.
+
+    Returns:
+        dict: A dictionary containing the move's details, or None if not found.
+    """
     try:
         with open(moves_file_path, "r", encoding="utf-8") as json_file:
             moves_data = json.load(json_file)
@@ -304,6 +407,16 @@ def find_details_move(move_name: str):
 
 
 def get_pokemon_evolution_data_all(pokemon_id, file_path=poke_evo_path):
+    """
+    Retrieves all evolution data for a specific Pokémon.
+
+    Args:
+        pokemon_id (int): The ID of the Pokémon.
+        file_path (str, optional): The path to the evolution data file. Defaults to poke_evo_path.
+
+    Returns:
+        dict: A dictionary containing the evolution data, or None if not found.
+    """
     # Open the CSV file
     with open(file_path, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="\t")  # Assuming tab-separated values

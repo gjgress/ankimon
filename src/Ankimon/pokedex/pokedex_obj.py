@@ -7,7 +7,21 @@ from aqt.utils import showInfo
 from ..resources import mypokemon_path
 
 class Pokedex(QDialog):
+    """A dialog for displaying a comprehensive and interactive Pokédex.
+
+    This class uses a `QWebEngineView` to render an HTML page, which allows
+    for a rich and dynamic presentation of Pokémon data, including which
+    Pokémon the user has caught. It is a central feature of the addon,
+    providing a Pokédex-like experience that is both informative and engaging.
+    """
     def __init__(self, addon_dir, ankimon_tracker):
+        """Initializes the Pokédex dialog.
+
+        Args:
+            addon_dir (str): The root directory of the addon.
+            ankimon_tracker: An instance of the `AnkimonTracker` class, which
+                             provides access to the user's collection data.
+        """
         super().__init__()
         self.addon_dir = addon_dir
         self.ankimon_tracker = ankimon_tracker
@@ -45,6 +59,13 @@ class Pokedex(QDialog):
         self.load_html()
 
     def load_html(self):
+        """Loads the Pokédex HTML page into the webview.
+
+        This method retrieves the list of caught Pokémon and the total number of
+        defeated Pokémon from the `AnkimonTracker`. It then passes this data to
+        the HTML page as URL query parameters, allowing the Pokédex to
+        dynamically display the user's progress.
+        """
         self.ankimon_tracker.get_ids_in_collection()
         self.owned_pokemon_ids = self.ankimon_tracker.owned_pokemon_ids
         #print("POKEDEX_DEBUG: Caught Pokémon IDs:", self.owned_pokemon_ids)
@@ -97,5 +118,10 @@ class Pokedex(QDialog):
         self.webview.setUrl(url)
 
     def showEvent(self, event):
+        """Reloads the Pokédex when the dialog is shown.
+
+        This ensures that the Pokédex is always up-to-date with the user's
+        latest progress.
+        """
         self.load_html()
         self.webview.reload()

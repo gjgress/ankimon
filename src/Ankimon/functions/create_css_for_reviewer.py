@@ -14,6 +14,28 @@ def create_css_for_reviewer(
     enemy_hp_true_percent,
     main_hp_true_percent
 ):
+    """
+    Generates the CSS for the Ankimon HUD in the Anki reviewer.
+
+    Args:
+        show_mainpkmn_in_reviewer (int): Determines whether to show the main Pokemon in the reviewer.
+        pokemon_hp_percent (float): The HP percentage of the enemy Pokemon.
+        hp_bar_thickness (int): The thickness of the HP bar.
+        xp_bar_spacer (int): The spacer for the XP bar.
+        view_main_front (bool): Determines whether to show the front of the main Pokemon.
+        mainpkmn_hp_percent (float): The HP percentage of the main Pokemon.
+        hp_only_spacer (int): The spacer for the HP only view.
+        wild_hp_spacer (int): The spacer for the wild Pokemon's HP.
+        xp_bar_config (bool): Determines whether to show the XP bar.
+        main_pokemon: The main Pokemon object.
+        experience_for_next_lvl (int): The experience required for the next level.
+        xp_bar_location (str): The location of the XP bar.
+        enemy_hp_true_percent (float): The true HP percentage of the enemy Pokemon.
+        main_hp_true_percent (float): The true HP percentage of the main Pokemon.
+
+    Returns:
+        str: The generated CSS string.
+    """
     css = ""
 
     # Determine HP bar colors

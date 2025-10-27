@@ -1,3 +1,14 @@
+"""
+This module provides a cross-platform solution for playing sound files, which
+is a critical component of the addon's audio feedback system. It includes
+implementations for Windows, macOS, and Linux, ensuring that the addon can
+provide a consistent and immersive audio experience regardless of the user's
+operating system.
+
+This module is a modified version of the `playsound` library, which is
+licensed under the MIT License. The original source code can be found at:
+https://github.com/TaylorSMarks/playsound
+"""
 '''
 The MIT License (MIT)
 

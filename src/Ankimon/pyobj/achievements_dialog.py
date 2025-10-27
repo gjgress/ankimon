@@ -7,7 +7,21 @@ from PyQt6.QtGui import QGuiApplication
 from pathlib import Path
 
 class AchievementsDialog(QDialog):
+    """A dialog for displaying the user's achievements and badges.
+
+    This dialog uses a `QWebEngineView` to render an HTML page, which allows
+    for a rich and dynamic presentation of the user's progress. It's a key
+    part of the addon's gamification features, providing a visual
+    representation of the user's accomplishments.
+    """
     def __init__(self, addon_dir, data_handler):
+        """Initializes the achievements and badges dialog.
+
+        Args:
+            addon_dir (pathlib.Path): The root directory of the addon.
+            data_handler: An instance of the `DataHandler` class, which
+                          provides access to the user's data.
+        """
         super().__init__()
         self.addon_dir = addon_dir
         self.data_handler = data_handler
@@ -32,6 +46,12 @@ class AchievementsDialog(QDialog):
         self.load_html()
 
     def load_html(self):
+        """Loads the achievements HTML page into the webview.
+
+        This method reads the badge definitions and the user's unlocked badges,
+        then passes this data to the HTML page as URL query parameters. This
+        allows the HTML page to dynamically render the user's achievements.
+        """
         # Load badge definitions
         badges_path = self.addon_dir / "addon_files" / "badges.json"
         with open(badges_path, "r") as f:

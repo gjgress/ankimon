@@ -27,13 +27,30 @@ new_values = {
 }
 
 class DataHandler:
+    """A class for managing the user's data files in the Ankimon addon.
+
+    This class is a critical component of the addon's data management system.
+    It is responsible for reading, validating, and updating the user's data
+    files, ensuring that the data is always in a consistent and usable state.
+    This includes assigning unique IDs to Pokémon, adding new data fields as
+    the addon evolves, and saving the updated data back to the files.
+    """
     def __init__(self):
+        """Initializes the DataHandler and reads the user's data files."""
         self.new_values = new_values
         self.path = user_path  # Store the provided path
         self.data = {}         # Store any potential errors or file read issues
         self.read_files()
 
     def read_files(self):
+        """Reads all of the user's data files.
+
+        This method iterates through a list of predefined data files, reads
+        their contents, and stores them as attributes of the `DataHandler`
+        instance. It also creates the files with default content if they do
+        not exist, ensuring that the addon can always function, even on a
+        fresh installation.
+        """
         # Specify the files to read
         files = ['mypokemon.json', 'mainpokemon.json', 'items.json', 'team.json', 'data.json', 'badges.json']
 
@@ -68,10 +85,17 @@ class DataHandler:
                 self.data[file] = f"Error reading {file}: {e}"
 
     def assign_unique_ids(self, pokemon_list):
-        """
-        Adds a unique 'individual_id' field to each Pokémon in the provided list,
-        but only if an 'individual_id' is not already set.
-        Ensures no duplicate IDs are assigned.
+        """Assigns a unique 'individual_id' to each Pokémon in a list.
+
+        This method ensures that every Pokémon has a unique identifier, which
+        is crucial for tracking individual Pokémon and their progress. It only
+        assigns an ID if one is not already present, preserving existing data.
+
+        Args:
+            pokemon_list (list): A list of Pokémon dictionaries.
+
+        Raises:
+            ValueError: If the input is not a list of dictionaries.
         """
         if not isinstance(pokemon_list, list):
             raise ValueError("Expected list of Pokémon dictionaries")
@@ -101,11 +125,15 @@ class DataHandler:
             print("Unique ID assignment failed")
 
     def assign_new_variables(self, pokemon_list):
-        """
-        Adds new fields to each Pokémon in the provided list.
-        Sets their default values only if they're not already set.
-        The new_values parameter should be a dictionary where the keys are the field names
-        and the values are the default values.
+        """Adds new data fields to each Pokémon in a list.
+
+        This method is used to update the data structure of Pokémon as new
+        features are added to the addon. It adds new fields with default
+        values, ensuring that the data is always compatible with the latest
+        version of the addon.
+
+        Args:
+            pokemon_list (list): A list of Pokémon dictionaries.
         """
         for pokemon in pokemon_list:
             for field, default_value in self.new_values.items():
@@ -113,8 +141,11 @@ class DataHandler:
                     pokemon[field] = default_value
 
     def save_file(self, attr_name):
-        """
-        Save the updated content back to its respective JSON file.
+        """Saves the updated data back to its respective JSON file.
+
+        Args:
+            attr_name (str): The name of the attribute to be saved, which
+                             corresponds to the filename.
         """
         if hasattr(self, attr_name):
             file_path = os.path.join(self.path, f"{attr_name}.json")

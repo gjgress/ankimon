@@ -21,20 +21,32 @@ except:
 
 
 class CustomAVPlayer(AVPlayer):
+    """A custom audio player that prevents audio from being interrupted.
+
+    This class extends Anki's default AVPlayer to introduce a 'no_interrupt'
+    mode, ensuring that certain sounds play to completion without being cut
+    off by other audio events in Anki.
+    """
     no_interrupt = False
 
     def _on_play_without_interrupt_finished(self) -> None:
+        """Resets the interrupt flag when non-interruptible audio finishes."""
         self.no_interrupt = False
         self._on_play_finished()
 
     def _stop_if_playing(self) -> None:
+        """Stops the currently playing audio, unless it's non-interruptible."""
         if self.current_player and not self.no_interrupt:
             self.current_player.stop()
 
     def play_without_interrupt(self, file: Path) -> None:
-        """Audio played with this function will not be interrupted by other audio
-        except audio played through this function.
-        This function does not clear existing audio queue created by other play methods.
+        """Plays an audio file without being interrupted by other sounds.
+
+        This method ensures that the audio playback is not stopped by other
+        sounds, which is crucial for Ankimon's sound effects during reviews.
+
+        Args:
+            file: The path to the audio file to be played.
         """
         if self.current_player:
             self.current_player.stop()
@@ -51,6 +63,13 @@ class CustomAVPlayer(AVPlayer):
 
 
 def will_use_audio_player() -> None:
+    """Monkey-patches Anki's default audio player to use custom behavior.
+
+    This function is a critical setup step that replaces methods in Anki's
+    global AVPlayer instance with the custom, non-interruptible versions
+    defined in this module. This allows the addon to control audio playback
+    behavior globally.
+    """
     aqt.sound.av_player.no_interrupt = False
     AVPlayer._on_play_without_interrupt_finished = (
         CustomAVPlayer._on_play_without_interrupt_finished
@@ -60,10 +79,18 @@ def will_use_audio_player() -> None:
 
 
 def audio(file: Path) -> None:
+    """Plays a non-interruptible audio file.
+
+    A convenience wrapper around `play_without_interrupt` for cleaner code.
+
+    Args:
+        file: The path to the audio file.
+    """
     aqt.sound.av_player.play_without_interrupt(file)
 
 
 def force_stop_audio() -> None:
+    """Forces the currently playing audio to stop, bypassing any protections."""
     av_player = aqt.sound.av_player
     if av_player.current_player:
         av_player.current_player.stop()

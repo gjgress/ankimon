@@ -35,17 +35,32 @@ class Bridge(QObject):
             self.dialog.close()
 
 class HelpWindow(QDialog):
-    """
-    Modern Ankimon Help Guide window that displays interactive HTML content.
-    Features:
-    - Uses QWebEngineView when available for full browser capabilities
-    - Falls back to QTextEdit when WebEngine isn't available
-    - Loads content from GitHub with local fallback
-    - Supports direct loading of remote images
-    - Interactive page navigation within the HTML
-    - All links (including target="_blank" and JS window.open) open in external browser
+    """A modern and interactive help guide for the Ankimon addon.
+
+    This dialog displays a comprehensive user guide, leveraging `QWebEngineView`
+    to render a rich HTML page with full browser capabilities. It is designed to
+    be a one-stop resource for users, providing detailed information on all of
+    the addon's features.
+
+    Key features include:
+    - **Dynamic Content Loading:** The guide is fetched from GitHub, ensuring
+      that users always have access to the latest information. It also includes
+      a local fallback for offline use.
+    - **Interactive Navigation:** The HTML-based guide supports internal page
+      navigation, allowing users to easily jump between different sections.
+    - **External Link Handling:** All external links are automatically opened in
+      the user's default web browser, providing a seamless experience.
+    - **Graceful Fallback:** In environments where `QWebEngineView` is not
+      available, the dialog gracefully falls back to a `QTextEdit` view,
+      ensuring that the guide is always accessible.
     """
     def __init__(self, online_connectivity=test_online_connectivity):
+        """Initializes the Ankimon help guide window.
+
+        Args:
+            online_connectivity (function, optional): A function to test for
+                internet connectivity. Defaults to `test_online_connectivity`.
+        """
         super().__init__()
         self.setWindowTitle("Ankimon Guide")
         self.setWindowIcon(QIcon(str(icon_path)))
@@ -72,6 +87,7 @@ class HelpWindow(QDialog):
         self.setLayout(layout)
 
     def _setup_web_engine_view(self, layout, online_connectivity):
+        """Sets up the QWebEngineView for displaying the help guide."""
         from PyQt6.QtWebEngineWidgets import QWebEngineView
 
         self.web_view = QWebEngineView()
@@ -95,7 +111,7 @@ class HelpWindow(QDialog):
         layout.addWidget(self.web_view)
 
     def _setup_text_edit_view(self, layout, online_connectivity):
-        """Fallback to QTextEdit when QWebEngineView isn't available"""
+        """Sets up a fallback QTextEdit view when QWebEngineView is unavailable."""
         self.text_edit = QTextEdit()
         self.text_edit.setReadOnly(True)
         self.text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -115,7 +131,19 @@ class HelpWindow(QDialog):
         layout.addWidget(self.text_edit)
 
     def _get_html_content(self, online_connectivity):
-        """Get HTML content from GitHub or local file"""
+        """Retrieves the HTML content for the help guide.
+
+        This method attempts to fetch the latest version of the guide from
+        GitHub. If an internet connection is not available, or if the GitHub
+        request fails, it falls back to a locally cached version of the guide.
+
+        Args:
+            online_connectivity (function): A function to test for internet
+                connectivity.
+
+        Returns:
+            str: The HTML content of the help guide.
+        """
         html_content = ""
         help_local_file_path = addon_dir / "HelpInfos.html"
 

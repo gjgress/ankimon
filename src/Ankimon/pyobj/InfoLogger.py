@@ -4,7 +4,21 @@ from PyQt6.QtCore import Qt
 import os
 
 class ShowInfoLogger:
+    """A versatile logging utility for the Ankimon addon.
+
+    This class provides a comprehensive logging system that is essential for
+    both development and user feedback. It supports logging to a file,
+    displaying messages to the user in a dialog box, and a dedicated log
+    viewer for debugging. This multifaceted approach to logging is a
+    cornerstone of the addon's stability and maintainability.
+    """
     def __init__(self, name="ShowInfoLogger", log_filename="app.log"):
+        """Initializes the logger.
+
+        Args:
+            name (str, optional): The name of the logger.
+            log_filename (str, optional): The name of the log file.
+        """
         # Determine the path of the current script and set log file path
         script_directory = os.path.dirname(os.path.abspath(__file__))
         self.log_file = os.path.join(script_directory, log_filename)
@@ -40,6 +54,16 @@ class ShowInfoLogger:
         self.log_dialog = None
 
     def log_and_showinfo(self, level, message):
+        """Logs a message and displays it to the user in a dialog box.
+
+        This method is ideal for communicating important information to the
+        user, such as warnings or errors, while also recording the event in
+        the log file for debugging purposes.
+
+        Args:
+            level (str): The logging level ('info', 'warning', 'error', 'game').
+            message (str): The message to be logged and displayed.
+        """
         # Log the message
         if level == 'info':
             self.logger.info(message)
@@ -59,6 +83,15 @@ class ShowInfoLogger:
             msg_box.exec()
 
     def log(self, level, message):
+        """Logs a message without displaying it to the user.
+
+        This method is suitable for logging events that are not critical for
+        the user to see, but are still important for debugging.
+
+        Args:
+            level (str): The logging level ('info', 'warning', 'error', 'game').
+            message (str): The message to be logged.
+        """
         # Log the message
         if level == 'info':
             self.logger.info(message)
@@ -70,10 +103,23 @@ class ShowInfoLogger:
             self.game_log(message)  # Use the game-specific logging
 
     def game_log(self, message):
+        """Logs a game-specific message.
+
+        This method uses a separate logger with a custom format to distinguish
+        game-related events from other log messages.
+
+        Args:
+            message (str): The game-specific message to be logged.
+        """
         # Log a game-specific message with the GAME- prefix
         self.game_logger.info(message)
 
     def toggle_log_window(self):
+        """Toggles the visibility of the log viewer dialog.
+
+        This developer tool provides a convenient way to inspect the log file
+        in real-time, with options to refresh the content and clear the log.
+        """
         if self.log_dialog and self.log_dialog.isVisible():
             # Close the dialog if it's open and currently focused
             self.log_dialog.close()
@@ -115,6 +161,7 @@ class ShowInfoLogger:
             self.log_dialog.show()
 
     def clear_log_file(self):
+        """Clears the contents of the log file."""
         # Clear the log file
         with open(self.log_file, 'w') as f:
             f.write('')  # Empty the log file

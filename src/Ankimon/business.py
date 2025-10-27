@@ -4,11 +4,35 @@ import csv
 from .resources import csv_file_items, csv_file_descriptions
 
 def get_image_as_base64(path):
+    """Reads an image file and converts it to a base64 encoded string.
+
+    This is useful for embedding images directly into HTML or other web-based
+    components, avoiding the need for separate file references.
+
+    Args:
+        path (str): The file path to the image.
+
+    Returns:
+        str: The base64 encoded image string.
+    """
     with open(path, 'rb') as image_file:
         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
     return encoded_string
 
 def split_string_by_length(input_string, max_length):
+    """Splits a string into multiple lines based on a maximum length.
+
+    This generator function wraps text by words, ensuring that no line
+    exceeds the specified maximum length. It's used for formatting text in
+    the UI to prevent overflow.
+
+    Args:
+        input_string (str): The string to be split.
+        max_length (int): The maximum length of each line.
+
+    Yields:
+        str: The next line of formatted text.
+    """
     current_length = 0
     current_line = []
 
@@ -26,6 +50,18 @@ def split_string_by_length(input_string, max_length):
     yield ' '.join(current_line)
 
 def split_japanese_string_by_length(input_string, max_length):
+    """Splits a Japanese string into multiple lines based on a maximum length.
+
+    Unlike the generic string splitter, this function wraps text by character,
+    which is more appropriate for Japanese and other logographic languages.
+
+    Args:
+        input_string (str): The Japanese string to be split.
+        max_length (int): The maximum length of each line.
+
+    Yields:
+        str: The next line of formatted Japanese text.
+    """
     max_length = 30
     current_length = 0
     current_line = ""
@@ -43,6 +79,15 @@ def split_japanese_string_by_length(input_string, max_length):
         yield current_line
 
 def resize_pixmap_img(pixmap, max_width):
+    """Resizes a QPixmap image to a maximum width while maintaining aspect ratio.
+
+    Args:
+        pixmap (QPixmap): The image to be resized.
+        max_width (int): The maximum width for the resized image.
+
+    Returns:
+        QPixmap: The resized image.
+    """
     original_width = pixmap.width()
     original_height = pixmap.height()
     new_width = max_width
@@ -51,10 +96,32 @@ def resize_pixmap_img(pixmap, max_width):
     return pixmap2
 
 def calc_experience(base_experience, enemy_level):
+    """Calculates the experience points gained from defeating a Pokémon.
+
+    This function implements the standard Pokémon experience formula.
+
+    Args:
+        base_experience (int): The base experience yield of the defeated Pokémon.
+        enemy_level (int): The level of the defeated Pokémon.
+
+    Returns:
+        float: The calculated experience points.
+    """
     exp = base_experience * enemy_level / 7
     return exp
 
 def get_multiplier_stats(stage):
+    """Returns the multiplier for a given in-battle stat stage.
+
+    In Pokémon battles, stats can be raised or lowered in stages from -6 to +6.
+    This function provides the corresponding multiplier for each stage.
+
+    Args:
+        stage (int): The current stat stage.
+
+    Returns:
+        float: The statistical multiplier.
+    """
     # Define the mapping of stage to factor
     stage_to_factor = {
         -6: 3/9, -5: 3/8, -4: 3/7, -3: 3/6, -2: 3/5, -1: 3/4,
@@ -66,6 +133,17 @@ def get_multiplier_stats(stage):
     return stage_to_factor.get(stage, "Invalid stage")
 
 def get_multiplier_acc_eva(stage):
+    """Returns the multiplier for accuracy and evasion stat stages.
+
+    Accuracy and evasion use a different formula for their stat stages
+    compared to other stats. This function provides the correct multiplier.
+
+    Args:
+        stage (int): The current accuracy or evasion stage.
+
+    Returns:
+        float: The statistical multiplier.
+    """
     # Define the mapping of stage to factor
     stage_to_factor_new = {
         -6: 2/8, -5: 2/7, -4: 2/6, -3: 2/5, -2: 2/4, -1: 2/3,
@@ -77,6 +155,17 @@ def get_multiplier_acc_eva(stage):
     return stage_to_factor_new.get(stage, "Invalid stage")
 
 def bP_none_moves(move):
+    """Provides a default base power for moves that lack one.
+
+    This function serves as a fallback for the battle system, ensuring that
+    moves without a specified base power are still functional.
+
+    Args:
+        move (dict): The move data dictionary.
+
+    Returns:
+        int: The default base power, or the move's damage if specified.
+    """
     target =  move.get("target", None)
     if target == "normal":
         damage = move.get("damage")
@@ -85,6 +174,17 @@ def bP_none_moves(move):
         return damage
 
 def type_colors(type_str):
+    """Returns the hexadecimal color code for a given Pokémon type.
+
+    This is used for styling UI elements based on Pokémon type, such as in the
+    Pokédex or battle interface.
+
+    Args:
+        type_str (str): The name of the Pokémon type.
+
+    Returns:
+        str: The corresponding hexadecimal color code.
+    """
     _type_colors = {
         "Normal": "#A8A77A",
         "Fire": "#EE8130",
@@ -109,10 +209,29 @@ def type_colors(type_str):
     return _type_colors.get(type_str, "Unknown")
 
 def calc_exp_gain(base_experience, w_pkmn_level):
+    """Calculates the experience points gained from defeating a Pokémon.
+
+    This function implements the standard Pokémon experience formula.
+
+    Args:
+        base_experience (int): The base experience yield of the defeated Pokémon.
+        w_pkmn_level (int): The level of the defeated Pokémon.
+
+    Returns:
+        int: The calculated experience points.
+    """
     exp = int((base_experience * w_pkmn_level) / 7)
     return exp
 
 def read_csv_file(csv_file):
+    """Reads a CSV file and creates a mapping from item names to item IDs.
+
+    Args:
+        csv_file (str): The path to the CSV file.
+
+    Returns:
+        dict: A dictionary mapping item names to their corresponding IDs.
+    """
     item_id_mapping = {}
     with open(csv_file, newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
@@ -121,10 +240,31 @@ def read_csv_file(csv_file):
     return item_id_mapping
 
 def capitalize_each_word(item_name):
+    """Capitalizes each word in a string, handling hyphens.
+
+    This is used for formatting item names for display in the UI.
+
+    Args:
+        item_name (str): The item name to be formatted.
+
+    Returns:
+        str: The formatted item name.
+    """
     # Replace hyphens with spaces and capitalize each word
     return ' '.join(word.capitalize() for word in item_name.replace("-", " ").split())
 
 def read_descriptions_csv(csv_file):
+    """Reads a CSV file of item descriptions.
+
+    This function creates a mapping from a composite key (item ID, version
+    group ID, language ID) to the description text.
+
+    Args:
+        csv_file (str): The path to the CSV file.
+
+    Returns:
+        dict: A dictionary of item descriptions.
+    """
     descriptions = {}
     with open(csv_file, newline='', encoding='utf-8') as file:
         reader = csv.reader(file)

@@ -1,3 +1,15 @@
+"""
+This module is a cornerstone of the Ankimon addon's architecture,
+responsible for defining and organizing the paths to all of the addon's
+resources. By providing a centralized and consistent way for the rest of the
+addon to access its files and assets, it simplifies file management, enhances
+maintainability, and ensures that the addon can reliably locate its
+resources, regardless of the user's system configuration.
+
+This module's role is simple but critical: it provides a single source of
+truth for all file paths, which helps to prevent errors and makes the codebase
+cleaner and more readable.
+"""
 from pathlib import Path
 import os
 import json

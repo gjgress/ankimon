@@ -2,7 +2,18 @@ from aqt import gui_hooks
 from .utils import addon_config_editor_will_display_json
 
 def setupHooks(check_data, ankimon_tracker_obj):
-    """Set up Ankimon hooks - updated to handle None check_data"""
+    """Sets up and attaches the necessary Anki hooks for Ankimon.
+
+    This function connects Ankimon's core logic to Anki's event system,
+    allowing it to respond to events like configuration changes and profile
+    syncing. It's a crucial part of the addon's integration with Anki.
+
+    Args:
+        check_data: An object responsible for data validation and sync
+                    operations. It's conditionally checked for required methods.
+        ankimon_tracker_obj: The main tracker object for Ankimon, which
+                             manages the addon's state.
+    """
 
     # Only set up sync hooks if check_data exists and has the required methods
     if check_data is not None:

@@ -212,7 +212,20 @@ def show_warning_with_traceback(
     exception: Optional[Exception] = None,
     message: str = "An error occurred during execution."
 ) -> None:
-    """Display error dialog with environment info only in debug clipboard."""
+    """Displays a user-friendly error dialog with detailed traceback information.
+
+    This function is the cornerstone of the addon's error handling system. It
+    creates a custom dialog that presents a clear error message to the user,
+    while also providing the tools they need to report the bug effectively.
+    This includes a button to copy a sanitized traceback and environment
+    information to the clipboard, as well as links to the addon's Discord
+    server and GitHub issues page.
+
+    Args:
+        parent (QDialog, optional): The parent widget for the dialog.
+        exception (Exception, optional): The exception that was raised.
+        message (str, optional): A user-friendly message to be displayed.
+    """
     if not exception:
         raise ValueError("An exception must be provided.")
 
@@ -239,6 +252,7 @@ def show_warning_with_traceback(
     ok_button = dialog.findChild(QPushButton, "ok")
 
     def copy_debug_info():
+        """Copies sanitized debug information to the clipboard."""
         # Wrap in triple backticks for markdown code block formatting
         full_debug = f"```python\n{env_info}\n\n{tb_text}\n```"
         mw.app.clipboard().setText(full_debug)

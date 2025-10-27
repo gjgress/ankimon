@@ -1,3 +1,13 @@
+"""
+This module loads user-configurable settings from Anki's configuration manager
+and makes them available as global variables for the rest of the addon.
+
+This centralization of configuration variables allows for easy access and
+management of user preferences, covering everything from UI elements and battle
+mechanics to audio settings and keyboard shortcuts. The module also handles
+system-specific configurations, such as sound playback, to ensure
+cross-platform compatibility.
+"""
 from aqt import mw
 import platform
 from .singletons import settings_obj

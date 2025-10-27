@@ -14,7 +14,18 @@ from .pyobj.error_handler import show_warning_with_traceback
 
 
 class MovieSplashLabel(QLabel):
+    """A QLabel that displays an animated GIF as a splash screen.
+
+    This class is used to create a visually engaging loading screen or intro
+    sequence for the addon, providing a more polished user experience.
+    """
     def __init__(self, gif_path, parent=None):
+        """Initializes the splash screen label.
+
+        Args:
+            gif_path (str): The file path to the animated GIF.
+            parent (QWidget, optional): The parent widget.
+        """
         super().__init__(parent)
         self.movie = QMovie(gif_path)
         self.movie.jumpToFrame(0)
@@ -22,14 +33,29 @@ class MovieSplashLabel(QLabel):
         self.movie.frameChanged.connect(self.repaint)
 
     def showEvent(self, event):
+        """Starts the animation when the label is shown."""
         self.movie.start()
 
     def hideEvent(self, event):
+        """Stops the animation when the label is hidden."""
         self.movie.stop()
 
 class UpdateNotificationWindow(QDialog):
-    """Custom Dialog class with enhanced features."""
+    """A dialog for displaying update notifications and other important messages.
+
+    This class provides a flexible way to present formatted text to the user,
+    supporting both plain HTML and Markdown. It is used to inform users about
+    new features, bug fixes, and other important announcements.
+    """
     def __init__(self, content, is_markdown=False):
+        """Initializes the notification window.
+
+        Args:
+            content (str): The content to be displayed, either as HTML or
+                           Markdown.
+            is_markdown (bool, optional): Whether the content is in Markdown
+                                          format.
+        """
         super().__init__()
         self.setWindowTitle("Ankimon Notifications")
         self.setGeometry(100, 100, 600, 400)
@@ -53,10 +79,18 @@ class UpdateNotificationWindow(QDialog):
         self.setLayout(layout)
 
     def open(self):
+        """Displays the notification window."""
         self.exec()
 
 class AgreementDialog(QDialog):
+    """A dialog for presenting terms and conditions to the user.
+
+    This dialog is used to ensure that users agree to the addon's terms of
+    service before downloading or accessing certain features. It is a crucial
+    part of the addon's legal compliance.
+    """
     def __init__(self):
+        """Initializes the agreement dialog."""
         super().__init__()
 
         # Setup the dialog layout
@@ -85,14 +119,25 @@ class AgreementDialog(QDialog):
         self.setLayout(layout)
 
     def on_proceed_clicked(self):
+        """Handles the proceed button click event.
+
+        If the user has checked the agreement box, the dialog is closed and
+        the action is allowed to proceed. Otherwise, a warning is displayed.
+        """
         if self.checkbox.isChecked():
             self.accept()  # Close the dialog and return success
         else:
             QMessageBox.warning(self, "Agreement Required", "You must agree to the terms to proceed.")
 
 class Version_Dialog(QDialog):
-    """Custom Dialog class"""
+    """A dialog for displaying the addon's version and update information.
+
+    This dialog is used to inform users about the latest changes and updates
+    to the addon. It reads the update information from a local Markdown file
+    and displays it in a readable format.
+    """
     def __init__(self):
+        """Initializes the version dialog."""
         super().__init__()
         self.setWindowTitle("Ankimon Notifications")
         self.setGeometry(100, 100, 600, 400)
@@ -110,14 +155,18 @@ class Version_Dialog(QDialog):
         self.setLayout(layout)
 
     def open(self):
+        """Displays the version dialog."""
         self.exec()
 
 class License(QWidget):
+    """A window for displaying the addon's license information."""
     def __init__(self):
+        """Initializes the license window."""
         super().__init__()
         self.initUI()
 
     def initUI(self):
+        """Initializes the user interface of the license window."""
         self.setWindowTitle("AnkiMon License")
 
         # Create a label and set HTML content
@@ -156,14 +205,18 @@ class License(QWidget):
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     def show_window(self):
+        """Displays the license window."""
         self.show()
 
 class Credits(QWidget):
+    """A window for displaying the addon's credits."""
     def __init__(self):
+        """Initializes the credits window."""
         super().__init__()
         self.initUI()
 
     def initUI(self):
+        """Initializes the user interface of the credits window."""
         self.setWindowTitle("AnkiMon License")
 
         # Create a label and set HTML content
@@ -202,10 +255,13 @@ class Credits(QWidget):
         with open(file_path, 'r', encoding='utf-8') as file:
             return file.read()
     def show_window(self):
+        """Displays the credits window."""
         self.show()
 
 class HelpWindow(QDialog):
+    """A window for displaying the addon's help guide."""
     def __init__(self, online_connectivity):
+        """Initializes the help window."""
         super().__init__()
         html_content = " "
         help_local_file_path = addon_dir / "HelpInfos.html"
@@ -248,11 +304,14 @@ class HelpWindow(QDialog):
         self.setLayout(layout)
 
 class TableWidget(QWidget):
+    """A widget for displaying the Pokémon type effectiveness chart."""
     def __init__(self):
+        """Initializes the type effectiveness chart widget."""
         super().__init__()
         self.initUI()
 
     def initUI(self):
+        """Initializes the user interface of the type effectiveness chart."""
         self.setWindowTitle("Pokémon Type Effectiveness Table")
 
         # Create a label and set HTML content
@@ -267,14 +326,18 @@ class TableWidget(QWidget):
         self.setLayout(layout)
 
     def show_eff_chart(self):
+        """Displays the type effectiveness chart."""
         self.show()
 
 class IDTableWidget(QWidget):
+    """A widget for displaying the Pokémon generation and ID chart."""
     def __init__(self):
+        """Initializes the generation and ID chart widget."""
         super().__init__()
         self.initUI()
 
     def initUI(self):
+        """Initializes the user interface of the generation and ID chart."""
         self.setWindowTitle("Pokémon - Generations and ID")
         # Create a label and set HTML content
         label = QLabel()
@@ -288,19 +351,24 @@ class IDTableWidget(QWidget):
         self.setLayout(layout)
 
     def show_gen_chart(self):
+        """Displays the generation and ID chart."""
         self.show()
 
 class Pokedex_Widget(QWidget):
+    """A widget for displaying the user's Pokédex."""
     def __init__(self):
+        """Initializes the Pokédex widget."""
         super().__init__()
         self.read_poke_coll()
         self.initUI()
 
     def read_poke_coll(self):
+        """Reads the user's Pokémon collection from the JSON file."""
         with (open(mypokemon_path, "r", encoding="utf-8") as json_file):
             self.captured_pokemon_data = json.load(json_file)
 
     def initUI(self):
+        """Initializes the user interface of the Pokédex."""
         self.setWindowTitle("Pokédex")
 
         # Create a label and set HTML content
@@ -325,6 +393,7 @@ class Pokedex_Widget(QWidget):
 
     # Helper function to generate table rows
     def generate_table_row(self, pokedex_number, is_gray):
+        """Generates an HTML table row for a Pokémon."""
         name = f"Pokemon #{pokedex_number}" # Placeholder, actual name should be fetched from a database or API
         image_class = "pokemon-gray" if is_gray else ""
         return f'''
@@ -336,11 +405,14 @@ class Pokedex_Widget(QWidget):
         '''
 
     def show_pokedex(self):
+        """Displays the Pokédex."""
         self.read_poke_coll()
         self.show()
 
 class CheckFiles(QDialog):
+    """A dialog for checking the integrity of the addon's files."""
     def __init__(self):
+        """Initializes the file checker dialog."""
         super().__init__()
         self.setWindowTitle("Ankimon Files Checker")
         check_files_message = "Ankimon Files:"

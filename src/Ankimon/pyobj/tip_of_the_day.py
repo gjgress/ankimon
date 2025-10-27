@@ -9,7 +9,21 @@ from ..pyobj.settings import Settings
 from ..resources import rate_path
 
 class TipOfTheDayDialog(QDialog):
+    """A dialog for displaying a "Tip of the Day" to the user.
+
+    This dialog presents a random tip on startup, helping users discover new
+    features and mechanics within the Ankimon addon. It also provides an
+    option to disable future tips, respecting user preferences.
+    """
     def __init__(self, tip_text, tip_number, total_tips, parent=None):
+        """Initializes the "Tip of the Day" dialog.
+
+        Args:
+            tip_text (str): The text of the tip to be displayed.
+            tip_number (int): The index of the current tip.
+            total_tips (int): The total number of available tips.
+            parent (QWidget, optional): The parent widget of this dialog.
+        """
         super().__init__(parent)
         self.setWindowTitle(f"Ankimon Tip #{tip_number + 1}/{total_tips}")
         self.setMinimumWidth(400)
@@ -37,6 +51,11 @@ class TipOfTheDayDialog(QDialog):
         self.current_tip_index = tip_number
 
     def _load_tips(self) -> list:
+        """Loads the list of tips from the `tips.json` file.
+
+        Returns:
+            list: A list of strings, where each string is a tip.
+        """
         tips_path = Path(__file__).parent.parent / "addon_files" / "tips.json"
         if not tips_path.exists():
             return []
@@ -48,19 +67,31 @@ class TipOfTheDayDialog(QDialog):
             return []
 
     def show_new_tip(self):
+        """Displays the next tip in the list."""
         self.current_tip_index = (self.current_tip_index + 1) % len(self.tips)
         self.tip_label.setText(self.tips[self.current_tip_index])
         self.setWindowTitle(f"Ankimon Tip #{self.current_tip_index + 1}/{len(self.tips)}")
 
 
     def accept(self):
+        """Handles the closing of the dialog.
+
+        If the "Don't show tips again" checkbox is checked, this method updates
+        the addon's settings to disable the "Tip of the Day" feature on future
+        startups.
+        """
         if self.dont_show_again_checkbox.isChecked():
             self.settings.set("misc.show_tip_on_startup", False)
         self.settings.set("misc.last_tip_index", self.current_tip_index)
         super().accept()
 
 def show_tip_of_the_day():
-    """Checks settings and shows the tip of the day dialog if enabled."""
+    """Checks user settings and displays the "Tip of the Day" dialog if enabled.
+
+    This function is the main entry point for the "Tip of the Day" feature. It
+    reads the user's preferences and the list of tips, then creates and shows
+    the dialog as appropriate.
+    """
     settings = Settings()
     if not settings.get("misc.show_tip_on_startup", True):
         return

@@ -78,6 +78,37 @@ def PokemonCollectionDetails(
     logger: ShowInfoLogger,
     refresh_callback,
 ):
+    """
+    Creates a details panel for a Pokémon.
+
+    Args:
+        name (str): The name of the Pokémon.
+        level (int): The level of the Pokémon.
+        id (int): The ID of the Pokémon.
+        shiny (bool): Whether the Pokémon is shiny.
+        ability (str): The ability of the Pokémon.
+        type (list[str]): The type(s) of the Pokémon.
+        detail_stats (dict[Any, Any]): The detailed stats of the Pokémon.
+        attacks (list[str]): The attacks of the Pokémon.
+        base_experience (int): The base experience of the Pokémon.
+        growth_rate: The growth rate of the Pokémon.
+        ev (dict[str, int]): The EVs of the Pokémon.
+        iv (dict[str, int]): The IVs of the Pokémon.
+        gender (str): The gender of the Pokémon.
+        nickname (str): The nickname of the Pokémon.
+        individual_id (str): The individual ID of the Pokémon.
+        pokemon_defeated (int): The number of Pokémon defeated by this Pokémon.
+        everstone (bool): Whether the Pokémon is holding an everstone.
+        captured_date (str): The date the Pokémon was captured.
+        language (int): The language setting.
+        gif_in_collection: Whether to use GIFs in the collection.
+        remove_levelcap (bool): Whether to remove the level cap.
+        logger (ShowInfoLogger): The logger object.
+        refresh_callback: The callback function to refresh the view.
+
+    Returns:
+        QVBoxLayout: The layout for the details panel.
+    """
     # Create a layout for the details panel
     try:
         lang_name = get_pokemon_diff_lang_name(int(id), language).capitalize()
@@ -357,6 +388,19 @@ def PokemonCollectionDetails(
 
 
 def PokemonDetailsStats(detail_stats, growth_rate, level, remove_levelcap, language):
+    """
+    Creates a table of Pokémon stats.
+
+    Args:
+        detail_stats (dict): The detailed stats of the Pokémon.
+        growth_rate: The growth rate of the Pokémon.
+        level (int): The level of the Pokémon.
+        remove_levelcap (bool): Whether to remove the level cap.
+        language (int): The language setting.
+
+    Returns:
+        QVBoxLayout: The layout for the stats table.
+    """
     CompleteTable_layout = QVBoxLayout()
     # Stat colors
     stat_colors = {
@@ -414,6 +458,16 @@ def PokemonDetailsStats(detail_stats, growth_rate, level, remove_levelcap, langu
 
 
 def createStatBar(color, value):
+    """
+    Creates a colored bar for a stat.
+
+    Args:
+        color (QColor): The color of the bar.
+        value (int): The value of the stat.
+
+    Returns:
+        QPixmap: The pixmap of the stat bar.
+    """
     pixmap = QPixmap(200, 10)
     pixmap.fill(QColor(0, 0, 0, 0))  # RGBA where A (alpha) is 0 for full transparency
 
@@ -437,6 +491,12 @@ def createStatBar(color, value):
 
 
 def attack_details_window(attacks):
+    """
+    Creates a window to display the details of a Pokémon's attacks.
+
+    Args:
+        attacks (list[str]): The list of attacks.
+    """
     window = QDialog()
     window.setWindowIcon(QIcon(str(icon_path)))
     layout = QVBoxLayout()
@@ -482,6 +542,15 @@ def attack_details_window(attacks):
 
 
 def remember_attack_details_window(individual_id, attack_set, all_attacks, logger):
+    """
+    Creates a window to allow the user to remember a new attack.
+
+    Args:
+        individual_id (str): The individual ID of the Pokémon.
+        attack_set (list[str]): The current set of attacks.
+        all_attacks (list[str]): All possible attacks the Pokémon can learn.
+        logger (ShowInfoLogger): The logger object.
+    """
     window = QDialog()
     window.setWindowIcon(QIcon(str(icon_path)))
     outer_layout = QVBoxLayout(window)
@@ -534,7 +603,7 @@ def forget_attack_details_window(
     Creates a window that will allow the user to erase moves from a Pokemon.
 
     Args:
-        id (int): The Pokemon's identifier.
+        individual_id (int): The Pokemon's identifier.
         attack_set (list[str]): The Pokemon's move set.
         logger: Logger object that can log info and display windows containing messages.
 
@@ -591,6 +660,15 @@ def forget_attack_details_window(
 def remember_attack(
     individual_id: str, attacks: list[str], new_attack: str, logger: ShowInfoLogger
 ):
+    """
+    Remembers a new attack for a Pokémon.
+
+    Args:
+        individual_id (str): The individual ID of the Pokémon.
+        attacks (list[str]): The current attacks of the Pokémon.
+        new_attack (str): The new attack to remember.
+        logger (ShowInfoLogger): The logger object.
+    """
     if new_attack in attacks:
         logger.log_and_showinfo("warning", "Your pokemon already knows this move!")
         return
@@ -660,7 +738,7 @@ def forget_attack(
     Pokemon data file.
 
     Args:
-        id (int): The Pokemon's identifier.
+        individual_id (int): The Pokemon's identifier.
         attacks (list[str]): The Pokemon's move set.
         attack_to_forget (str): Name of the move to forget.
         logger: Logger object that can log info and display windows containing messages.
@@ -821,6 +899,16 @@ def rename_pkmn(
     logger: ShowInfoLogger,
     refresh_callback,
 ):
+    """
+    Renames a Pokémon.
+
+    Args:
+        nickname (str): The new nickname for the Pokémon.
+        pkmn_name (str): The name of the Pokémon.
+        individual_id (str): The individual ID of the Pokémon.
+        logger (ShowInfoLogger): The logger object.
+        refresh_callback: The callback function to refresh the view.
+    """
     try:
         # Load the captured Pokémon data
         with open(mypokemon_path, "r", encoding="utf-8") as json_file:
@@ -864,6 +952,15 @@ def rename_pkmn(
 def PokemonFree(
     individual_id: str, name: str, logger: ShowInfoLogger, refresh_callback
 ):
+    """
+    Releases a Pokémon.
+
+    Args:
+        individual_id (str): The individual ID of the Pokémon to release.
+        name (str): The name of the Pokémon to release.
+        logger (ShowInfoLogger): The logger object.
+        refresh_callback: The callback function to refresh the view.
+    """
     # Confirmation dialog
     reply = QMessageBox.question(
         None,

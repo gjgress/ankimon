@@ -54,8 +54,15 @@ from ..resources import (
 from ..config_var import remove_levelcap
 
 def modify_percentages(total_reviews, daily_average, player_level):
-    """
-    Modify Pokémon encounter percentages based on total reviews, player level, event modifiers, and main Pokémon level.
+    """Modifies Pokémon encounter percentages based on various factors.
+
+    Args:
+        total_reviews (int): The total number of reviews in the current session.
+        daily_average (int): The user's average number of daily reviews.
+        player_level (int): The player's current level.
+
+    Returns:
+        dict: A dictionary with the modified encounter percentages for each Pokémon tier.
     """
     # Start with the base percentages
     percentages = {"Baby": 2, "Legendary": 0.5, "Mythical": 0.2, "Normal": 92.3, "Ultra": 5}
@@ -110,6 +117,15 @@ def modify_percentages(total_reviews, daily_average, player_level):
     return percentages
 
 def get_pokemon_id_by_tier(tier):
+    """
+    Retrieves a random Pokémon ID from a specified tier.
+
+    Args:
+        tier (str): The tier from which to select a Pokémon ID (e.g., "Normal", "Legendary").
+
+    Returns:
+        int: A random Pokémon ID from the specified tier.
+    """
     id_species_path = None
     if tier == "Normal":
         id_species_path = pokemon_species_normal_path
@@ -130,16 +146,17 @@ def get_pokemon_id_by_tier(tier):
     return random_pokemon_id
 
 def get_tier(total_reviews, player_level=1, event_modifier=None):
-    """_summary_
-    Randomly picks the tier for a new enemy Pokemon to be generated from, based on weighted probabilities based on number of reviews and player level.
+    """Randomly picks a tier for a new enemy Pokemon.
+
+    The selection is based on weighted probabilities determined by the number of reviews and player level.
 
     Args:
-        total_reviews (int): Number of reviews done in that Anki session.
-        player_level (int, optional): Trainer XP level. Defaults to 1.
-        event_modifier (?, optional): Unused argument. Defaults to None.
+        total_reviews (int): The number of reviews done in the current Anki session.
+        player_level (int, optional): The trainer's XP level. Defaults to 1.
+        event_modifier (optional): An unused argument. Defaults to None.
 
     Returns:
-        choice[0]: The first choice of TIER picked randomly (by a random.choices function)
+        str: The randomly selected tier.
     """
     daily_average = int(settings_obj.get('battle.daily_average', 100))
     percentages = modify_percentages(total_reviews, daily_average, player_level)
@@ -152,13 +169,13 @@ def get_tier(total_reviews, player_level=1, event_modifier=None):
 
 def choose_random_pkmn_from_tier():
     """
-    Runs a tier-selection and a subsequent ID-selection function to pick a random Pokemon from a given randomly picked Tier.
-    The tier is a weighted probability selection, based on total_reviews and trainer_level.
-    Pokemon ID is picked randomly from within that tier.
+    Selects a random Pokémon from a randomly chosen tier.
+
+    The tier is selected based on a weighted probability determined by the total number of reviews and the trainer's level.
+    The Pokémon ID is then randomly picked from within that tier.
 
     Returns:
-        id (int): Pokedex ID for generated Pokemon
-        tier (string): Rarity tier for generated Pokemon (normal/ultra/legendary etc.)
+        tuple[int, str]: A tuple containing the Pokedex ID of the generated Pokémon and its rarity tier.
     """
     total_reviews = ankimon_tracker_obj.total_reviews
     trainer_level = trainer_card.level
@@ -170,6 +187,15 @@ def choose_random_pkmn_from_tier():
         show_warning_with_traceback(parent=mw, exception=e, message="Error occurred")
 
 def check_min_generate_level(name):
+    """
+    Checks the minimum level at which a Pokémon can be generated.
+
+    Args:
+        name (str): The name of the Pokémon.
+
+    Returns:
+        int: The minimum generation level for the Pokémon.
+    """
     evoType = search_pokedex(name.lower(), "evoType")
     evoLevel = search_pokedex(name.lower(), "evoLevel")
     if evoLevel:
@@ -182,6 +208,15 @@ def check_min_generate_level(name):
         return min_level
 
 def check_id_ok(id_num: Union[int, list[int]]):
+    """
+    Checks if a Pokémon ID is valid based on the user's settings.
+
+    Args:
+        id_num (Union[int, list[int]]): The Pokémon ID or a list containing a single ID.
+
+    Returns:
+        bool: True if the ID is valid, False otherwise.
+    """
     if isinstance(id_num, list):
         if len(id_num) > 0:
             id_num = id_num[0]
@@ -205,42 +240,37 @@ def check_id_ok(id_num: Union[int, list[int]]):
     return False
 
 def generate_random_pokemon(main_pokemon_level: int, ankimon_tracker_obj: AnkimonTracker):
-    """
-    Generates a random wild Pokémon with attributes scaled to the level of the player's main Pokémon.
+    """Generates a random wild Pokémon with attributes scaled to the player's main Pokémon level.
 
-    This function resets the encounter and battle round state in the provided `AnkimonTracker` object.
-    It then selects a valid Pokémon that can appear at the current level range, computes its stats,
-    determines its moves, ability, and other combat-relevant characteristics, and returns all necessary
-    data required for a battle.
+    This function resets the encounter and battle round state in the `AnkimonTracker` object.
+    It selects a valid Pokémon for the current level range, computes its stats, moves, ability, and other combat-relevant characteristics.
 
     Args:
-        main_pokemon_level (int): The level of the player's main Pokémon. Determines the level range of
-            the generated wild Pokémon.
-        ankimon_tracker_obj (AnkimonTracker): An object used to track battle state, such as the number
-            of Pokémon encountered and cards used in the battle.
+        main_pokemon_level (int): The level of the player's main Pokémon, used to determine the wild Pokémon's level.
+        ankimon_tracker_obj (AnkimonTracker): An object that tracks battle state.
 
     Returns:
-        tuple: A tuple containing the following elements:
-            - name (str): Name of the wild Pokémon.
-            - pokemon_id (int): Unique ID of the Pokémon.
-            - wild_pokemon_lvl (int): The level of the generated Pokémon.
-            - ability (str): The selected ability of the Pokémon.
-            - pokemon_type (list[str]): List of type(s) the Pokémon belongs to.
-            - base_stats (dict): Dictionary of the Pokémon's base stats.
-            - moves (list[str]): List of up to 4 moves the Pokémon can use in battle.
-            - base_experience (int): Experience points awarded for defeating the Pokémon.
-            - growth_rate (str): Growth rate category of the Pokémon (e.g., "slow", "fast").
-            - ev (dict): Effort values (EVs) for each stat, initialized to 0.
-            - iv (dict): Randomly generated individual values (IVs) for each stat.
-            - gender (str): Randomly assigned gender.
-            - battle_status (str): Current status of the Pokémon in battle, defaulted to "fighting".
-            - final_stats (dict): Final computed stats of the Pokémon.
-            - tier (str): Tier from which the Pokémon was selected (e.g., common, rare).
-            - ev_yield (dict): Effort values (EVs) awarded upon defeating the Pokémon.
-            - is_shiny (bool): Indicates whether the Pokémon is shiny.
+        tuple: A tuple containing the generated Pokémon's attributes:
+            - name (str): The Pokémon's name.
+            - pokemon_id (int): The Pokémon's Pokedex ID.
+            - wild_pokemon_lvl (int): The Pokémon's level.
+            - ability (str): The Pokémon's ability.
+            - pokemon_type (list[str]): The Pokémon's type(s).
+            - base_stats (dict): The Pokémon's base stats.
+            - moves (list[str]): The Pokémon's moves.
+            - base_experience (int): The base experience yielded by the Pokémon.
+            - growth_rate (str): The Pokémon's growth rate.
+            - ev (dict): The Pokémon's effort values.
+            - iv (dict): The Pokémon's individual values.
+            - gender (str): The Pokémon's gender.
+            - battle_status (str): The Pokémon's initial battle status.
+            - final_stats (dict): The Pokémon's final stats.
+            - tier (str): The Pokémon's rarity tier.
+            - ev_yield (dict): The effort values yielded by the Pokémon.
+            - is_shiny (bool): Whether the Pokémon is shiny.
 
     Raises:
-        ValueError: If no valid Pokémon can be generated (highly unlikely under normal conditions).
+        ValueError: If no valid Pokémon can be generated.
     """
     lvl_variation = 3
     lvl_range = max(1, main_pokemon_level - lvl_variation), max(1, main_pokemon_level + lvl_variation)
@@ -319,23 +349,19 @@ def new_pokemon(
         ankimon_tracker: AnkimonTracker,
         reviewer_obj: Reviewer_Manager
         ) -> PokemonObject:
-    """
-    Initializes a new wild Pokémon encounter by generating a random Pokémon,
-    updating its stats, setting its HP, and preparing the battle scene.
+    """Initializes a new wild Pokémon encounter.
 
-    This function uses the player's main Pokémon level to generate an appropriately
-    leveled wild Pokémon with randomized attributes. It updates the provided `pokemon`
-    object with generated data, resets HP, triggers any battle scene randomization,
-    and updates the reviewer interface if applicable.
+    This function generates a random Pokémon, updates its stats, sets its HP, and prepares the battle scene.
+    It uses the player's main Pokémon level to generate an appropriately leveled wild Pokémon.
 
     Args:
         pokemon (PokemonObject): The Pokémon object to be updated with the new wild Pokémon's data.
-        test_window (TestWindow): Optional UI window to display the first encounter scene.
-        ankimon_tracker (AnkimonTracker): Object tracking battle-related state and handling battle scene randomization.
-        reviewer_obj (Reviewer_Manager): Manager object responsible for updating battle review elements like life bars.
+        test_window (TestWindow): An optional UI window to display the first encounter scene.
+        ankimon_tracker (AnkimonTracker): The object that tracks battle-related state.
+        reviewer_obj (Reviewer_Manager): The manager object for updating battle review elements.
 
     Returns:
-        PokemonObject: The updated `pokemon` object representing the newly generated wild Pokémon ready for battle.
+        PokemonObject: The updated `pokemon` object representing the newly generated wild Pokémon.
     """
     (
         name,
@@ -401,6 +427,17 @@ def save_main_pokemon_progress(
         logger: ShowInfoLogger,
         evo_window: EvoWindow,
         ):
+    """
+    Saves the progress of the main Pokémon after a battle, including experience gain, leveling up, and evolution.
+
+    Args:
+        main_pokemon (PokemonObject): The main Pokémon object.
+        enemy_pokemon (PokemonObject): The enemy Pokémon object.
+        exp (int): The experience points gained.
+        achievements (dict): A dictionary of achievements.
+        logger (ShowInfoLogger): The logger object.
+        evo_window (EvoWindow): The evolution window object.
+    """
     experience = int(find_experience_for_level(main_pokemon.growth_rate, main_pokemon.level, settings_obj.get("misc.remove_level_cap", False)))
     if remove_levelcap is True:
         main_pokemon.xp += exp
@@ -541,11 +578,12 @@ def save_main_pokemon_progress(
 # --- Utility: Sync mainpokemon to mypokemon ---
 def sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path):
     """
-    Update the relevant entry in mypokemon file with the latest values from mainpokemon file.
+    Updates the relevant entry in the `mypokemon` file with the latest values from the `mainpokemon` file.
+
     Args:
-        main_pokemon: The main PokemonObject (should have individual_id).
-        mainpokemon_path: Path to mainpokemon.json.
-        mypokemon_path: Path to mypokemon.json.
+        main_pokemon: The main PokemonObject, which should have an `individual_id`.
+        mainpokemon_path: The path to `mainpokemon.json`.
+        mypokemon_path: The path to `mypokemon.json`.
     """
     import json
     # Load mainpokemon data
@@ -590,6 +628,17 @@ def kill_pokemon(
         achievements: dict,
         trainer_card: Union[TrainerCard, None]=None
         ):
+    """
+    Handles the defeat of an enemy Pokémon, awarding experience to the main Pokémon and the trainer.
+
+    Args:
+        main_pokemon (PokemonObject): The main Pokémon object.
+        enemy_pokemon (PokemonObject): The defeated enemy Pokémon object.
+        evo_window (EvoWindow): The evolution window object.
+        logger (ShowInfoLogger): The logger object.
+        achievements (dict): A dictionary of achievements.
+        trainer_card (Union[TrainerCard, None], optional): The trainer card object. Defaults to None.
+    """
     if trainer_card is not None:
         trainer_card.gain_xp(enemy_pokemon.tier, settings_obj.get("controls.allow_to_choose_moves", False))
 
@@ -623,6 +672,14 @@ def save_caught_pokemon(
         nickname: Union[str, None]=None,
         achievements: Union[dict, None]=None
         ):
+    """
+    Saves a caught Pokémon to the user's collection.
+
+    Args:
+        enemy_pokemon (PokemonObject): The Pokémon that was caught.
+        nickname (Union[str, None], optional): The nickname for the caught Pokémon. Defaults to None.
+        achievements (Union[dict, None], optional): A dictionary of achievements. Defaults to None.
+    """
     # Create a dictionary to store the Pokémon's data
     # add all new values like hp as max_hp, evolution_data, description and growth rate
     if enemy_pokemon.tier is not None and achievements is not None:
@@ -700,6 +757,17 @@ def catch_pokemon(
         collected_pokemon_ids: Union[set, None]=None,
         achievements: Union[dict, None]=None,
         ):
+    """
+    Handles the logic for catching a Pokémon.
+
+    Args:
+        enemy_pokemon (PokemonObject): The Pokémon to be caught.
+        ankimon_tracker_obj (AnkimonTracker): The Ankimon tracker object.
+        logger (Union[ShowInfoLogger, None], optional): The logger object. Defaults to None.
+        nickname (Union[str, None], optional): The nickname for the caught Pokémon. Defaults to None.
+        collected_pokemon_ids (Union[set, None], optional): A set of collected Pokémon IDs. Defaults to None.
+        achievements (Union[dict, None], optional): A dictionary of achievements. Defaults to None.
+    """
     ankimon_tracker_obj.caught += 1
     if ankimon_tracker_obj.caught > 1:
         if settings_obj.get('gui.pop_up_dialog_message_on_defeat', True) is True:

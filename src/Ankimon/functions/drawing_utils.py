@@ -10,6 +10,20 @@ from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.settings import Settings
 
 def tooltipWithColour(msg, color, x=0, y=20, xref=1, parent=None, width=0, height=0, centered=False):
+    """
+    Displays a tooltip with a specified color.
+
+    Args:
+        msg (str): The message to display in the tooltip.
+        color (str): The background color of the tooltip.
+        x (int, optional): The x-coordinate of the tooltip. Defaults to 0.
+        y (int, optional): The y-coordinate of the tooltip. Defaults to 20.
+        xref (int, optional): The x-reference for positioning. Defaults to 1.
+        parent (optional): The parent widget. Defaults to None.
+        width (int, optional): The width of the tooltip. Defaults to 0.
+        height (int, optional): The height of the tooltip. Defaults to 0.
+        centered (bool, optional): Whether to center the tooltip. Defaults to False.
+    """
     from ..config_var import reviewer_text_message_box
     period = int(Settings().get("gui.reviewer_text_message_box_time", 3) * 1000) #time for pop up message
     class CustomLabel(QLabel):
