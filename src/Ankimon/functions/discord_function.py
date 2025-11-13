@@ -2,6 +2,7 @@ import threading
 import random
 import time
 from ..addon_files.lib.pypresence import Presence
+from ..addon_files.lib.pypresence.exceptions import InvalidPipe, InvalidID
 from aqt.utils import showWarning, tooltip
 from aqt import mw
 from ..pyobj.error_handler import show_warning_with_traceback
@@ -38,6 +39,12 @@ class DiscordPresence:
                 conflict_list = ', '.join(conflicting_addons)
                 logger.log_and_showinfo("warning", f"⚠️ Conflicting Discord Rich Presence addons detected: \n{conflict_list}\n\nPlease remove them to avoid issues with Ankimon's Discord status, or turn off Discord Rich Presence in Ankimon settings :) ")
 
+        except InvalidPipe:
+            logger.log("error", "Error with Discord setup: Could not connect to Discord. Is it running?")
+            tooltip("Error with Discord setup: Could not connect to Discord. Is it running?")
+        except InvalidID:
+            logger.log("error", "Error with Discord setup: Invalid Discord application client ID.")
+            tooltip("Error with Discord setup: Invalid Discord application client ID.")
         except Exception as e:
             logger.log("error",f"Error with Discord setup: {e}")
             tooltip("Error with Discord setup. Is Discord running?")
@@ -75,6 +82,12 @@ class DiscordPresence:
                     start=self.start_time
                 )
                 time.sleep(30)  # Sleep for 30 seconds before updating again
+        except InvalidPipe:
+            logger.log("error", "Error with Discord Rich Presence: Could not connect to Discord. Is it running?")
+            tooltip("Error with Discord Rich Presence: Could not connect to Discord. Is it running?")
+        except InvalidID:
+            logger.log("error", "Error with Discord Rich Presence: Invalid Discord application client ID.")
+            tooltip("Error with Discord Rich Presence: Invalid Discord application client ID.")
         except Exception as e:
             logger.log("error",f"Error with Discord Rich Presence: {e}")
             tooltip("Error with Discord Rich Presence. Is Discord running?")
@@ -88,6 +101,12 @@ class DiscordPresence:
                 self.loop = True
                 self.thread = threading.Thread(target=self.update_presence, daemon=True)
                 self.thread.start()
+        except InvalidPipe:
+            logger.log("error", "Error starting Discord Rich Presence: Could not connect to Discord. Is it running?")
+            tooltip("Error starting Discord Rich Presence: Could not connect to Discord. Is it running?")
+        except InvalidID:
+            logger.log("error", "Error starting Discord Rich Presence: Invalid Discord application client ID.")
+            tooltip("Error starting Discord Rich Presence: Invalid Discord application client ID.")
         except Exception as e:
             logger.log("error",f"Error starting Discord Rich Presence: {e}")
             tooltip("Error starting Discord Rich Presence. Is Discord running?")
@@ -102,6 +121,12 @@ class DiscordPresence:
                 self.thread.join() # Wait for the thread to finish
                 self.thread = None  # Reset the thread
             self.RPC.clear()
+        except InvalidPipe:
+            logger.log("error", "Error clearing Discord Rich Presence: Could not connect to Discord. Is it running?")
+            tooltip("Error clearing Discord Rich Presence: Could not connect to Discord. Is it running?")
+        except InvalidID:
+            logger.log("error", "Error clearing Discord Rich Presence: Invalid Discord application client ID.")
+            tooltip("Error clearing Discord Rich Presence: Invalid Discord application client ID.")
         except Exception as e:
             logger.log("error",f"Error clearing Discord Rich Presence: {e}")
             tooltip("Error clearing Discord Rich Presence. Please check Logger for info.")
@@ -117,6 +142,12 @@ class DiscordPresence:
                     state="Break time! You’ve earned it.",
                     large_image=self.large_image_url
                 )
+        except InvalidPipe:
+            logger.log("error", "Error stopping Discord Rich Presence: Could not connect to Discord. Is it running?")
+            tooltip("Error stopping Discord Rich Presence: Could not connect to Discord. Is it running?")
+        except InvalidID:
+            logger.log("error", "Error stopping Discord Rich Presence: Invalid Discord application client ID.")
+            tooltip("Error stopping Discord Rich Presence: Invalid Discord application client ID.")
         except Exception as e:
             logger.log("error",f"Error stopping Discord Rich Presence: {e}")
             tooltip("Error stopping Discord Rich Presence. Please check Logger for info.")

@@ -858,28 +858,29 @@ if reviewer_buttons is True:
     Reviewer._linkHandler = linkHandler_wrap
 
 if settings_obj.get("misc.discord_rich_presence") == True:
-    client_id = '1319014423876075541'  # Replace with your actual client ID
-    large_image_url = "https://raw.githubusercontent.com/Unlucky-Life/ankimon/refs/heads/main/src/Ankimon/ankimon_logo.png"  # URL for the large image
-    mw.ankimon_presence = DiscordPresence(client_id, large_image_url, ankimon_tracker_obj, logger, settings_obj)  # Establish connection and get the presence instance
+    try:
+        client_id = '1319014423876075541'  # Replace with your actual client ID
+        large_image_url = "https://raw.githubusercontent.com/Unlucky-Life/ankimon/refs/heads/main/src/Ankimon/ankimon_logo.png"  # URL for the large image
+        mw.ankimon_presence = DiscordPresence(client_id, large_image_url, ankimon_tracker_obj, logger, settings_obj)  # Establish connection and get the presence instance
 
-    # Hook functions for Anki
-    def on_reviewer_initialized(rev, card, ease):
-        if mw.ankimon_presence:
-            if mw.ankimon_presence.loop is False:
-                mw.ankimon_presence.loop = True
-                mw.ankimon_presence.start()
-        else:
-            client_id = '1319014423876075541'  # Replace with your actual client ID
-            large_image_url = "https://raw.githubusercontent.com/Unlucky-Life/ankimon/refs/heads/main/src/Ankimon/ankimon_logo.png"  # URL for the large image
-            mw.ankimon_presence = DiscordPresence(client_id, large_image_url, ankimon_tracker_obj, logger, settings_obj)  # Establish connection and get the presence instance
-            mw.ankimon_presence.loop = True
-            mw.ankimon_presence.start()
+        # Hook functions for Anki
+        def on_reviewer_initialized(rev, card, ease):
+            if hasattr(mw, 'ankimon_presence') and mw.ankimon_presence:
+                if not mw.ankimon_presence.loop:
+                    mw.ankimon_presence.start()
 
-    def on_reviewer_will_end(*args):
-        mw.ankimon_presence.loop = False
-        mw.ankimon_presence.stop_presence()
+        def on_reviewer_will_end(*args):
+            if hasattr(mw, 'ankimon_presence') and mw.ankimon_presence:
+                mw.ankimon_presence.stop_presence()
 
-    # Register the hook functions with Anki's GUI hooks
-    gui_hooks.reviewer_did_answer_card.append(on_reviewer_initialized)
-    gui_hooks.reviewer_will_end.append(mw.ankimon_presence.stop_presence)
-    gui_hooks.sync_did_finish.append(mw.ankimon_presence.stop)
+        def on_sync_did_finish():
+            if hasattr(mw, 'ankimon_presence') and mw.ankimon_presence:
+                mw.ankimon_presence.stop()
+
+        # Register the hook functions with Anki's GUI hooks
+        gui_hooks.reviewer_did_answer_card.append(on_reviewer_initialized)
+        gui_hooks.reviewer_will_end.append(on_reviewer_will_end)
+        gui_hooks.sync_did_finish.append(on_sync_did_finish)
+    except Exception as e:
+        logger.log("error", f"Failed to initialize Discord Rich Presence: {e}")
+        tooltip("Failed to initialize Discord Rich Presence. Please check the logs for more information.")
