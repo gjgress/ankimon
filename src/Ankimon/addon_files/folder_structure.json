@@ -56979,16 +56979,6 @@
             ]
         },
         {
-            "name": "utils",
-            "type": "folder",
-            "children": [
-                {
-                    "name": "encounter_generator.py",
-                    "type": "file"
-                }
-            ]
-        },
-        {
             "name": "utils.py",
             "type": "file"
         },
