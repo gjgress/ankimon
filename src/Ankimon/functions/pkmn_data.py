@@ -1,9 +1,11 @@
 LEGENDARY = [
+    # Generation 4
     480,  # uxie
     481,  # mesprit
     482,  # azelf
     485,  # heatran
     488,  # cresselia
+    # Generation 5
     638,  # cobalion
     639,  # terrakion
     640,  # virizion
@@ -13,9 +15,11 @@ LEGENDARY = [
     644,  # zekrom
     645,  # landorus
     646,  # kyurem
+    # Generation 6
     716,  # xerneas
     717,  # yveltal
     718,  # zygarde
+    # Generation 7
     772,  # typenull
     773,  # silvally
     785,  # tapukoko
@@ -27,6 +31,7 @@ LEGENDARY = [
     791,  # solgaleo
     792,  # lunala
     800,  # necrozma
+    # Generation 8
     888,  # zacian
     889,  # zamazenta
     890,  # eternatus
@@ -40,26 +45,33 @@ LEGENDARY = [
 ]
 
 MYTHICAL = [
+    # Generation 3
     385,  # jirachi
+    # Generation 4
     489,  # phione
     490,  # manaphy
     491,  # darkrai
     492,  # shaymin
+    # Generation 5
     494,  # victini
     647,  # keldeo
     648,  # meloetta
+    # Generation 6
     719,  # diancie
     720,  # hoopa
     721,  # volcanion
+    # Generation 7
     801,  # magearna
     802,  # marshadow
     807,  # zeraora
     808,  # meltan
     809,  # melmetal
+    # Generation 8
     893,  # zarude
 ]
 
 BABY = [
+    # Generation 2
     172,  # pichu
     173,  # cleffa
     174,  # igglybuff
@@ -68,8 +80,10 @@ BABY = [
     238,  # smoochum
     239,  # elekid
     240,  # magby
+    # Generation 3
     298,  # azurill
     360,  # wynaut
+    # Generation 4
     406,  # budew
     433,  # chingling
     438,  # bonsly
@@ -78,10 +92,12 @@ BABY = [
     446,  # munchlax
     447,  # riolu
     458,  # mantyke
+    # Generation 8
     848,  # toxel
 ]
 
 ULTRA = [
+    # Generation 7
     793,  # nihilego
     794,  # buzzwole
     795,  # pheromosa
@@ -123,6 +139,7 @@ STARTER = [
 ]
 
 NORMAL = [
+    # Generation 1
     10,  # caterpie
     11,  # metapod
     12,  # butterfree
@@ -255,6 +272,7 @@ NORMAL = [
     147,  # dratini
     148,  # dragonair
     149,  # dragonite
+    # Generation 2
     161,  # sentret
     162,  # furret
     163,  # hoothoot
@@ -442,6 +460,7 @@ NORMAL = [
     374,  # beldum
     375,  # metang
     376,  # metagross
+    # Generation 4
     396,  # starly
     397,  # staravia
     398,  # staraptor
@@ -514,6 +533,7 @@ NORMAL = [
     477,  # dusknoir
     478,  # froslass
     479,  # rotom
+    # Generation 5
     504,  # patrat
     505,  # watchog
     506,  # lillipup
@@ -644,6 +664,7 @@ NORMAL = [
     635,  # hydreigon
     636,  # larvesta
     637,  # volcarona
+    # Generation 6
     659,  # bunnelby
     660,  # diggersby
     661,  # fletchling
@@ -697,6 +718,7 @@ NORMAL = [
     713,  # avalugg
     714,  # noibat
     715,  # noivern
+    # Generation 7
     731,  # pikipek
     732,  # trumbeak
     733,  # toucannon
@@ -749,6 +771,7 @@ NORMAL = [
     782,  # jangmoo
     783,  # hakamoo
     784,  # kommoo
+    # Generation 8
     819,  # skwovet
     820,  # greedent
     821,  # rookidee
