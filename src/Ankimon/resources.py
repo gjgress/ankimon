@@ -67,13 +67,6 @@ ownhplow_sound_path = addon_dir / "addon_sprites" / "sounds" / "OwnHpLow.mp3"
 hpheal_sound_path = addon_dir / "addon_sprites" / "sounds" / "HpHeal.mp3"
 fainted_sound_path = addon_dir / "addon_sprites" / "sounds" / "Fainted.mp3"
 
-#pokemon species id files
-pokemon_species_normal_path = addon_dir / "user_files" / "pkmn_data" / "normal.json"
-pokemon_species_legendary_path = addon_dir / "user_files" / "pkmn_data" / "legendary.json"
-pokemon_species_ultra_path = addon_dir / "user_files" / "pkmn_data" / "ultra.json"
-pokemon_species_mythical_path = addon_dir / "user_files" / "pkmn_data" / "mythical.json"
-pokemon_species_baby_path = addon_dir / "user_files" / "pkmn_data" / "baby.json"
-
 #utils
 json_file_structure = addon_dir / "addon_files" / "folder_structure.json"
 

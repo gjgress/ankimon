@@ -43,11 +43,6 @@ from ..singletons import (
     translator,
 )
 from ..resources import (
-    pokemon_species_baby_path,
-    pokemon_species_legendary_path,
-    pokemon_species_mythical_path,
-    pokemon_species_normal_path,
-    pokemon_species_ultra_path,
     mypokemon_path,
     mainpokemon_path,
 )
@@ -109,20 +104,20 @@ def modify_percentages(total_reviews, daily_average, player_level):
     return percentages
 
 def get_pokemon_id_by_tier(tier):
-    id_species_path = None
-    if tier == "Normal":
-        id_species_path = pokemon_species_normal_path
-    elif tier == "Baby":
-        id_species_path = pokemon_species_baby_path
-    elif tier == "Ultra":
-        id_species_path = pokemon_species_ultra_path
-    elif tier == "Legendary":
-        id_species_path = pokemon_species_legendary_path
-    elif tier == "Mythical":
-        id_species_path = pokemon_species_mythical_path
+    from . import pkmn_data
 
-    with open(id_species_path, "r", encoding="utf-8") as file:
-        id_data = json.load(file)
+    if tier == "Normal":
+        id_data = pkmn_data.NORMAL
+    elif tier == "Baby":
+        id_data = pkmn_data.BABY
+    elif tier == "Ultra":
+        id_data = pkmn_data.ULTRA
+    elif tier == "Legendary":
+        id_data = pkmn_data.LEGENDARY
+    elif tier == "Mythical":
+        id_data = pkmn_data.MYTHICAL
+    else:
+        raise ValueError()
 
     # Select a random Pokemon ID from those in the tier
     random_pokemon_id = random.choice(id_data)
