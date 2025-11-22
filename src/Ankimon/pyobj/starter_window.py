@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     )
 
-from ..functions import pkmn_data
+from ..functions import starters
 
 from ..business import resize_pixmap_img
 from ..pyobj.pokemon_obj import PokemonObject
@@ -175,7 +175,7 @@ class StarterWindow(QWidget):
             water_starter = []
             fire_starter = []
             grass_starter = []
-            for pokemon in pkmn_data.STARTER:
+            for pokemon in starters.STARTER:
                 types = search_pokedex(pokemon, "types")
                 for type in types:
                     if type == "Grass":

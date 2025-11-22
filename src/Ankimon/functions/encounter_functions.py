@@ -103,19 +103,21 @@ def modify_percentages(total_reviews, daily_average, player_level):
     # it could be rewritten to run ONLY when the change in review ratio is detected.
     return percentages
 
+
+
 def get_pokemon_id_by_tier(tier):
-    from . import pkmn_data
+    from . import encounter_data
 
     if tier == "Normal":
-        id_data = pkmn_data.NORMAL
+        id_data = encounter_data.NORMAL
     elif tier == "Baby":
-        id_data = pkmn_data.BABY
+        id_data = encounter_data.BABY
     elif tier == "Ultra":
-        id_data = pkmn_data.ULTRA
+        id_data = encounter_data.ULTRA
     elif tier == "Legendary":
-        id_data = pkmn_data.LEGENDARY
+        id_data = encounter_data.LEGENDARY
     elif tier == "Mythical":
-        id_data = pkmn_data.MYTHICAL
+        id_data = encounter_data.MYTHICAL
     else:
         raise ValueError()
 
