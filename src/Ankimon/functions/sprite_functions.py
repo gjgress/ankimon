@@ -5,7 +5,8 @@ from ..resources import pkmnimgfolder
 SUBSTITUTE_PATH = f"{pkmnimgfolder}/front_default/substitute.png"
 
 
-def _path_format(side: str, id: int, gif: bool, shiny: bool, female: bool):
+def _path_format(back: bool, id: int, gif: bool, shiny: bool, female: bool):
+    side = "back" if back else "front"
     base_path = f"{side}_default_gif" if gif else f"{side}_default"
     sprite_type = "gif" if gif else "png"
 
@@ -21,15 +22,27 @@ def _path_format(side: str, id: int, gif: bool, shiny: bool, female: bool):
     return f"{pkmnimgfolder}/{base_path}/{id}.{sprite_type}"
 
 
-def _try_gendered(side: str, id: int, gif: bool, shiny: bool, female: bool):
-    path = _path_format(side, id, gif, shiny, female)
+def _try_gendered(back: bool, id: int, gif: bool, shiny: bool, female: bool):
+    path = _path_format(back, id, gif, shiny, female)
     if os.path.exists(path):
         return path
 
     if female:
         # requested gendered gif but not found, try non-gendered
-        path = _path_format(side, id, gif, shiny, False)
+        path = _path_format(back, id, gif, shiny, False)
         if os.path.exists(path):
+            return path
+
+
+def _try_back(back: bool, id: int, gif: bool, shiny: bool, female: bool):
+    path = _try_gendered(back, id, gif, shiny, female)
+    if path:
+        return path
+
+    if back:
+        # requested back
+        path = _try_gendered(False, id, gif, shiny, False)
+        if path:
             return path
 
 
@@ -38,14 +51,15 @@ def get_sprite_path(side: str, sprite_type: str, id: int, shiny: bool, gender: s
 
     gif = sprite_type == "gif"
     female = gender == "F"
+    back = side == "back"
 
-    path = _try_gendered(side, id, gif, shiny, female)
+    path = _try_back(back, id, gif, shiny, female)
     if path:
         return path
 
     if gif:
         # requested gif but not found, try png
-        path = _try_gendered(side, id, False, shiny, female)
+        path = _try_back(back, id, False, shiny, female)
         if path:
             return path
 
