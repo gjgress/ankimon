@@ -1,34 +1,56 @@
-from ..resources import pkmnimgfolder
 import os
 
-def get_sprite_path(side: str, sprite_type: str, id: int=132, shiny: bool=False, gender: str="M"):
-        """Return the path to the sprite of the Pokémon with robust fallbacks."""
-        base_path = f"{side}_default_gif" if sprite_type == "gif" else f"{side}_default"
-        default_path = f"{pkmnimgfolder}/front_default/substitute.png"
-        
-        # 1. Try the most specific path: Shiny and Gendered
-        if shiny and gender == "F":
-            path = f"{pkmnimgfolder}/{base_path}/shiny/female/{id}.{sprite_type}"
-            if os.path.exists(path):
-                return path
+from ..resources import pkmnimgfolder
 
-        # 2. Try Shiny (non-gendered)
-        if shiny:
-            path = f"{pkmnimgfolder}/{base_path}/shiny/{id}.{sprite_type}"
-            if os.path.exists(path):
-                return path
+SUBSTITUTE_PATH = f"{pkmnimgfolder}/front_default/substitute.png"
 
-        # 3. Try Gendered (non-shiny)
-        if gender == "F":
-            path = f"{pkmnimgfolder}/{base_path}/female/{id}.{sprite_type}"
-            if os.path.exists(path):
-                return path
 
-        # 4. Try the default path: Non-shiny, non-gendered
-        path = f"{pkmnimgfolder}/{base_path}/{id}.{sprite_type}"
+def _path_format(side: str, id: int, gif: bool, shiny: bool, female: bool):
+    base_path = f"{side}_default_gif" if gif else f"{side}_default"
+    sprite_type = "gif" if gif else "png"
+
+    if shiny and female:
+        return f"{pkmnimgfolder}/{base_path}/shiny/female/{id}.{sprite_type}"
+
+    if shiny:
+        return f"{pkmnimgfolder}/{base_path}/shiny/{id}.{sprite_type}"
+
+    if female:
+        return f"{pkmnimgfolder}/{base_path}/female/{id}.{sprite_type}"
+
+    return f"{pkmnimgfolder}/{base_path}/{id}.{sprite_type}"
+
+
+def _try_gendered(side: str, id: int, gif: bool, shiny: bool, female: bool):
+    path = _path_format(side, id, gif, shiny, female)
+    if os.path.exists(path):
+        return path
+
+    if female:
+        # requested gendered gif but not found, try non-gendered
+        path = _path_format(side, id, gif, shiny, False)
         if os.path.exists(path):
             return path
 
-        # 5. Fallback to the generic substitute image
-        print(f"Unable to find sprite for ID {id} (Shiny: {shiny}, Gender: {gender}). Returning substitute.")
-        return default_path
+
+def get_sprite_path(side: str, sprite_type: str, id: int, shiny: bool, gender: str):
+    """Return the path to the sprite of the Pokémon with robust fallbacks."""
+
+    gif = sprite_type == "gif"
+    female = gender == "F"
+
+    path = _try_gendered(side, id, gif, shiny, female)
+    if path:
+        return path
+
+    if gif:
+        # requested gif but not found, try png
+        path = _try_gendered(side, id, False, shiny, female)
+        if path:
+            return path
+
+    # Fallback to the generic substitute image
+    print(
+        f"Unable to find sprite for ID {id} (Side: {side} Sprite: {sprite_type} Shiny: {shiny}, Gender: {gender}). Returning substitute."
+    )
+    return SUBSTITUTE_PATH
