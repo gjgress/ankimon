@@ -31,7 +31,7 @@ from ..pyobj.settings import Settings
 from ..pyobj.InfoLogger import ShowInfoLogger
 from ..functions.badges_functions import check_for_badge, receive_badge
 from ..functions.battle_functions import calculate_hp
-from ..functions.pokedex_functions import search_pokedex, search_pokeapi_db_by_id
+from ..functions.pokedex_functions import get_base_experience, get_growth_rate, search_pokedex
 from ..functions.pokemon_functions import get_random_moves_for_pokemon, pick_random_gender
 from ..utils import load_custom_font, close_anki
 from ..resources import addon_dir, frontdefault, mainpokemon_path, mypokemon_path
@@ -101,10 +101,8 @@ class StarterWindow(QWidget):
             ability = "No Ability"
         type = search_pokedex(starter_name, "types")
         name = search_pokedex(starter_name, "name")
-        generation_file = "pokeapi_db.json"
-        growth_rate = search_pokeapi_db_by_id(id, "growth_rate")
-        base_experience = search_pokeapi_db_by_id(id, "base_experience")
-        description= search_pokeapi_db_by_id(id, "description")
+        growth_rate = get_growth_rate(id)
+        base_experience = get_base_experience(starter_name)
         level = 5
         attacks = get_random_moves_for_pokemon(starter_name, level)
         ev = {

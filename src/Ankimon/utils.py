@@ -25,7 +25,6 @@ from .resources import (
     csv_file_items_cost,
     csv_file_descriptions,
     font_path,
-    pokemon_names_file_path,
     move_names_file_path,
     hurt_normal_sound_path,
     hurt_noteff_sound_path,
@@ -43,9 +42,6 @@ audio_output = QAudioOutput()
 media_player = QMediaPlayer()
 media_player.setAudioOutput(audio_output)
 
-# Load move and pokemon name mapping at startup
-with open(pokemon_names_file_path, "r", encoding="utf-8") as f:
-    POKEMON_NAME_LOOKUP = json.load(f)
 with open(move_names_file_path, "r", encoding="utf-8") as f:
     MOVE_NAME_LOOKUP = json.load(f)
 
