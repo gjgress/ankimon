@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ..utils import load_custom_font
-from ..functions.pokedex_functions import return_name_for_id, search_pokeapi_db_by_id, search_pokedex
+from ..functions.pokedex_functions import get_base_experience, get_growth_rate, return_name_for_id, search_pokedex
 from ..functions.pokemon_functions import get_random_moves_for_pokemon
 from ..functions.battle_functions import calculate_hp
 from ..functions.update_main_pokemon import update_main_pokemon
@@ -268,8 +268,8 @@ class EvoWindow(QWidget):
                         level = pokemon["level"]
                         hp = calculate_hp(hp_stat, level, ev, iv)
                         pokemon["current_hp"] = int(hp)
-                        pokemon["growth_rate"] = search_pokeapi_db_by_id(evo_id,"growth_rate")
-                        pokemon["base_experience"] = search_pokeapi_db_by_id(evo_id,"base_experience")
+                        pokemon["growth_rate"] = get_growth_rate(evo_id)
+                        pokemon["base_experience"] = get_base_experience(evo_name.lower())
                         abilities = search_pokedex(evo_name.lower(), "abilities")
                         numeric_abilities = None
                         try:

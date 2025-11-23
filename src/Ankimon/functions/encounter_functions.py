@@ -23,8 +23,10 @@ from ..functions.pokemon_functions import find_experience_for_level, get_levelup
 from ..functions.pokedex_functions import (
     check_evolution_for_pokemon,
     get_all_pokemon_moves,
+    get_base_experience,
+    get_effort_values,
+    get_growth_rate,
     return_name_for_id,
-    search_pokeapi_db_by_id,
     search_pokedex,
     search_pokedex_by_id
 )
@@ -253,9 +255,9 @@ def generate_random_pokemon(main_pokemon_level: int, ankimon_tracker_obj: Ankimo
 
     # Now we get all necessary information about the chosen pokemon.
     pokemon_type = search_pokedex(name, "types")
-    base_experience = search_pokeapi_db_by_id(pokemon_id, "base_experience")  # Experience that the wild pokemon will give once beaten
-    growth_rate = search_pokeapi_db_by_id(pokemon_id, "growth_rate")
-    ev_yield = search_pokeapi_db_by_id(pokemon_id, "effort_values")
+    base_experience = get_base_experience(name)  # Experience that the wild pokemon will give once beaten
+    growth_rate = get_growth_rate(pokemon_id)
+    ev_yield = get_effort_values(name)
     gender = pick_random_gender(name)
     is_shiny = shiny_chance()
     battle_status = "fighting"

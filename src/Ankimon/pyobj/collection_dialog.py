@@ -19,7 +19,7 @@ from ..pyobj.translator import Translator
 from ..pyobj.test_window import TestWindow
 from ..pyobj.reviewer_obj import Reviewer_Manager
 from ..functions.sprite_functions import get_sprite_path
-from ..functions.pokedex_functions import search_pokedex, search_pokedex_by_id
+from ..functions.pokedex_functions import get_growth_rate, search_pokedex, search_pokedex_by_id
 from ..gui_classes.pokemon_details import PokemonCollectionDetails
 from ..gui_entities import MovieSplashLabel
 from ..resources import mypokemon_path, frontdefault, frontdefault, mainpokemon_path
@@ -568,11 +568,7 @@ def PokemonTradeIn(number_code, old_pokemon_name, position):
         stats = details["baseStats"]
         #type = search_pokedex(name, "types")
         #stats = search_pokedex(name, "baseStats")
-        with open(str(pokeapi_db_path), "r") as json_file:
-            pokemon_data = json.load(json_file)
-            for pokemon in pokemon_data:
-                if pokemon["id"] == pokemon_id:
-                    growth_rate = pokemon["growth_rate"]
+        growth_rate = get_growth_rate(pokemon_id)
         # Creating a dictionary to organize the extracted information
         stats["xp"] = 0
         pokemon_trade = {

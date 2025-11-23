@@ -1,7 +1,7 @@
+from typing import Literal
 from ..resources import (
     pokedex_path,
     pokedesc_lang_path,
-    pokeapi_db_path,
     pokenames_lang_path,
     mypokemon_path,
     learnset_path,
@@ -9,6 +9,7 @@ from ..resources import (
     poke_evo_path,
     poke_species_path,
     csv_file_items_cost,
+    stats_csv,
     pokemon_csv,
 )
 from aqt.utils import showWarning
@@ -141,25 +142,68 @@ def get_mainpokemon_evo(pokemon_name):
         evolutions = pokemon_info.get("evos", [])
         return evolutions
 
+GROWTH_RATES = {
+    1: "slow", 
+    2: "medium", 
+    3: "fast", 
+    4: "medium-slow", 
+    5: "slow-then-very-fast", 
+    6: "fast-then-very-slow"
+}
+def get_growth_rate(species_id: int) -> str:
+    with open(poke_species_path, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        
+        for row in reader:
+            if int(row["id"]) == species_id:
+                return GROWTH_RATES[int(row["growth_rate_id"])]
 
-def search_pokeapi_db(pkmn_name, variable):
-    with open(str(pokeapi_db_path), "r", encoding="utf-8") as json_file:
-        pokedex_data = json.load(json_file)
-        for pokemon_data in pokedex_data:
-            name = pokemon_data["name"]
-            if pokemon_data["name"] == pkmn_name:
-                var = pokemon_data.get(variable, None)
-                return var
+    raise Exception()
 
+def get_base_experience(name: str) -> int:
+    with open(pokemon_csv, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
 
-def search_pokeapi_db_by_id(pkmn_id, variable):
-    with open(str(pokeapi_db_path), "r", encoding="utf-8") as json_file:
-        pokedex_data = json.load(json_file)
-        for pokemon_data in pokedex_data:
-            if pokemon_data["id"] == pkmn_id:
-                var = pokemon_data.get(variable, None)
-                return var
+        for row in reader:
+            if row["identifier"].replace("-", "") == name.lower():
+                return int(row["base_experience"])
 
+    raise Exception()
+
+STATS = {
+    1: "hp",
+    2: "attack",
+    3: "defense", 
+    4: "special-attack", 
+    5: "special-defense", 
+    6: "speed", 
+}
+def get_effort_values(name: str) -> dict[str, int]:
+    id = None
+    with open(pokemon_csv, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+
+        for row in reader:
+            if row["identifier"].replace("-", "") == name.lower():
+                id = row["id"]
+                break
+
+    evs = {}
+    with open(stats_csv, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+            
+        for row in reader:
+            if row["pokemon_id"] == id:
+                evs[STATS[int(row["stat_id"])]] = row["effort"]
+
+    return {
+        "hp": evs["hp"],
+        "attack": evs["attack"],
+        "defense": evs["defense"],
+        "special-attack": evs["special-attack"], 
+        "special-defense": evs["special-defense"],
+        "speed": evs["speed"],
+    }
 
 # TODO change all the functions to use language as a parameter
 def get_pokemon_descriptions(species_id, language):

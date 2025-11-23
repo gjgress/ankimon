@@ -4837,10 +4837,6 @@
                             "type": "file"
                         },
                         {
-                            "name": "pokeapi_db.json",
-                            "type": "file"
-                        },
-                        {
                             "name": "pokedex.json",
                             "type": "file"
                         },
