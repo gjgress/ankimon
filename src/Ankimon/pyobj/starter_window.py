@@ -182,7 +182,7 @@ class StarterWindow(QWidget):
                         fire_starter.append(pokemon)
                     elif type == "Water":
                         water_starter.append(pokemon)
-            random_gen = random.randint(0, 6)
+            random_gen = random.randint(0, 8)
             water_start = f"{water_starter[random_gen]}"
             fire_start = f"{fire_starter[random_gen]}"
             grass_start = f"{grass_starter[random_gen]}"
