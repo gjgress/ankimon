@@ -194,7 +194,7 @@ def get_effort_values(name: str) -> dict[str, int]:
             
         for row in reader:
             if row["pokemon_id"] == id:
-                evs[STATS[int(row["stat_id"])]] = row["effort"]
+                evs[STATS[int(row["stat_id"])]] = int(row["effort"])
 
     return {
         "hp": evs["hp"],
