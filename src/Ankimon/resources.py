@@ -1,7 +1,8 @@
 from pathlib import Path
 import os
 import json
-
+from aqt import mw
+from aqt.utils import showInfo
 addon_dir = Path(__file__).parents[0]
 
 #safe route for updates
@@ -317,3 +318,90 @@ def generate_startup_files(base_path, base_user_path):  # Add base_user_path par
 
     return True
 
+def create_folder_structure_json(directory=addon_dir, output_file=json_file_structure, exclude_folders=["__pycache__"]):
+    """
+    Creates a JSON file representing the folder structure and files of the given directory.
+    
+    Args:
+        directory (str): The root directory to scan.
+        output_file (str): The JSON file to write the structure to.
+        exclude_folders (list): List of folder names to exclude from the structure.
+    """
+    # Default to an empty list if no folders are specified to exclude
+    exclude_folders = exclude_folders or []
+
+    def folder_to_dict(path):
+        """
+        Recursively builds a dictionary representation of the folder structure.
+        
+        Args:
+            path (str): The path to the folder to process.
+        
+        Returns:
+            dict: Dictionary representing the folder structure, or None if folder is excluded.
+        """
+        # Skip excluded folders
+        if os.path.basename(path) in exclude_folders:
+            return None
+
+        folder_dict = {'name': os.path.basename(path), 'type': 'folder', 'children': []}
+        
+        try:
+            for item in os.listdir(path):
+                item_path = os.path.join(path, item)
+                if os.path.isdir(item_path):
+                    subfolder = folder_to_dict(item_path)
+                    if subfolder:  # Only append non-None results (folders that are not excluded)
+                        folder_dict['children'].append(subfolder)
+                else:
+                    folder_dict['children'].append({'name': item, 'type': 'file'})
+        except PermissionError:
+            folder_dict['children'].append({'name': 'Permission Denied', 'type': 'error'})
+        
+        return folder_dict
+
+    # Build the structure starting from the root directory
+    folder_structure = folder_to_dict(directory)
+    
+    # If the root folder is excluded, return an empty structure
+    if not folder_structure:
+        folder_structure = {'name': 'root', 'type': 'folder', 'children': []}
+    
+    # Write the structure to a JSON file
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(folder_structure, f, indent=4)
+
+
+def check_current_files():
+    """
+    Validates the presence of all essential personal files required for the application to function properly.
+    This function performs a comprehensive check of critical files and folders by delegating to the 
+    file verification system. If any required files are missing, it displays a detailed notification 
+    to the user listing all missing items and prompts them to create the necessary files.
+    The function serves as a gatekeeper to ensure the application's dependencies are satisfied
+    before proceeding with operations that require these essential resources.
+      bool: True if all essential files and folders are present and accessible,
+          False if one or more required files/folders are missing.
+    Side Effects:
+      - Displays an informational dialog to the user if missing files are detected
+      - The dialog includes a formatted list of all missing files/folders with guidance
+    Dependencies:
+      - Requires check_files_in_json() from gui_classes.check_files module
+      - Relies on showInfo() function for user notification display
+    Note:
+      This function does not attempt to create missing files automatically;
+      it only identifies and reports them to the user for manual resolution.
+    Checks if the essential personal files exist.
+    
+    Returns:
+        bool: True if all files exist, False otherwise.
+    """
+    from .gui_classes.check_files import check_files_in_json
+
+    #create_folder_structure_json()  # Ensure folder structure JSON is created - uncomment if changes are made
+    missing_files = check_files_in_json()  # Call the file checking function
+    if missing_files:
+        showInfo(f"The following essential files or folders are missing:\n" +
+                 "\n".join(missing_files) + "\nPlease redownload the Ankimon Resources.")
+        return False
+    return True

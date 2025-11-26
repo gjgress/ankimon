@@ -20,51 +20,41 @@ except ModuleNotFoundError:
 import json
 import random
 import copy
-from pathlib import Path
-import traceback
+from typing import Union
 
 import aqt
 from anki.hooks import addHook, wrap
 from aqt import gui_hooks, mw, utils
 from aqt.qt import QDialog
+from aqt.operations import QueryOp
 from aqt.reviewer import Reviewer
 from aqt.utils import downArrow, showWarning, tr, tooltip
 from PyQt6.QtWidgets import QDialog
 from aqt.gui_hooks import webview_will_set_content
 from aqt.webview import WebContent
+import markdown
 
 from .resources import generate_startup_files, user_path, IS_EXPERIMENTAL_BUILD, addon_ver, addon_dir
-
 generate_startup_files(addon_dir, user_path)
 
-from .config_var import (
-    no_more_news,
-    ssh,
-    defeat_shortcut,
-    catch_shortcut,
-    reviewer_buttons,
-    battle_sounds
-)
+from .singletons import settings_obj
+no_more_news = settings_obj.get("misc.YouShallNotPass_Ankimon_News")
+ssh = settings_obj.get("misc.ssh")
+defeat_shortcut = settings_obj.get("controls.defeat_key") #default: 5; ; Else if not 5 => controll + Key for capture
+catch_shortcut = settings_obj.get("controls.catch_key") #default: 6; Else if not 6 => controll + Key for capture
+reviewer_buttons = settings_obj.get("controls.pokemon_buttons") #default: true; false = no pokemon buttons in reviewer
+
 from .resources import (
     addon_dir,
     pkmnimgfolder,
     mypokemon_path,
-    mainpokemon_path,
-    pokemon_names_file_path,
-    move_names_file_path,
     itembag_path,
-    badgebag_path,
     sound_list_path,
-    badges_list_path,
-    items_list_path,
-    rate_path,
+    check_current_files
 )
 from .menu_buttons import create_menu_actions
 from .hooks import setupHooks
 from .texts import _bottomHTML_template, button_style
-from .business import (
-    get_multiplier_stats,
-)
 from .utils import (
     check_folders_exist,
     safe_get_random_move,
@@ -74,16 +64,13 @@ from .utils import (
     compare_files,
     write_local_file,
     count_items_and_rewrite,
-    format_pokemon_name,
-    format_move_name,
     play_effect_sound,
     get_main_pokemon_data,
     play_sound,
     load_collected_pokemon_ids,
 )
-from .functions.reviewer_iframe import create_iframe_html, create_head_code
 from .functions.url_functions import open_team_builder, rate_addon_url, report_bug, join_discord_url, open_leaderboard_url
-from .functions.badges_functions import check_badges, handle_achievements, check_and_award_badges
+from .functions.badges_functions import get_achieved_badges, handle_review_count_achievement, check_for_badge, receive_badge
 from .functions.pokemon_showdown_functions import export_to_pkmn_showdown, export_all_pkmn_showdown, flex_pokemon_collection
 from .functions.drawing_utils import tooltipWithColour
 from .functions.discord_function import DiscordPresence
@@ -96,16 +83,15 @@ from .functions.encounter_functions import (
     handle_enemy_faint,
     handle_main_pokemon_faint
 )
-from .functions.pokedex_functions import find_details_move
 from .gui_entities import UpdateNotificationWindow, CheckFiles
+from .pyobj.download_sprites import show_agreement_and_download_dialog
 from .pyobj.help_window import HelpWindow
 from .pyobj.backup_files import run_backup
 from .pyobj.backup_manager import BackupManager
-from .pyobj.ankimon_sync import save_ankimon_configs, read_ankimon_configs, setup_ankimon_sync_hooks, check_and_sync_pokemon_data
+from .pyobj.ankimon_sync import setup_ankimon_sync_hooks, check_and_sync_pokemon_data
 from .pyobj.tip_of_the_day import show_tip_of_the_day
 from .classes.choose_move_dialog import MoveSelectionDialog
 from .poke_engine.ankimon_hooks_to_poke_engine import simulate_battle_with_poke_engine
-from .poke_engine import constants
 from .singletons import (
     reviewer_obj,
     logger,
@@ -123,7 +109,6 @@ from .singletons import (
     shop_manager,
     ankimon_tracker_window,
     pokedex_window,
-    reviewer_obj,
     eff_chart,
     gen_id_chart,
     license,
@@ -132,7 +117,6 @@ from .singletons import (
     starter_window,
     item_window,
     version_dialog,
-    pokecollection_win,
     achievements,
     pokemon_pc
 )
@@ -143,23 +127,17 @@ from .functions.battle_functions import (
     update_pokemon_battle_status,
     validate_pokemon_status,
     process_battle_data,
-    _process_battle_effects
 )
 
 from .pyobj.error_handler import show_warning_with_traceback
-from .functions.drawing_utils import draw_gender_symbols, draw_stat_boosts
-
-# Load move and pokemon name mapping at startup
-with open(pokemon_names_file_path, "r", encoding="utf-8") as f:
-    POKEMON_NAME_LOOKUP = json.load(f)
-
-with open(move_names_file_path, "r", encoding="utf-8") as f:
-    MOVE_NAME_LOOKUP = json.load(f)
 
 mw.settings_ankimon = settings_window
 mw.logger = logger
 mw.translator = translator
 mw.settings_obj = settings_obj
+
+if check_current_files() == False:
+    show_agreement_and_download_dialog(force_download=True)
 
 # Log an startup message
 logger.log_and_showinfo('game', translator.translate("startup"))
@@ -173,7 +151,7 @@ except Exception as e:
 
 backup_manager = BackupManager(logger, settings_obj)
 
-if settings_obj.get("misc.developer_mode", False):
+if settings_obj.get("misc.developer_mode"):
     backup_manager.create_backup(manual=False)
 
 # Initialize mutator and mutator_full_reset
@@ -193,10 +171,6 @@ if not _collection_loaded: # If the collection hasn't already been loaded
     _collection_loaded = True
 
 
-
-items_list = []
-with open(items_list_path, "r", encoding="utf-8") as file:
-    items_list = json.load(file)
 
 with open(sound_list_path, "r", encoding="utf-8") as json_file:
     sound_list = json.load(json_file)
@@ -235,16 +209,9 @@ database_complete = all([
 ])
 
 if not database_complete:
+    show_agreement_and_download_dialog(force_download=True)
     dialog = CheckFiles()
     dialog.show()
-
-if mainpokemon_path.is_file():
-    with open(mainpokemon_path, "r", encoding="utf-8") as json_file:
-        main_pokemon_data = json.load(json_file)
-        if not main_pokemon_data or main_pokemon_data is None:
-            mainpokemon_empty = True
-        else:
-            mainpokemon_empty = False
 
 sync_dialog = None
 
@@ -275,39 +242,45 @@ setupHooks(None, ankimon_tracker_obj)
 online_connectivity = test_online_connectivity()
 
 #Connect to GitHub and Check for Notification and HelpGuideChanges
-try:
-    if online_connectivity and ssh != False:
+update_infos_md = addon_dir / "updateinfos.md"
+def download_changelog():
+    try:
         # URL of the file on GitHub
         github_url = f"https://raw.githubusercontent.com/h0tp-ftw/ankimon/refs/heads/main/assets/changelogs/{addon_ver}.md"
-
-        # Path to the local file
-        local_file_path = addon_dir / "updateinfos.md"
+    
         # Read content from GitHub
-        github_content, github_html_content = read_github_file(github_url)
-
+        github_content = read_github_file(github_url)
+    
         # If changelog content is None, try unknown.md as a fallback for all builds
         if github_content is None:
             github_url = "https://raw.githubusercontent.com/h0tp-ftw/ankimon/refs/heads/main/assets/changelogs/unknown.md"
-            github_content, github_html_content = read_github_file(github_url)
+            github_content = read_github_file(github_url)
 
+        return github_content
+    except Exception as e:
+        return e
+
+if online_connectivity and ssh:
+    def done(result: Union[Exception, str, None]):
+        if isinstance(result, Exception):
+            show_warning_with_traceback(parent=mw, exception=result, message="Error connecting to GitHub:")
+            return
+        if result is None:
+            showWarning("Failed to retrieve Ankimon content from GitHub.")
+            return
         # Read content from the local file
-        local_content = read_local_file(local_file_path)
-        # If local content exists and is the same as GitHub content, do not open dialog
-        if local_content is not None and compare_files(local_content, github_content):
-            pass
-        else:
-            # Download new content from GitHub
-            if github_content is not None:
-                # Write new content to the local file
-                write_local_file(local_file_path, github_content)
-                dialog = UpdateNotificationWindow(github_html_content)
-                if no_more_news is False:
-                    dialog.exec()
-            else:
-                showWarning("Failed to retrieve Ankimon content from GitHub.")
-except Exception as e:
-    if ssh != False:
-        show_warning_with_traceback(parent=mw, exception=e, message="Error connecting to GitHub:")
+        local_content = read_local_file(update_infos_md)
+        # If local content is not the same as the GitHub content, open dialog
+        if not compare_files(local_content, result):
+            write_local_file(update_infos_md, result)
+            dialog = UpdateNotificationWindow(markdown.markdown(result))
+            if not no_more_news:
+                dialog.exec()
+    op = QueryOp(
+        parent=mw,
+        op=lambda _col: download_changelog(), # Background operation
+        success=done, # Ran on UI thread
+    ).without_collection().run_in_background()
 
 def open_help_window(online_connectivity):
     try:
@@ -317,10 +290,6 @@ def open_help_window(online_connectivity):
         help_dialog.exec()
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="Error in opening Help Guide:")
-
-gen_config = []
-for i in range(1,10):
-    gen_config.append(settings_obj.get(f"misc.gen{i}"))
 
 def answerCard_before(filter, reviewer, card):
 	utils.answBtnAmt = reviewer.mw.col.sched.answerButtons(card)
@@ -387,6 +356,9 @@ if database_complete:
 
 cry_counter = 0
 
+# How many cards need to be done before receiving an item
+item_receive_value = random.randint(3, 385)
+
 # Hook into Anki's card review event
 def on_review_card(*args):
     try:
@@ -404,7 +376,7 @@ def on_review_card(*args):
 
         global mutator_full_reset
 
-        global battle_sounds
+        battle_sounds = settings_obj.get("audio.battle_sounds")
         global achievements
         global new_state
         global user_hp_after
@@ -412,20 +384,36 @@ def on_review_card(*args):
         global dmg_from_enemy_move
         global dmg_from_user_move
 
+        global item_receive_value
+
         # Increment the counter when a card is reviewed
         attack_counter = ankimon_tracker_obj.attack_counter
         ankimon_tracker_obj.cards_battle_round += 1
         ankimon_tracker_obj.cry_counter += 1
         cry_counter = ankimon_tracker_obj.cry_counter
-        card_counter = ankimon_tracker_obj.card_counter
+        total_reviews = ankimon_tracker_obj.total_reviews
         reviewer_obj.seconds = 0
         reviewer_obj.myseconds = 0
         ankimon_tracker_obj.general_card_count_for_battle += 1
-        
+                
         color = "#F0B27A" # Initialize with a default color
 
-        achievements = handle_achievements(card_counter, achievements)
-        achievements = check_and_award_badges(card_counter, achievements, ankimon_tracker_obj, test_window)
+        # Handle achievements based on total reviews
+        achievements = handle_review_count_achievement(total_reviews, achievements)
+
+        item_receive_value -= 1
+        if item_receive_value <= 0:
+            item_receive_value = random.randint(3, 385)
+
+            test_window.display_item()
+
+            # Give them a badge for getting an item
+            if not check_for_badge(achievements,6):
+                receive_badge(6, achievements)
+
+        if total_reviews == 10:
+            settings_obj.set("trainer.cash", settings_obj.get("trainer.cash") + 200)
+            trainer_card.cash = settings_obj.get("trainer.cash")
 
         try:
              mutator_full_reset
@@ -435,7 +423,7 @@ def on_review_card(*args):
         if battle_sounds == True and ankimon_tracker_obj.general_card_count_for_battle == 1:
             play_sound(enemy_pokemon.id, settings_obj)
 
-        if ankimon_tracker_obj.cards_battle_round >= int(settings_obj.get("battle.cards_per_round", 2)):
+        if ankimon_tracker_obj.cards_battle_round >= int(settings_obj.get("battle.cards_per_round")):
             ankimon_tracker_obj.cards_battle_round = 0
             ankimon_tracker_obj.attack_counter = 0
             slp_counter = 0
@@ -461,7 +449,7 @@ def on_review_card(*args):
 
             if ankimon_tracker_obj.pokemon_encouter > 0 and main_pokemon.hp > 0 and enemy_pokemon.hp > 0:
 
-                if settings_obj.get("controls.allow_to_choose_moves", False) == True:
+                if settings_obj.get("controls.allow_to_choose_moves") == True:
                     dialog = MoveSelectionDialog(main_pokemon.attacks)
                     if dialog.exec() == QDialog.DialogCode.Accepted:
                         if dialog.selected_move:
@@ -571,17 +559,17 @@ def on_review_card(*args):
             if true_dmg_from_enemy_move > 0 and multiplier < 1:
                 reviewer_obj.myseconds = settings_obj.compute_special_variable("animate_time")
                 tooltipWithColour(f" -{true_dmg_from_enemy_move} HP ", "#F06060", x=-200)
-                play_effect_sound("HurtNormal")
+                play_effect_sound(settings_obj, "HurtNormal")
 
             if true_dmg_from_user_move > 0:
                 reviewer_obj.seconds = settings_obj.compute_special_variable("animate_time")
                 tooltipWithColour(f" -{true_dmg_from_user_move} HP ", "#F06060", x=200)
                 if multiplier == 1:
-                    play_effect_sound("HurtNormal")
+                    play_effect_sound(settings_obj, "HurtNormal")
                 elif multiplier < 1:
-                    play_effect_sound("HurtNotEffective")
+                    play_effect_sound(settings_obj, "HurtNotEffective")
                 elif multiplier > 1:
-                    play_effect_sound("HurtSuper")
+                    play_effect_sound(settings_obj, "HurtSuper")
             else:
                 reviewer_obj.seconds = 0
 
@@ -629,7 +617,8 @@ def on_review_card(*args):
         reviewer.web = mw.reviewer.web
         reviewer_obj.update_life_bar(reviewer, 0, 0)
         if test_window is not None:
-            test_window.display_battle()
+            if enemy_pokemon.hp > 0:
+                test_window.display_battle()
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="An error occurred in reviewer:")
 
@@ -637,17 +626,9 @@ def on_review_card(*args):
 gui_hooks.reviewer_did_answer_card.append(on_review_card)
 
 if database_complete:
-    with open(badgebag_path, "r", encoding="utf-8") as json_file:
-        badge_list = json.load(json_file)
-        if len(badge_list) > 1: # has atleast one badge
-            rate_this_addon()
-
-#Badges needed for achievements:
-with open(badges_list_path, "r", encoding="utf-8") as json_file:
-    badges = json.load(json_file)
-
-achievements = {str(i): False for i in range(1, 69)}
-achievements = check_badges(achievements)
+    badge_list = get_achieved_badges()
+    if len(badge_list) > 1: # has atleast one badge
+        rate_this_addon()
 
 if database_complete:
     if mypokemon_path.is_file() is False:
@@ -689,7 +670,7 @@ create_menu_actions(
     settings_window,
     shop_manager,
     pokedex_window,
-    settings_obj.get("controls.key_for_opening_closing_ankimon","Ctrl+Shift+P"),
+    settings_obj.get("controls.key_for_opening_closing_ankimon"),
     join_discord_url,
     open_leaderboard_url,
     settings_obj,
@@ -751,7 +732,7 @@ def on_profile_did_open():
 
     # AnkiWeb Sync
     try:
-        from .config_var import ankiweb_sync
+        ankiweb_sync = settings_obj.get("misc.ankiweb_sync")
         if not ankiweb_sync:
             logger.log("info", "AnkiWeb sync is disabled in settings - skipping sync system initialization")
             return
@@ -782,26 +763,26 @@ addHook("profileLoaded", on_profile_loaded)
 gui_hooks.profile_did_open.append(on_profile_did_open)
 gui_hooks.profile_will_close.append(backup_manager.on_anki_close)
 
-def catch_shorcut_function():
-    if enemy_pokemon.hp >= 1:
-        tooltip("You only catch a pokemon once it's fainted !")
-    else:
+def catch_shortcut_function():
+    if enemy_pokemon.hp < 1:
         catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements)
         new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
+    else:
+        tooltip("You only catch a pokemon once it's fainted!")
 
 def defeat_shortcut_function():
-    if enemy_pokemon.hp > 1:
-        tooltip("Wild pokemon has to be fainted to defeat it !")
-    else:
+    if enemy_pokemon.hp < 1:
         kill_pokemon(main_pokemon, enemy_pokemon, evo_window, logger , achievements, trainer_card)
         new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
+    else:
+        tooltip("Wild pokemon has to be fainted to defeat it!")
 
 catch_shortcut = catch_shortcut.lower()
 defeat_shortcut = defeat_shortcut.lower()
 #// adding shortcuts to _shortcutKeys function in anki
 def _shortcutKeys_wrap(self, _old):
     original = _old(self)
-    original.append((catch_shortcut, lambda: catch_shorcut_function()))
+    original.append((catch_shortcut, lambda: catch_shortcut_function()))
     original.append((defeat_shortcut, lambda: defeat_shortcut_function()))
     return original
 
@@ -817,7 +798,7 @@ if reviewer_buttons is True:
     # Update the link handler function to handle the custom button action
     def linkHandler_wrap(reviewer, url):
         if url == "catch":
-            catch_shorcut_function()
+            catch_shortcut_function()
         elif url == "defeat":
             defeat_shortcut_function()
         else:
@@ -840,7 +821,7 @@ if reviewer_buttons is True:
     # Replace the original link handler function with the modified one
     Reviewer._linkHandler = linkHandler_wrap
 
-if settings_obj.get("misc.discord_rich_presence",False) == True:
+if settings_obj.get("misc.discord_rich_presence") == True:
     client_id = '1319014423876075541'  # Replace with your actual client ID
     large_image_url = "https://raw.githubusercontent.com/Unlucky-Life/ankimon/refs/heads/main/src/Ankimon/ankimon_logo.png"  # URL for the large image
     mw.ankimon_presence = DiscordPresence(client_id, large_image_url, ankimon_tracker_obj, logger, settings_obj)  # Establish connection and get the presence instance

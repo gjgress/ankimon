@@ -23,6 +23,7 @@ def check_files_in_json(json_file=json_file_structure, root_directory=addon_dir)
     Returns:
         list: A list of missing files.
     """
+
     def verify_files(folder_dict, current_path, missing_files):
         for child in folder_dict.get('children', []):
             if child['type'] == 'file':
