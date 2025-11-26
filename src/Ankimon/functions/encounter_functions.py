@@ -107,7 +107,7 @@ def modify_percentages(total_reviews, daily_average, player_level):
 
 
 
-def get_pokemon_id_by_tier(tier):
+def get_random_pokemon_in_tier(tier):
     from . import encounter_data
 
     if tier == "Normal":
@@ -156,13 +156,13 @@ def choose_random_pkmn_from_tier():
 
     Returns:
         id (int): Pokedex ID for generated Pokemon
-        tier (string): Rarity tier for generated Pokemon (normal/ultra/legendary etc.)
+        tier (str): Rarity tier for generated Pokemon (normal/ultra/legendary etc.)
     """
     total_reviews = ankimon_tracker_obj.total_reviews
     trainer_level = trainer_card.level
     try:
         tier = get_tier(total_reviews, trainer_level)
-        id = get_pokemon_id_by_tier(tier)
+        id = get_random_pokemon_in_tier(tier)
         return id, tier
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="Error occurred")
@@ -255,9 +255,9 @@ def generate_random_pokemon(main_pokemon_level: int, ankimon_tracker_obj: Ankimo
 
     # Now we get all necessary information about the chosen pokemon.
     pokemon_type = search_pokedex(name, "types")
-    base_experience = get_base_experience(name)  # Experience that the wild pokemon will give once beaten
+    base_experience = get_base_experience(name + (search_pokedex(name, "baseForme") or ""))  # Experience that the wild pokemon will give once beaten
     growth_rate = get_growth_rate(pokemon_id)
-    ev_yield = get_effort_values(name)
+    ev_yield = get_effort_values(name + (search_pokedex(name, "baseForme") or ""))
     gender = pick_random_gender(name)
     is_shiny = shiny_chance()
     battle_status = "fighting"
