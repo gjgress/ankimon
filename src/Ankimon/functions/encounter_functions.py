@@ -255,9 +255,9 @@ def generate_random_pokemon(main_pokemon_level: int, ankimon_tracker_obj: Ankimo
 
     # Now we get all necessary information about the chosen pokemon.
     pokemon_type = search_pokedex(name, "types")
-    base_experience = get_base_experience(name + (search_pokedex(name, "baseForme") or ""))  # Experience that the wild pokemon will give once beaten
+    base_experience = get_base_experience(search_pokedex(name, "actual_id"))  # Experience that the wild pokemon will give once beaten
     growth_rate = get_growth_rate(pokemon_id)
-    ev_yield = get_effort_values(name + (search_pokedex(name, "baseForme") or ""))
+    ev_yield = get_effort_values(search_pokedex(name, "actual_id"))
     gender = pick_random_gender(name)
     is_shiny = shiny_chance()
     battle_status = "fighting"
