@@ -33,7 +33,6 @@ from .pyobj.achievement_window import AchievementWindow
 from .pyobj.ankimon_tracker_window import AnkimonTrackerWindow
 from .pyobj.backup_manager import BackupManager
 from .gui_classes.backup_manager_dialog import BackupManagerDialog
-from .gui_classes.quick_team_swap_dialog import show_quick_team_swap_dialog
 from .gui_entities import (
     License,
     Credits,
