@@ -124,11 +124,11 @@ def search_pokedex_by_name_for_id(pokemon_name, variable):
             return None
 
 
-def search_pokedex_by_id(pokemon_id):
+def search_pokedex_by_id(species_id):
     with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
         for entry_name, attributes in pokedex_data.items():
-            if attributes["num"] == pokemon_id:
+            if attributes["species_id"] == species_id:
                 return entry_name
     return "Pokémon not found"
 
@@ -160,15 +160,15 @@ def get_growth_rate(species_id: int) -> str:
 
     raise ValueError(species_id)
 
-def get_base_experience(name: str) -> int:
+def get_base_experience(actual_id: int) -> int:
     with open(pokemon_csv, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
-            if row["identifier"].replace("-", "") == name.lower():
+            if int(row["id"]) == actual_id:
                 return int(row["base_experience"])
 
-    raise ValueError(name)
+    raise ValueError(actual_id)
 
 STATS = {
     1: "hp",
@@ -178,22 +178,13 @@ STATS = {
     5: "special-defense", 
     6: "speed", 
 }
-def get_effort_values(name: str) -> dict[str, int]:
-    id = None
-    with open(pokemon_csv, mode="r", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-
-        for row in reader:
-            if row["identifier"].replace("-", "") == name.lower():
-                id = row["id"]
-                break
-
+def get_effort_values(actual_id: int) -> dict[str, int]:
     evs = {}
     with open(stats_csv, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
             
         for row in reader:
-            if row["pokemon_id"] == id:
+            if int(row["pokemon_id"]) == actual_id:
                 evs[STATS[int(row["stat_id"])]] = int(row["effort"])
 
     return {
