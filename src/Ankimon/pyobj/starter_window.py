@@ -271,9 +271,9 @@ class StarterWindow(QWidget):
 
     def pokemon_display_starter(self, water_start, fire_start, grass_start):
         bckgimage_path = addon_dir / "addon_sprites" / "starter_screen" / "bckg.png"
-        water_id = int(search_pokedex(water_start, "num"))
-        grass_id = int(search_pokedex(grass_start, "num"))
-        fire_id = int(search_pokedex(fire_start, "num"))
+        water_id = int(search_pokedex(water_start, "species_id"))
+        grass_id = int(search_pokedex(grass_start, "species_id"))
+        fire_id = int(search_pokedex(fire_start, "species_id"))
 
         # Load the background image
         pixmap_bckg = QPixmap()
@@ -343,7 +343,7 @@ class StarterWindow(QWidget):
 
     def pokemon_display_chosen_starter(self, starter_name):
         bckgimage_path = addon_dir / "addon_sprites" / "starter_screen" / "bg.png"
-        id = int(search_pokedex(starter_name, "num"))
+        id = int(search_pokedex(starter_name, "species_id"))
 
         # Load the background image
         pixmap_bckg = QPixmap()
