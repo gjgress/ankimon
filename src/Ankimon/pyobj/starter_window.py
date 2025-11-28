@@ -85,7 +85,7 @@ class StarterWindow(QWidget):
         # Create a dictionary to store the Pokémon's data
         # add all new values like hp as max_hp, evolution_data, description and growth rate
         name = search_pokedex(starter_name, "name")
-        id = search_pokedex(starter_name, "num")
+        id = search_pokedex(starter_name, "species_id")
         base_stats = search_pokedex(starter_name, "baseStats")
         abilities = search_pokedex(starter_name, "abilities")
         gender = pick_random_gender(name.lower())
@@ -102,7 +102,7 @@ class StarterWindow(QWidget):
         type = search_pokedex(starter_name, "types")
         name = search_pokedex(starter_name, "name")
         growth_rate = get_growth_rate(id)
-        base_experience = get_base_experience(starter_name)
+        base_experience = get_base_experience(search_pokedex(starter_name, "actual_id"))
         level = 5
         attacks = get_random_moves_for_pokemon(starter_name, level)
         ev = {

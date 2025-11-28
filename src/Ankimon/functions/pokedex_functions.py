@@ -111,19 +111,6 @@ def search_pokedex(pokemon_name, variable):
         )
         return []
 
-
-def search_pokedex_by_name_for_id(pokemon_name, variable):
-    pokemon_name = special_pokemon_names_for_min_level(pokemon_name)
-    with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
-        pokedex_data = json.load(json_file)
-        if pokemon_name in pokedex_data:
-            pokemon_info = pokedex_data[pokemon_name]
-            var = pokemon_info.get("num", None)
-            return var
-        else:
-            return None
-
-
 def search_pokedex_by_id(species_id):
     with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
