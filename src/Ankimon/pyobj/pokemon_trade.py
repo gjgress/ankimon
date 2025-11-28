@@ -10,7 +10,7 @@ from ..resources import mainpokemon_path, mypokemon_path, moves_file_path, poked
 from ..functions.sprite_functions import get_sprite_path
 from datetime import datetime
 import uuid
-from ..functions.pokedex_functions import get_base_experience
+from ..functions.pokedex_functions import get_base_experience, get_growth_rate
 from .error_handler import show_warning_with_traceback
 
 # --- Module-level functions for Monthly Challenges ---
@@ -458,7 +458,7 @@ class PokemonTrade:
             with open(self.pokedex_path, 'r', encoding='utf-8') as file:
                 pokedex = json.load(file)
                 for details in pokedex.values():
-                    if details.get('num') == pokemon_id:
+                    if details.get('species_id') == pokemon_id:
                         return details.get('name', str(pokemon_id))
         except Exception as e:
             show_warning_with_traceback(parent=self.parent_window, exception=e, message=f"An error occurred while getting the Pokémon name for ID {pokemon_id}.")
@@ -509,7 +509,7 @@ class PokemonTrade:
             if not details:
                 raise ValueError(f"Could not find Pokémon details for ID {pokemon_id}")
 
-            base_experience = get_base_experience(details["name"])
+            base_experience = get_base_experience(details["actual_id"])
 
             ability = "No Ability"
             possible_abilities = search_pokedex(details["name"], "abilities")
@@ -578,7 +578,7 @@ class PokemonTrade:
             with open(self.pokedex_path, 'r', encoding='utf-8') as file:
                 pokedex = json.load(file)
                 for details in pokedex.values():
-                    if details.get('num') == pokemon_id:
+                    if details.get('species_id') == pokemon_id:
                         return details
             self.logger.log_and_showinfo("warning",f"No Pokémon found with ID: {pokemon_id}")
             return None

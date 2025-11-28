@@ -245,7 +245,7 @@ def save_fossil_pokemon(pokemon_id):
         ability = "No Ability"
     type = search_pokedex(name, "types")
     growth_rate = get_growth_rate(id)
-    base_experience = get_base_experience(name)
+    base_experience = search_pokedex(name.lower(), "actual_id")
     level = 5
     attacks = get_random_moves_for_pokemon(name, level)
     #stats["xp"] = 0
