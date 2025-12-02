@@ -30,5 +30,5 @@ def get_sprite_path(side: str, sprite_type: str, id: int=132, shiny: bool=False,
             return path
 
         # 5. Fallback to the generic substitute image
-        print(f"Unable to find sprite for ID {id} (Shiny: {shiny}, Gender: {gender}). Returning substitute.")
+        #print(f"Unable to find sprite for ID {id} (Shiny: {shiny}, Gender: {gender}). Returning substitute.")
         return default_path

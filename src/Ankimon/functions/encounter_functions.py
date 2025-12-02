@@ -29,6 +29,7 @@ from ..functions.pokedex_functions import (
     search_pokedex_by_id
 )
 from ..pyobj.error_handler import show_warning_with_traceback
+from ..pyobj.encounter_log import log_encounter, update_pokemon_battle_stats
 from ..functions.trainer_functions import xp_share_gain_exp
 from ..functions.badges_functions import check_for_badge, receive_badge
 from ..functions.drawing_utils import tooltipWithColour
@@ -51,6 +52,66 @@ from ..resources import (
     mypokemon_path,
     mainpokemon_path,
 )
+
+# Story-based spawn requirements: defines which Pokemon require other Pokemon to be owned first
+# Format: {pokemon_id: {"requires": [list of required pokemon ids], "description": "requirement description"}}
+SPAWN_REQUIREMENTS = {
+    # Mewtwo requires Mew
+    150: {"requires": [151], "description": "Requires Mew to be owned"},
+    
+    # Ho-Oh and Lugia require all legendary beasts
+    250: {"requires": [243, 244, 245], "description": "Requires Raikou, Entei, and Suicune"},
+    249: {"requires": [243, 244, 245], "description": "Requires Raikou, Entei, and Suicune"},
+    
+    # Regigigas requires all Regis
+    486: {"requires": [377, 378, 379], "description": "Requires Regirock, Regice, and Registeel"},
+    
+    # Rayquaza requires Kyogre and Groudon
+    384: {"requires": [382, 383], "description": "Requires Kyogre and Groudon"},
+    
+    # Giratina requires Dialga and Palkia
+    487: {"requires": [483, 484], "description": "Requires Dialga and Palkia"},
+    
+    # Arceus requires Dialga, Palkia, and Giratina
+    493: {"requires": [483, 484, 487], "description": "Requires Dialga, Palkia, and Giratina"},
+    
+    # Kyurem requires Reshiram and Zekrom (Gen 5)
+    646: {"requires": [643, 644], "description": "Requires Reshiram and Zekrom"},
+    
+    # Necrozma requires Solgaleo and Lunala (Gen 7)
+    800: {"requires": [791, 792], "description": "Requires Solgaleo and Lunala"},
+    
+    # Eternatus requires Zacian and Zamazenta (Gen 8)
+    890: {"requires": [888, 889], "description": "Requires Zacian and Zamazenta"},
+}
+
+
+def check_spawn_requirements(pokemon_id: int, owned_pokemon_ids: list) -> bool:
+    """
+    Check if a Pokemon can spawn based on story requirements.
+    
+    Certain legendary and mythical Pokemon can only spawn if the player
+    has already caught specific other Pokemon (following story logic).
+    
+    Args:
+        pokemon_id (int): The ID of the Pokemon to check
+        owned_pokemon_ids (list): List of Pokemon IDs the player owns
+        
+    Returns:
+        bool: True if the Pokemon can spawn (requirements met or no requirements), False otherwise
+    """
+    if pokemon_id not in SPAWN_REQUIREMENTS:
+        return True  # No requirements for this Pokemon
+    
+    required_pokemon = SPAWN_REQUIREMENTS[pokemon_id]["requires"]
+    
+    # Check if all required Pokemon are owned
+    for required_id in required_pokemon:
+        if required_id not in owned_pokemon_ids:
+            return False  # Missing a required Pokemon
+    
+    return True  # All requirements met
+
 
 def modify_percentages(total_reviews, daily_average, player_level):
     """
@@ -248,14 +309,23 @@ def generate_random_pokemon(main_pokemon_level: int, ankimon_tracker_obj: Ankimo
     if main_pokemon_level == 100:
         wild_pokemon_lvl = 100
 
+    # Get owned Pokemon IDs for spawn requirement checks
+    owned_pokemon_ids = ankimon_tracker_obj.owned_pokemon_ids if hasattr(ankimon_tracker_obj, 'owned_pokemon_ids') else []
+
     # First, we draw a random, valid pokemon id.
     pokemon_id, tier = choose_random_pkmn_from_tier()
     name = search_pokedex_by_id(pokemon_id)
     min_allowed_pokemon_lvl = check_min_generate_level(str(name.lower()))  # Gets the minimum allowed level for that pokemon given its stage of evolution
-    while (not check_id_ok(pokemon_id)) or (wild_pokemon_lvl < min_allowed_pokemon_lvl):  # We keep drawing a random pokemon until we find a valid one
+    
+    # Check spawn requirements (story-based conditions for legendary/mythical Pokemon)
+    spawn_requirements_met = check_spawn_requirements(pokemon_id, owned_pokemon_ids)
+    
+    # We keep drawing a random pokemon until we find a valid one that meets all criteria
+    while (not check_id_ok(pokemon_id)) or (wild_pokemon_lvl < min_allowed_pokemon_lvl) or (not spawn_requirements_met):
         pokemon_id, tier = choose_random_pkmn_from_tier()
         name = search_pokedex_by_id(pokemon_id)
         min_allowed_pokemon_lvl = check_min_generate_level(str(name.lower()))  # Gets the minimum allowed level for that pokemon given its stage of evolution
+        spawn_requirements_met = check_spawn_requirements(pokemon_id, owned_pokemon_ids)
 
     # Now we get all necessary information about the chosen pokemon.
     pokemon_type = search_pokedex(name, "types")
@@ -592,6 +662,24 @@ def kill_pokemon(
     if trainer_card is not None:
         trainer_card.gain_xp(enemy_pokemon.tier, settings_obj.get("controls.allow_to_choose_moves"))
 
+    # Log the encounter as "defeated"
+    try:
+        log_encounter(
+            pokemon_id=enemy_pokemon.id,
+            pokemon_name=enemy_pokemon.name,
+            level=enemy_pokemon.level,
+            tier=enemy_pokemon.tier or "Normal",
+            is_shiny=getattr(enemy_pokemon, "shiny", False),
+            outcome="defeated",
+            main_pokemon_name=main_pokemon.name,
+            main_pokemon_id=getattr(main_pokemon, "individual_id", None),
+        )
+        # Update battle stats for main Pokemon (won)
+        if hasattr(main_pokemon, "individual_id") and main_pokemon.individual_id:
+            update_pokemon_battle_stats(main_pokemon.individual_id, won=True)
+    except Exception as e:
+        print(f"Ankimon: Error logging encounter: {e}")
+
     # Calculate experience based on whether moves are chosen manually
     exp = calc_experience(main_pokemon.base_experience, enemy_pokemon.level)
     if settings_obj.get("controls.allow_to_choose_moves"):
@@ -697,11 +785,30 @@ def catch_pokemon(
         nickname: Union[str, None]=None,
         collected_pokemon_ids: Union[set, None]=None,
         achievements: Union[dict, None]=None,
+        main_pokemon: Union[PokemonObject, None]=None,
         ):
     ankimon_tracker_obj.caught += 1
     if ankimon_tracker_obj.caught > 1:
         if settings_obj.get('gui.pop_up_dialog_message_on_defeat') is True:
             logger.log_and_showinfo("info",translator.translate("already_caught_pokemon")) # Display a message when the Pokémon is caught
+
+    # Log the encounter as "caught"
+    try:
+        log_encounter(
+            pokemon_id=enemy_pokemon.id,
+            pokemon_name=enemy_pokemon.name,
+            level=enemy_pokemon.level,
+            tier=enemy_pokemon.tier or "Normal",
+            is_shiny=getattr(enemy_pokemon, "shiny", False),
+            outcome="caught",
+            main_pokemon_name=main_pokemon.name if main_pokemon else None,
+            main_pokemon_id=getattr(main_pokemon, "individual_id", None) if main_pokemon else None,
+        )
+        # Update battle stats for main Pokemon (won by catching)
+        if main_pokemon and hasattr(main_pokemon, "individual_id") and main_pokemon.individual_id:
+            update_pokemon_battle_stats(main_pokemon.individual_id, won=True)
+    except Exception as e:
+        print(f"Ankimon: Error logging catch: {e}")
 
     # If we arrive here, this means that ankimon_tracker_obj.caught == 1
     if nickname is not None or not nickname:
@@ -749,21 +856,167 @@ def handle_enemy_faint(
         enemy_id = enemy_pokemon.id
         # Check cache instead of file
         if enemy_id not in collected_pokemon_ids or enemy_pokemon.shiny:
-            catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements)
+            catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements, main_pokemon)
         else:
             kill_pokemon(main_pokemon, enemy_pokemon, evo_window, logger , achievements, trainer_card)
         new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
     elif auto_battle_setting == 1:  # Existing auto-catch
-        catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements)
+        catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements, main_pokemon)
         new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
     elif auto_battle_setting == 2:  # Existing auto-defeat
         kill_pokemon(main_pokemon, enemy_pokemon, evo_window, logger , achievements, trainer_card)
         new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
 
     # For Manual mode (auto_battle_setting == 0): no need to show window or do actions automatically
-
+    test_window.display_pokemon_death()
     main_pokemon.reset_bonuses()
     ankimon_tracker_obj.general_card_count_for_battle = 0
+
+def get_next_available_pokemon(current_individual_id: str) -> dict:
+    """
+    Find the next available Pokemon with HP > 0 from the collection.
+    
+    Args:
+        current_individual_id: The individual_id of the current (fainted) Pokemon
+        
+    Returns:
+        dict: The next available Pokemon data, or None if none available
+    """
+    try:
+        with open(mypokemon_path, "r", encoding="utf-8") as f:
+            all_pokemon = json.load(f)
+        
+        # Filter out the current Pokemon and find one with HP
+        for pokemon in all_pokemon:
+            if pokemon.get("individual_id") != current_individual_id:
+                # Check if Pokemon has HP (use max_hp if current_hp not set)
+                current_hp = pokemon.get("current_hp")
+                if current_hp is None:
+                    # Calculate max HP as default
+                    base_hp = pokemon.get("stats", {}).get("hp", 1)
+                    level = pokemon.get("level", 1)
+                    iv_hp = pokemon.get("iv", {}).get("hp", 0)
+                    ev_hp = pokemon.get("ev", {}).get("hp", 0)
+                    current_hp = PokemonObject.calc_stat("hp", base_hp, level, iv_hp, ev_hp, "serious")
+                
+                if current_hp > 0:
+                    return pokemon
+        
+        return None
+    except Exception as e:
+        print(f"Ankimon: Error finding next Pokemon: {e}")
+        return None
+
+
+def auto_switch_pokemon(main_pokemon: PokemonObject, translator: Translator) -> bool:
+    """
+    Automatically switch to the next available Pokemon.
+    
+    Args:
+        main_pokemon: The current main Pokemon object (to update in-place)
+        translator: For displaying messages
+        
+    Returns:
+        bool: True if switch was successful, False otherwise
+    """
+    try:
+        # Find next available Pokemon
+        next_pokemon = get_next_available_pokemon(main_pokemon.individual_id)
+        
+        if not next_pokemon:
+            tooltipWithColour("No available Pokémon to switch to!", "#E12939")
+            return False
+        
+        # Save current fainted Pokemon back to mypokemon
+        try:
+            with open(mypokemon_path, "r", encoding="utf-8") as f:
+                all_pokemon = json.load(f)
+            
+            # Update or add the fainted Pokemon
+            found = False
+            for idx, pkmn in enumerate(all_pokemon):
+                if pkmn.get("individual_id") == main_pokemon.individual_id:
+                    all_pokemon[idx] = main_pokemon.to_dict()
+                    all_pokemon[idx]["current_hp"] = 0  # Mark as fainted
+                    found = True
+                    break
+            
+            if not found:
+                fainted_data = main_pokemon.to_dict()
+                fainted_data["current_hp"] = 0
+                all_pokemon.append(fainted_data)
+            
+            with open(mypokemon_path, "w", encoding="utf-8") as f:
+                json.dump(all_pokemon, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Ankimon: Error saving fainted Pokemon: {e}")
+        
+        # Get base stats from pokedex
+        pokemon_name = search_pokedex_by_id(next_pokemon.get("id"))
+        base_stats = search_pokedex(pokemon_name, "baseStats") or next_pokemon.get("stats", {})
+        
+        # Calculate HP
+        level = next_pokemon.get("level", 1)
+        ivs = next_pokemon.get("iv", {})
+        evs = next_pokemon.get("ev", {})
+        hp_base = base_stats.get("hp", 1)
+        hp_iv = ivs.get("hp", 0)
+        hp_ev = evs.get("hp", 0)
+        max_hp = PokemonObject.calc_stat("hp", hp_base, level, hp_iv, hp_ev, "serious")
+        current_hp = next_pokemon.get("current_hp") or max_hp
+        
+        # Update main_pokemon object in-place
+        main_pokemon.name = pokemon_name or next_pokemon.get("name")
+        main_pokemon.level = level
+        main_pokemon.ability = next_pokemon.get("ability", ["none"])
+        main_pokemon.type = next_pokemon.get("type", ["Normal"])
+        main_pokemon.base_stats = base_stats
+        main_pokemon.ev = evs if isinstance(evs, dict) else {}
+        main_pokemon.iv = ivs if isinstance(ivs, dict) else {}
+        main_pokemon.attacks = next_pokemon.get("attacks", ["Struggle"])
+        main_pokemon.base_experience = next_pokemon.get("base_experience", 0)
+        main_pokemon.growth_rate = next_pokemon.get("growth_rate", "medium")
+        main_pokemon.hp = current_hp
+        main_pokemon.current_hp = current_hp
+        main_pokemon.max_hp = max_hp
+        main_pokemon.gender = next_pokemon.get("gender", "N")
+        main_pokemon.shiny = next_pokemon.get("shiny", False)
+        main_pokemon.individual_id = next_pokemon.get("individual_id")
+        main_pokemon.id = next_pokemon.get("id")
+        main_pokemon.status = next_pokemon.get("status")
+        main_pokemon.xp = next_pokemon.get("xp", 0)
+        main_pokemon.nickname = next_pokemon.get("nickname", "")
+        main_pokemon.pokemon_defeated = next_pokemon.get("pokemon_defeated", 0)
+        main_pokemon.everstone = next_pokemon.get("everstone", False)
+        main_pokemon.captured_date = next_pokemon.get("captured_date")
+        main_pokemon.battles_won = next_pokemon.get("battles_won", 0)
+        main_pokemon.battles_lost = next_pokemon.get("battles_lost", 0)
+        
+        # Save new main Pokemon to file
+        with open(mainpokemon_path, "w", encoding="utf-8") as f:
+            json.dump([main_pokemon.to_dict()], f, indent=2, ensure_ascii=False)
+        
+        # Remove the new main Pokemon from mypokemon
+        try:
+            with open(mypokemon_path, "r", encoding="utf-8") as f:
+                all_pokemon = json.load(f)
+            
+            all_pokemon = [p for p in all_pokemon if p.get("individual_id") != main_pokemon.individual_id]
+            
+            with open(mypokemon_path, "w", encoding="utf-8") as f:
+                json.dump(all_pokemon, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Ankimon: Error updating mypokemon after switch: {e}")
+        
+        display_name = main_pokemon.nickname or main_pokemon.name.capitalize()
+        tooltipWithColour(f"Go, {display_name}!", "#4CAF50")
+        
+        return True
+        
+    except Exception as e:
+        print(f"Ankimon: Error in auto-switch: {e}")
+        return False
+
 
 def handle_main_pokemon_faint(
         main_pokemon: PokemonObject,
@@ -775,12 +1028,52 @@ def handle_main_pokemon_faint(
     """
     Handles what happens when the main Pokémon faints.
     """
+    # Log the encounter as "lost"
+    try:
+        log_encounter(
+            pokemon_id=enemy_pokemon.id,
+            pokemon_name=enemy_pokemon.name,
+            level=enemy_pokemon.level,
+            tier=enemy_pokemon.tier or "Normal",
+            is_shiny=getattr(enemy_pokemon, "shiny", False),
+            outcome="lost",
+            main_pokemon_name=main_pokemon.name,
+            main_pokemon_id=getattr(main_pokemon, "individual_id", None),
+        )
+        # Update battle stats for main Pokemon (lost)
+        if hasattr(main_pokemon, "individual_id") and main_pokemon.individual_id:
+            update_pokemon_battle_stats(main_pokemon.individual_id, won=False)
+    except Exception as e:
+        print(f"Ankimon: Error logging lost battle: {e}")
+
     msg = translator.translate("pokemon_fainted", enemy_pokemon_name=main_pokemon.name.capitalize())
     tooltipWithColour(msg, "#E12939")
     play_effect_sound(settings_obj, "Fainted")
 
-    main_pokemon.hp = main_pokemon.max_hp
-    main_pokemon.current_hp = main_pokemon.max_hp
+    # Check if auto-switch is enabled
+    try:
+        auto_switch_enabled = settings_obj.get("misc.auto_switch_fainted")
+    except Exception:
+        auto_switch_enabled = False
+    
+    if auto_switch_enabled:
+        # Try to auto-switch to next available Pokemon
+        if auto_switch_pokemon(main_pokemon, translator):
+            # Successful switch - update the UI
+            try:
+                test_window.update_pokemon()
+            except Exception:
+                pass
+        else:
+            # No Pokemon available, restore HP as fallback
+            main_pokemon.hp = main_pokemon.max_hp
+            main_pokemon.current_hp = main_pokemon.max_hp
+    else:
+        # Original behavior - restore HP
+        main_pokemon.hp = main_pokemon.max_hp
+        main_pokemon.current_hp = main_pokemon.max_hp
+    
     main_pokemon.reset_bonuses()
 
     new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
+

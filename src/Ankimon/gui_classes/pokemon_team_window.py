@@ -4,13 +4,72 @@ from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPushBut
 from PyQt6.QtGui import QPixmap
 import json
 import os
+from typing import Optional, List, Dict, Any
 from aqt import mw
 from aqt.utils import showInfo, showWarning
 from ..resources import mypokemon_path, frontdefault, team_pokemon_path
 
+
 class PokemonTeamDialog(QDialog):
-    def __init__(self, settings_obj, logger, parent=mw):
-        super().__init__(parent)
+    """
+    Dialog for managing the player's Pokemon team composition.
+    
+    This dialog allows users to select up to 6 Pokemon from their collection
+    to form their active team. It also supports XP Share assignment to
+    distribute experience points to a designated team member.
+    
+    The dialog is protected from being opened during an active review session
+    to prevent team changes that could cause inconsistencies in battle state.
+    
+    Attributes:
+        settings: Settings object for storing team configuration.
+        logger: Logger instance for debug/info messages.
+        my_pokemon (List[Dict]): All Pokemon owned by the player.
+        team_pokemon (List[Optional[Dict]]): Current team (6 slots, None if empty).
+        pokemon_frames (List[Dict]): UI frame data for each team slot.
+        xp_share_combo (QComboBox): Dropdown for XP Share assignment.
+    
+    Example:
+        >>> dialog = PokemonTeamDialog(settings_obj, logger)
+        # Dialog opens, user selects team, clicks OK
+        # Team is saved to team_pokemon_path
+    """
+    
+    def __init__(
+        self,
+        settings_obj: Any,
+        logger: Any,
+        parent: Optional[QDialog] = None
+    ) -> None:
+        """
+        Initialize the Pokemon Team Dialog.
+        
+        Checks if the user is currently in a review session and blocks
+        team changes if so. Otherwise, sets up the full team selection UI.
+        
+        Args:
+            settings_obj: Settings object for reading/writing configuration.
+                Must support get() and set() methods for keys like
+                'trainer.team' and 'trainer.xp_share'.
+            logger: Logger instance for displaying messages.
+                Must support log_and_showinfo(level, message) method.
+            parent (QDialog, optional): Parent widget. Defaults to Anki main window.
+        
+        Side Effects:
+            - If in review: Shows warning and rejects dialog immediately
+            - If not in review: Creates full UI, loads team data, displays dialog
+        
+        Note:
+            The review check prevents team changes during active study sessions
+            which could cause battle state inconsistencies or XP distribution issues.
+        """
+        super().__init__(parent or mw)
+        
+        # Check if in reviewer - don't allow team changes during review
+        if mw.state == "review":
+            showWarning("Cannot change team while reviewing. Please finish or exit the review session first.")
+            self.reject()
+            return
 
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setWindowTitle("Choose Your Pokémon Team (Max 6 Pokémon)")
@@ -21,8 +80,8 @@ class PokemonTeamDialog(QDialog):
         self.setMinimumSize(900, 500)  # Minimum size of 900x500 pixels
 
         # Load the Pokémon team data
-        self.my_pokemon = self.load_my_pokemon()
-        self.team_pokemon = [None] * 6  # Assuming a team can hold 6 Pokémon
+        self.my_pokemon: List[Dict[str, Any]] = self.load_my_pokemon()
+        self.team_pokemon: List[Optional[Dict[str, Any]]] = [None] * 6  # Assuming a team can hold 6 Pokémon
         self.team_pokemon = self.load_pokemon_team()
 
         # Layout

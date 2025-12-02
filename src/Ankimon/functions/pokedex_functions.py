@@ -185,6 +185,47 @@ def get_pokemon_descriptions(species_id, language):
         return "Description not found."
 
 
+def get_pokemon_egg_moves(pk_name: str) -> list:
+    """
+    Get all egg moves that a Pokemon can learn.
+    
+    Args:
+        pk_name (str): The name of the Pokémon.
+        
+    Returns:
+        list: A list of egg move names.
+    """
+    try:
+        # Load the learnset JSON file
+        with open(learnset_path, "r", encoding="utf-8") as file:
+            learnsets = json.load(file)
+        
+        # Normalize the Pokémon name to lowercase for consistency
+        pk_name = special_pokemon_names_for_min_level(pk_name.lower())
+        
+        # Retrieve the learnset for the specified Pokémon
+        pokemon_learnset = learnsets.get(pk_name, {})
+        
+        egg_moves = []
+        
+        # Loop through the learnset dictionary
+        for move, sources in pokemon_learnset.get("learnset", {}).items():
+            for source in sources:
+                # Check if the source ends with 'E' (egg move)
+                # Format is like "9E" (Gen 9 Egg move), "8E", "7E" etc.
+                if len(source) >= 2 and source[-1] == "E" and source[:-1].isdigit():
+                    # This is an egg move
+                    egg_moves.append(move)
+                    break  # Only add once per move
+        
+        return egg_moves
+    except Exception as e:
+        show_warning_with_traceback(
+            parent=mw, exception=e, message=f"Error getting egg moves for {pk_name}"
+        )
+        return []
+
+
 # TODO change all the functions to use language as a parameter
 def get_pokemon_diff_lang_name(pokemon_id: int, language: int):
     with open(pokenames_lang_path, mode="r", encoding="utf-8") as file:

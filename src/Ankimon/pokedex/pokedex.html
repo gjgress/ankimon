@@ -285,6 +285,461 @@
       background: #067cbc;
       color: white;
     }
+
+    /* Modal styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a98a4 0%, #068CF2 100%);
+      border-radius: 15px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark-mode .modal {
+      background: linear-gradient(135deg, #045C9F 0%, #032c43 100%);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-pokemon-sprite {
+      width: 100px;
+      height: 100px;
+      image-rendering: pixelated;
+      margin-right: 20px;
+    }
+
+    .modal-pokemon-info {
+      flex: 1;
+    }
+
+    .modal-pokemon-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: white;
+      margin: 0 0 5px 0;
+    }
+
+    .modal-pokemon-id {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .modal-types {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .type-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+      text-transform: uppercase;
+    }
+
+    .type-Normal { background: #A8A878; }
+    .type-Fire { background: #F08030; }
+    .type-Water { background: #6890F0; }
+    .type-Electric { background: #F8D030; color: #333; }
+    .type-Grass { background: #78C850; }
+    .type-Ice { background: #98D8D8; color: #333; }
+    .type-Fighting { background: #C03028; }
+    .type-Poison { background: #A040A0; }
+    .type-Ground { background: #E0C068; color: #333; }
+    .type-Flying { background: #A890F0; }
+    .type-Psychic { background: #F85888; }
+    .type-Bug { background: #A8B820; }
+    .type-Rock { background: #B8A038; }
+    .type-Ghost { background: #705898; }
+    .type-Dragon { background: #7038F8; }
+    .type-Dark { background: #705848; }
+    .type-Steel { background: #B8B8D0; color: #333; }
+    .type-Fairy { background: #EE99AC; color: #333; }
+
+    .modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .modal-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .modal-tab {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .modal-tab:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .modal-tab.active {
+      background: rgba(255, 255, 255, 0.4);
+      font-weight: bold;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Evolution section */
+    .evolution-section {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .evolution-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    .evolution-chain {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .evolution-pokemon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+
+    .evolution-pokemon:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .evolution-pokemon.current {
+      background: rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .evolution-pokemon img {
+      width: 70px;
+      height: 70px;
+      image-rendering: pixelated;
+    }
+
+    .evolution-pokemon-name {
+      font-size: 12px;
+      color: white;
+      margin-top: 5px;
+    }
+
+    .evolution-arrow {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 24px;
+    }
+
+    .evolution-condition {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      max-width: 80px;
+    }
+
+    /* Moves section */
+    .moves-category {
+      margin-bottom: 20px;
+    }
+
+    .moves-category-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .moves-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .move-item {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .move-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .move-item.expanded {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .move-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .move-name {
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .move-level {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .move-details {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .move-item.expanded .move-details {
+      display: block;
+    }
+
+    .move-stats {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .move-stat {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .move-stat-label {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .move-description {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.4;
+    }
+
+    .no-moves {
+      color: rgba(255, 255, 255, 0.5);
+      font-style: italic;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      color: white;
+      padding: 40px;
+    }
+
+    .loading::after {
+      content: '';
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    /* Regional Progress Styles */
+    .regional-progress-container {
+      display: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .regional-progress-container.visible {
+      display: block;
+    }
+
+    .regional-progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .regional-progress-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #032c43;
+    }
+
+    body.dark-mode .regional-progress-title {
+      color: white;
+    }
+
+    .regional-toggle-btn {
+      background: #05699E;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .regional-toggle-btn:hover {
+      background: #045C9F;
+    }
+
+    body.dark-mode .regional-toggle-btn {
+      background: #04929F;
+    }
+
+    .regional-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
+    .region-item {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    body.dark-mode .region-item {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .region-name {
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #032c43;
+    }
+
+    body.dark-mode .region-name {
+      color: white;
+    }
+
+    .region-bar-container {
+      height: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .region-bar {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+
+    .region-bar.kanto { background: linear-gradient(90deg, #FF6B6B, #EE5253); }
+    .region-bar.johto { background: linear-gradient(90deg, #FFD93D, #F9CA24); }
+    .region-bar.hoenn { background: linear-gradient(90deg, #6BCB77, #10AC84); }
+    .region-bar.sinnoh { background: linear-gradient(90deg, #4D96FF, #0984E3); }
+    .region-bar.unova { background: linear-gradient(90deg, #9B59B6, #8E44AD); }
+    .region-bar.kalos { background: linear-gradient(90deg, #FF9FF3, #F368E0); }
+    .region-bar.alola { background: linear-gradient(90deg, #00D2D3, #01A3A4); }
+    .region-bar.galar { background: linear-gradient(90deg, #FF6348, #EB4D4B); }
+    .region-bar.paldea { background: linear-gradient(90deg, #A29BFE, #6C5CE7); }
+
+    .region-stats {
+      font-size: 10px;
+      color: #555;
+      margin-top: 3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    body.dark-mode .region-stats {
+      color: #ccc;
+    }
+
+    .region-percent {
+      font-weight: bold;
+    }
+
+    .region-complete {
+      color: #27AE60 !important;
+    }
   </style>
 </head>
 <body>
@@ -292,10 +747,21 @@
     <div class="header">
       <span id="obtained-count">Pokémon Obtained: 0</span>
       <div>
+        <button id="regional-btn" class="theme-toggle">📊 Regions</button>
         <button id="gif-toggle" class="theme-toggle">GIF Off</button>
         <button id="theme-toggle" class="theme-toggle">Dark</button>
       </div>
       <span id="seen-count">Pokémon Seen: 0</span>
+    </div>
+
+    <!-- Regional Progress Section -->
+    <div class="regional-progress-container" id="regional-progress">
+      <div class="regional-progress-header">
+        <span class="regional-progress-title">📊 Regional Pokédex Completion</span>
+      </div>
+      <div class="regional-grid" id="regional-grid">
+        <!-- Generated by JavaScript -->
+      </div>
     </div>
 
     <div class="navigation">
@@ -311,6 +777,75 @@
     </div>
   </div>
 
+  <!-- Pokemon Details Modal -->
+  <div class="modal-overlay" id="pokemon-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <img class="modal-pokemon-sprite" id="modal-sprite" src="" alt="">
+        <div class="modal-pokemon-info">
+          <h2 class="modal-pokemon-name" id="modal-name">Loading...</h2>
+          <span class="modal-pokemon-id" id="modal-id">#000</span>
+          <div class="modal-types" id="modal-types"></div>
+        </div>
+        <button class="modal-close" id="modal-close">×</button>
+      </div>
+      <div class="modal-content">
+        <div class="modal-tabs">
+          <button class="modal-tab active" data-tab="evolution">Evolution</button>
+          <button class="modal-tab" data-tab="level-moves">Level Moves</button>
+          <button class="modal-tab" data-tab="tm-moves">TM/HM</button>
+          <button class="modal-tab" data-tab="egg-moves">Egg Moves</button>
+          <button class="modal-tab" data-tab="tutor-moves">Tutor</button>
+        </div>
+
+        <div class="tab-content active" id="tab-evolution">
+          <div class="evolution-section">
+            <div class="evolution-title">Evolution Chain</div>
+            <div class="evolution-chain" id="evolution-chain">
+              <div class="loading">Loading evolution data</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-level-moves">
+          <div class="moves-category">
+            <div class="moves-category-title">Moves Learned by Level</div>
+            <div class="moves-list" id="level-moves-list">
+              <div class="loading">Loading moves</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-tm-moves">
+          <div class="moves-category">
+            <div class="moves-category-title">TM/HM Moves</div>
+            <div class="moves-list" id="tm-moves-list">
+              <div class="loading">Loading moves</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-egg-moves">
+          <div class="moves-category">
+            <div class="moves-category-title">Egg Moves</div>
+            <div class="moves-list" id="egg-moves-list">
+              <div class="loading">Loading moves</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-tutor-moves">
+          <div class="moves-category">
+            <div class="moves-category-title">Move Tutor</div>
+            <div class="moves-list" id="tutor-moves-list">
+              <div class="loading">Loading moves</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.addEventListener("DOMContentLoaded", async function () {
       const totalPokemon = 905;
@@ -323,14 +858,62 @@
       const filterNotCaughtBtn = document.getElementById("filter-not-caught");
       const themeToggleBtn = document.getElementById("theme-toggle");
       const gifToggleBtn = document.getElementById("gif-toggle");
+      const regionalBtn = document.getElementById("regional-btn");
+      const regionalProgress = document.getElementById("regional-progress");
+      const regionalGrid = document.getElementById("regional-grid");
 
+      // Regional Pokedex ranges
+      const REGIONS = [
+        { name: "Kanto", start: 1, end: 151, key: "kanto" },
+        { name: "Johto", start: 152, end: 251, key: "johto" },
+        { name: "Hoenn", start: 252, end: 386, key: "hoenn" },
+        { name: "Sinnoh", start: 387, end: 493, key: "sinnoh" },
+        { name: "Unova", start: 494, end: 649, key: "unova" },
+        { name: "Kalos", start: 650, end: 721, key: "kalos" },
+        { name: "Alola", start: 722, end: 809, key: "alola" },
+        { name: "Galar", start: 810, end: 898, key: "galar" },
+        { name: "Paldea", start: 899, end: 905, key: "paldea" },
+      ];
+
+      // Modal elements
+      const modal = document.getElementById("pokemon-modal");
+      const modalClose = document.getElementById("modal-close");
+      const modalSprite = document.getElementById("modal-sprite");
+      const modalName = document.getElementById("modal-name");
+      const modalId = document.getElementById("modal-id");
+      const modalTypes = document.getElementById("modal-types");
+      const evolutionChain = document.getElementById("evolution-chain");
+      const levelMovesList = document.getElementById("level-moves-list");
+      const tmMovesList = document.getElementById("tm-moves-list");
+      const eggMovesList = document.getElementById("egg-moves-list");
+      const tutorMovesList = document.getElementById("tutor-moves-list");
+
+      // Data loaded from JSON files
       let pokemonNames = {};
-      try {
-        const response = await fetch("./pokemon_names.json");
-        pokemonNames = await response.json();
-      } catch (error) {
-        console.log("Could not load Pokémon names:", error);
+      let pokedexData = {};
+      let movesData = {};
+      let learnsetsData = {};
+
+      // Load all data files
+      async function loadDataFiles() {
+        try {
+          const [namesRes, pokedexRes, movesRes, learnsetsRes] = await Promise.all([
+            fetch("./pokemon_names.json"),
+            fetch("../user_files/data_files/pokedex.json"),
+            fetch("../user_files/data_files/moves.json"),
+            fetch("../user_files/data_files/learnsets.json")
+          ]);
+          pokemonNames = await namesRes.json();
+          pokedexData = await pokedexRes.json();
+          movesData = await movesRes.json();
+          learnsetsData = await learnsetsRes.json();
+          console.log("All data files loaded successfully");
+        } catch (error) {
+          console.log("Error loading data files:", error);
+        }
       }
+
+      await loadDataFiles();
 
       let isDarkMode = false;
       themeToggleBtn.addEventListener("click", () => {
@@ -345,6 +928,331 @@
         gifToggleBtn.textContent = useGif ? "GIF On" : "GIF Off";
         displayPokemon();
       });
+
+      // Tab switching
+      document.querySelectorAll('.modal-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+      });
+
+      // Modal close handlers
+      modalClose.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+
+      // Open Pokemon details modal
+      async function openPokemonModal(pokemonId) {
+        modal.classList.add('active');
+        
+        // Reset to evolution tab
+        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector('.modal-tab[data-tab="evolution"]').classList.add('active');
+        document.getElementById('tab-evolution').classList.add('active');
+
+        const formattedId = pokemonId.toString().padStart(3, '0');
+        const spriteFolder = useGif ? "front_default_gif" : "front_default";
+        modalSprite.src = `../user_files/sprites/${spriteFolder}/${pokemonId}.${useGif ? 'gif' : 'png'}`;
+        modalName.textContent = pokemonNames[formattedId] || `Pokemon #${formattedId}`;
+        modalId.textContent = `#${formattedId}`;
+        modalTypes.innerHTML = '';
+        evolutionChain.innerHTML = '<div class="loading">Loading evolution data</div>';
+        levelMovesList.innerHTML = '<div class="loading">Loading moves</div>';
+        tmMovesList.innerHTML = '<div class="loading">Loading moves</div>';
+        eggMovesList.innerHTML = '<div class="loading">Loading moves</div>';
+        tutorMovesList.innerHTML = '<div class="loading">Loading moves</div>';
+
+        // Find Pokemon in pokedex by ID number
+        const pokemonEntry = findPokemonById(pokemonId);
+        
+        if (!pokemonEntry) {
+          evolutionChain.innerHTML = '<div class="no-moves">Pokemon not found in database</div>';
+          levelMovesList.innerHTML = '<div class="no-moves">Pokemon not found</div>';
+          tmMovesList.innerHTML = '<div class="no-moves">Pokemon not found</div>';
+          eggMovesList.innerHTML = '<div class="no-moves">Pokemon not found</div>';
+          tutorMovesList.innerHTML = '<div class="no-moves">Pokemon not found</div>';
+          return;
+        }
+
+        // Update name and types
+        modalName.textContent = pokemonEntry.name || pokemonNames[formattedId] || `Pokemon #${formattedId}`;
+        
+        if (pokemonEntry.types && pokemonEntry.types.length > 0) {
+          modalTypes.innerHTML = '';
+          pokemonEntry.types.forEach(type => {
+            const badge = document.createElement('span');
+            badge.className = `type-badge type-${type}`;
+            badge.textContent = type;
+            modalTypes.appendChild(badge);
+          });
+        }
+
+        // Build evolution chain
+        renderEvolutionChainFromData(pokemonEntry, pokemonId);
+
+        // Get moves from learnsets
+        const pokemonKey = pokemonEntry.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const learnset = learnsetsData[pokemonKey]?.learnset || {};
+        
+        const levelMoves = [];
+        const tmMoves = [];
+        const eggMoves = [];
+        const tutorMoves = [];
+
+        for (const [moveName, sources] of Object.entries(learnset)) {
+          const moveData = getMoveData(moveName);
+          
+          for (const source of sources) {
+            // Parse source code: "9L15" = Gen 9 Level 15, "9M" = TM, "9E" = Egg, "9T" = Tutor
+            const match = source.match(/^(\d+)([A-Z])(\d*)$/);
+            if (!match) continue;
+            
+            const [, gen, type, levelNum] = match;
+            
+            const moveInfo = {
+              name: moveData?.name || formatMoveName(moveName),
+              type: moveData?.type || 'Normal',
+              category: moveData?.category || 'Status',
+              power: moveData?.basePower || null,
+              accuracy: moveData?.accuracy,
+              pp: moveData?.pp,
+              description: moveData?.shortDesc || moveData?.desc || ''
+            };
+
+            if (type === 'L') {
+              // Level-up move
+              moveInfo.level = parseInt(levelNum) || 0;
+              // Avoid duplicates (use latest gen)
+              const existingIdx = levelMoves.findIndex(m => m.name === moveInfo.name);
+              if (existingIdx === -1) {
+                levelMoves.push(moveInfo);
+              } else if (parseInt(gen) > parseInt(sources[existingIdx]?.charAt(0) || '0')) {
+                levelMoves[existingIdx] = moveInfo;
+              }
+            } else if (type === 'M') {
+              if (!tmMoves.find(m => m.name === moveInfo.name)) {
+                tmMoves.push(moveInfo);
+              }
+            } else if (type === 'E') {
+              if (!eggMoves.find(m => m.name === moveInfo.name)) {
+                eggMoves.push(moveInfo);
+              }
+            } else if (type === 'T') {
+              if (!tutorMoves.find(m => m.name === moveInfo.name)) {
+                tutorMoves.push(moveInfo);
+              }
+            }
+          }
+        }
+
+        // Sort level moves by level
+        levelMoves.sort((a, b) => a.level - b.level);
+        // Sort other moves alphabetically
+        tmMoves.sort((a, b) => a.name.localeCompare(b.name));
+        eggMoves.sort((a, b) => a.name.localeCompare(b.name));
+        tutorMoves.sort((a, b) => a.name.localeCompare(b.name));
+
+        renderMovesList(levelMovesList, levelMoves, true);
+        renderMovesList(tmMovesList, tmMoves, false);
+        renderMovesList(eggMovesList, eggMoves, false);
+        renderMovesList(tutorMovesList, tutorMoves, false);
+      }
+
+      // Helper function to find Pokemon by ID number
+      function findPokemonById(id) {
+        for (const [key, pokemon] of Object.entries(pokedexData)) {
+          if (pokemon.num === id) {
+            return { ...pokemon, key };
+          }
+        }
+        return null;
+      }
+
+      // Helper function to get move data
+      function getMoveData(moveName) {
+        // Convert move name to key format (lowercase, no spaces/special chars)
+        const moveKey = moveName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return movesData[moveKey];
+      }
+
+      // Helper function to format move name for display
+      function formatMoveName(name) {
+        return name.replace(/([a-z])([A-Z])/g, '$1 $2')
+                   .replace(/^./, str => str.toUpperCase())
+                   .replace(/([a-z])(\d)/gi, '$1 $2');
+      }
+
+      // Render evolution chain from pokedex data
+      function renderEvolutionChainFromData(pokemon, currentId) {
+        evolutionChain.innerHTML = '';
+
+        // Find prevo if exists
+        if (pokemon.prevo) {
+          const prevoData = pokedexData[pokemon.prevo.toLowerCase()];
+          const prevoId = prevoData?.num || 0;
+          const prevoDiv = createEvolutionPokemon(prevoId, pokemon.prevo, false);
+          evolutionChain.appendChild(prevoDiv);
+
+          // Arrow with condition
+          const arrowDiv = document.createElement('div');
+          arrowDiv.className = 'evolution-arrow';
+          arrowDiv.innerHTML = '→';
+          
+          let conditionText = '';
+          if (pokemon.evoLevel) conditionText = `Lv. ${pokemon.evoLevel}`;
+          else if (pokemon.evoItem) conditionText = pokemon.evoItem;
+          else if (pokemon.evoCondition) conditionText = pokemon.evoCondition;
+          else if (pokemon.evoMove) conditionText = `Know ${pokemon.evoMove}`;
+          else if (pokemon.evoType) conditionText = pokemon.evoType;
+          
+          if (conditionText) {
+            const condition = document.createElement('div');
+            condition.className = 'evolution-condition';
+            condition.textContent = conditionText;
+            arrowDiv.appendChild(condition);
+          }
+          evolutionChain.appendChild(arrowDiv);
+        }
+
+        // Current Pokemon
+        const currentDiv = createEvolutionPokemon(currentId, pokemon.name, true);
+        evolutionChain.appendChild(currentDiv);
+
+        // Show evolutions if exist
+        if (pokemon.evos && pokemon.evos.length > 0) {
+          pokemon.evos.forEach(evoName => {
+            const evoData = pokedexData[evoName.toLowerCase()];
+            const evoId = evoData?.num || 0;
+            
+            // Arrow with condition
+            const arrowDiv = document.createElement('div');
+            arrowDiv.className = 'evolution-arrow';
+            arrowDiv.innerHTML = '→';
+            
+            let conditionText = '';
+            if (evoData?.evoLevel) conditionText = `Lv. ${evoData.evoLevel}`;
+            else if (evoData?.evoItem) conditionText = evoData.evoItem;
+            else if (evoData?.evoCondition) conditionText = evoData.evoCondition;
+            else if (evoData?.evoMove) conditionText = `Know ${evoData.evoMove}`;
+            else if (evoData?.evoType) conditionText = evoData.evoType;
+            
+            if (conditionText) {
+              const condition = document.createElement('div');
+              condition.className = 'evolution-condition';
+              condition.textContent = conditionText;
+              arrowDiv.appendChild(condition);
+            }
+            evolutionChain.appendChild(arrowDiv);
+
+            const evoDiv = createEvolutionPokemon(evoId, evoName, false);
+            evolutionChain.appendChild(evoDiv);
+          });
+        }
+
+        // If no evolutions and no prevo
+        if (!pokemon.prevo && (!pokemon.evos || pokemon.evos.length === 0)) {
+          const noEvoDiv = document.createElement('div');
+          noEvoDiv.className = 'evolution-condition';
+          noEvoDiv.style.marginLeft = '15px';
+          noEvoDiv.textContent = 'Does not evolve';
+          evolutionChain.appendChild(noEvoDiv);
+        }
+      }
+
+      function createEvolutionPokemon(id, name, isCurrent) {
+        const div = document.createElement('div');
+        div.className = 'evolution-pokemon' + (isCurrent ? ' current' : '');
+        div.dataset.pokemonId = id;
+
+        const spriteFolder = useGif ? "front_default_gif" : "front_default";
+        const img = document.createElement('img');
+        img.src = `../user_files/sprites/${spriteFolder}/${id}.${useGif ? 'gif' : 'png'}`;
+        img.onerror = () => { img.src = '../user_files/sprites/front_default/0.png'; };
+        div.appendChild(img);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'evolution-pokemon-name';
+        nameSpan.textContent = name || `#${id}`;
+        div.appendChild(nameSpan);
+
+        if (!isCurrent) {
+          div.addEventListener('click', () => openPokemonModal(id));
+        }
+
+        return div;
+      }
+
+      function renderMovesList(container, moves, showLevel) {
+        container.innerHTML = '';
+
+        if (!moves || moves.length === 0) {
+          container.innerHTML = '<div class="no-moves">No moves in this category</div>';
+          return;
+        }
+
+        moves.forEach(move => {
+          const moveItem = document.createElement('div');
+          moveItem.className = 'move-item';
+
+          const header = document.createElement('div');
+          header.className = 'move-header';
+
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'move-name';
+          nameSpan.textContent = move.name;
+          header.appendChild(nameSpan);
+
+          if (showLevel && move.level !== undefined) {
+            const levelSpan = document.createElement('span');
+            levelSpan.className = 'move-level';
+            levelSpan.textContent = move.level === 0 ? 'Start' : `Lv. ${move.level}`;
+            header.appendChild(levelSpan);
+          }
+
+          moveItem.appendChild(header);
+
+          // Move details (hidden by default)
+          const details = document.createElement('div');
+          details.className = 'move-details';
+
+          const stats = document.createElement('div');
+          stats.className = 'move-stats';
+          stats.innerHTML = `
+            <span class="move-stat"><span class="move-stat-label">Type:</span> <span class="type-badge type-${move.type}" style="padding: 2px 6px; font-size: 10px;">${move.type}</span></span>
+            <span class="move-stat"><span class="move-stat-label">Category:</span> ${move.category}</span>
+            <span class="move-stat"><span class="move-stat-label">Power:</span> ${move.power || '—'}</span>
+            <span class="move-stat"><span class="move-stat-label">Accuracy:</span> ${move.accuracy === true ? '—' : (move.accuracy || '—')}</span>
+            <span class="move-stat"><span class="move-stat-label">PP:</span> ${move.pp || '—'}</span>
+          `;
+          details.appendChild(stats);
+
+          if (move.description) {
+            const desc = document.createElement('div');
+            desc.className = 'move-description';
+            desc.textContent = move.description;
+            details.appendChild(desc);
+          }
+
+          moveItem.appendChild(details);
+
+          // Toggle details on click
+          moveItem.addEventListener('click', () => {
+            moveItem.classList.toggle('expanded');
+          });
+
+          container.appendChild(moveItem);
+        });
+      }
 
       function getNumbersFromURL() {
         const params = new URLSearchParams(window.location.search);
@@ -373,6 +1281,56 @@
 
       obtainedCount.textContent = `Pokémon Obtained: ${caughtCount}`;
       seenCount.textContent = `Pokémon Seen: ${seenTotal}`;
+
+      // Regional Progress Functions
+      function calculateRegionalProgress() {
+        return REGIONS.map(region => {
+          const regionTotal = region.end - region.start + 1;
+          const caughtInRegion = caughtNumbers.filter(
+            num => num >= region.start && num <= region.end
+          ).length;
+          const percentage = Math.round((caughtInRegion / regionTotal) * 100);
+          return {
+            ...region,
+            caught: caughtInRegion,
+            total: regionTotal,
+            percentage: percentage,
+          };
+        });
+      }
+
+      function renderRegionalProgress() {
+        const progress = calculateRegionalProgress();
+        regionalGrid.innerHTML = '';
+        
+        progress.forEach(region => {
+          const isComplete = region.percentage === 100;
+          const item = document.createElement('div');
+          item.className = 'region-item';
+          item.innerHTML = `
+            <div class="region-name">${region.name}</div>
+            <div class="region-bar-container">
+              <div class="region-bar ${region.key}" style="width: ${region.percentage}%"></div>
+            </div>
+            <div class="region-stats ${isComplete ? 'region-complete' : ''}">
+              <span>${region.caught}/${region.total}</span>
+              <span class="region-percent">${region.percentage}%${isComplete ? ' ✓' : ''}</span>
+            </div>
+          `;
+          regionalGrid.appendChild(item);
+        });
+      }
+
+      // Toggle regional progress visibility
+      let regionalVisible = false;
+      regionalBtn.addEventListener("click", () => {
+        regionalVisible = !regionalVisible;
+        regionalProgress.classList.toggle("visible", regionalVisible);
+        regionalBtn.textContent = regionalVisible ? "📊 Hide Regions" : "📊 Regions";
+        if (regionalVisible) {
+          renderRegionalProgress();
+        }
+      });
 
       let currentPage = 0;
       const itemsPerPage = 25;
@@ -457,6 +1415,8 @@
         for (let i of pageNumbers) {
           const pokemonItem = document.createElement("div");
           pokemonItem.className = "pokemon-item";
+          pokemonItem.style.cursor = "pointer";
+          pokemonItem.dataset.pokemonId = i;
 
           const formattedId = i.toString().padStart(3, '0');
           const spriteFolder = useGif ? "front_default_gif" : "front_default";
@@ -466,7 +1426,7 @@
           if (caughtNumbers.includes(i)) {
             const img = document.createElement("img");
             img.src = spritePath;
-            img.loading = "lazy"; // Enable lazy loading
+            img.loading = "lazy";
             img.onerror = function() {
               console.error(`Failed to load sprite: ${spritePath}`);
               this.src = placeholderPath;
@@ -479,12 +1439,12 @@
             const baseImg = document.createElement("img");
             baseImg.src = placeholderPath;
             baseImg.classList.add("base");
-            baseImg.loading = "lazy"; // Enable lazy loading
+            baseImg.loading = "lazy";
 
             const hoverImg = document.createElement("img");
             hoverImg.src = spritePath;
             hoverImg.classList.add("grayscale-hidden");
-            hoverImg.loading = "lazy"; // Enable lazy loading
+            hoverImg.loading = "lazy";
             hoverImg.onerror = function() {
               console.error(`Failed to load sprite: ${spritePath}`);
               this.src = placeholderPath;
@@ -502,6 +1462,12 @@
             `#${formattedId}`;
 
           pokemonItem.appendChild(idSpan);
+          
+          // Add click handler to open modal
+          pokemonItem.addEventListener("click", () => {
+            openPokemonModal(i);
+          });
+
           pokemonGrid.appendChild(pokemonItem);
         }
 
