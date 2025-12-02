@@ -1,7 +1,7 @@
 import json
 import hashlib
 import requests
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QFrame
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QFrame, QMessageBox
 from PyQt6.QtGui import QPixmap, QFont, QIcon, QColor
 from PyQt6.QtCore import QSize, Qt
 from aqt.utils import showWarning, showInfo
@@ -10,8 +10,147 @@ from ..resources import mainpokemon_path, mypokemon_path, pokeapi_db_path, moves
 from ..functions.sprite_functions import get_sprite_path
 from datetime import datetime
 import uuid
-from ..functions.pokedex_functions import search_pokeapi_db_by_id
+from ..functions.pokedex_functions import search_pokeapi_db_by_id, search_pokedex, get_all_pokemon_moves
 from .error_handler import show_warning_with_traceback
+
+
+# --- Trade Evolution Helper Functions ---
+
+def get_trade_evolution(pokemon_name: str, held_item: str = None) -> dict:
+    """
+    Check if a Pokemon can evolve by trade and return the evolution data.
+    
+    Args:
+        pokemon_name: Name of the Pokemon
+        held_item: The held item (if any) for trade evolutions requiring items
+        
+    Returns:
+        dict with 'evolves_to' (name) and 'requires_item' (item name or None)
+        or None if no trade evolution exists
+    """
+    try:
+        with open(pokedex_path, 'r', encoding='utf-8') as f:
+            pokedex = json.load(f)
+        
+        # Normalize name for lookup
+        pokemon_key = pokemon_name.lower().replace(" ", "").replace("-", "").replace(".", "")
+        
+        # Find Pokemon in pokedex
+        pokemon_data = None
+        for key, data in pokedex.items():
+            if key.lower() == pokemon_key or data.get('name', '').lower() == pokemon_name.lower():
+                pokemon_data = data
+                break
+        
+        if not pokemon_data:
+            return None
+        
+        # Check if this Pokemon has trade evolutions
+        evos = pokemon_data.get('evos', [])
+        if not evos:
+            return None
+        
+        # Check each evolution to see if any is a trade evolution
+        for evo_name in evos:
+            evo_key = evo_name.lower().replace(" ", "").replace("-", "").replace(".", "")
+            evo_data = pokedex.get(evo_key)
+            
+            if not evo_data:
+                # Try to find by name
+                for key, data in pokedex.items():
+                    if data.get('name', '').lower() == evo_name.lower():
+                        evo_data = data
+                        break
+            
+            if evo_data and evo_data.get('evoType') == 'trade':
+                required_item = evo_data.get('evoItem')
+                
+                # If evolution requires an item, check if held_item matches
+                if required_item:
+                    if held_item and held_item.lower() == required_item.lower():
+                        return {
+                            'evolves_to': evo_data.get('name', evo_name),
+                            'evolves_to_id': evo_data.get('num'),
+                            'requires_item': required_item
+                        }
+                else:
+                    # No item required, can evolve
+                    return {
+                        'evolves_to': evo_data.get('name', evo_name),
+                        'evolves_to_id': evo_data.get('num'),
+                        'requires_item': None
+                    }
+        
+        return None
+    except Exception as e:
+        print(f"Error checking trade evolution: {e}")
+        return None
+
+
+def evolve_pokemon_by_trade(pokemon: dict) -> dict:
+    """
+    Evolve a Pokemon through trade if applicable.
+    
+    Args:
+        pokemon: The Pokemon dictionary to evolve
+        
+    Returns:
+        The evolved Pokemon dictionary, or the original if no evolution
+    """
+    import random
+    
+    pokemon_name = pokemon.get('name', '')
+    held_item = pokemon.get('held_item')
+    
+    evolution = get_trade_evolution(pokemon_name, held_item)
+    if not evolution:
+        return pokemon
+    
+    evolved_name = evolution['evolves_to']
+    evolved_id = evolution['evolves_to_id']
+    required_item = evolution['requires_item']
+    
+    # Get evolved Pokemon data from pokedex
+    evolved_types = search_pokedex(evolved_name, "types") or pokemon.get('type', ['Normal'])
+    evolved_stats = search_pokedex(evolved_name, "baseStats") or pokemon.get('stats', {})
+    evolved_abilities = search_pokedex(evolved_name, "abilities")
+    
+    # Pick a random ability from the evolved form
+    evolved_ability = pokemon.get('ability', 'Unknown')
+    if evolved_abilities:
+        numeric_abilities = {k: v for k, v in evolved_abilities.items() if k.isdigit()}
+        if numeric_abilities:
+            evolved_ability = random.choice(list(numeric_abilities.values()))
+    
+    # Get new moves the Pokemon can learn at its current level
+    level = pokemon.get('level', 1)
+    new_possible_moves = get_all_pokemon_moves(evolved_name, level)
+    current_attacks = pokemon.get('attacks', [])
+    
+    # Keep current moves but maybe add one new move if available
+    evolved_attacks = list(current_attacks)
+    if new_possible_moves:
+        for move in new_possible_moves:
+            if move not in evolved_attacks:
+                if len(evolved_attacks) < 4:
+                    evolved_attacks.append(move)
+                break
+    
+    # Create evolved Pokemon
+    evolved_pokemon = pokemon.copy()
+    evolved_pokemon['name'] = evolved_name
+    evolved_pokemon['id'] = evolved_id
+    evolved_pokemon['type'] = evolved_types
+    evolved_pokemon['stats'] = evolved_stats
+    evolved_pokemon['ability'] = evolved_ability
+    evolved_pokemon['attacks'] = evolved_attacks
+    
+    # If evolution required held item, consume it
+    if required_item:
+        evolved_pokemon['held_item'] = None
+    
+    return evolved_pokemon
+
 
 # --- Module-level functions for Monthly Challenges ---
 
@@ -601,6 +740,32 @@ class PokemonTrade:
 
     def replace_pokemon(self, new_pokemon):
         try:
+            # Check if the incoming Pokemon can evolve by trade
+            original_name = new_pokemon.get('name', '')
+            evolution_info = get_trade_evolution(original_name, new_pokemon.get('held_item'))
+            
+            evolved = False
+            if evolution_info:
+                # Ask user if they want to evolve
+                parent = self.parent_window if self.parent_window is not None else mw
+                msg = QMessageBox(parent)
+                msg.setIcon(QMessageBox.Icon.Question)
+                msg.setWindowTitle("Trade Evolution!")
+                
+                if evolution_info.get('requires_item'):
+                    item_name = evolution_info['requires_item']
+                    msg.setText(f"What's this?\n\n{original_name} is holding a {item_name} and is evolving into {evolution_info['evolves_to']}!")
+                else:
+                    msg.setText(f"What's this?\n\n{original_name} is evolving into {evolution_info['evolves_to']}!")
+                
+                msg.setInformativeText("Allow the evolution?")
+                msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                result = msg.exec()
+                
+                if result == QMessageBox.StandardButton.Yes:
+                    new_pokemon = evolve_pokemon_by_trade(new_pokemon)
+                    evolved = True
+            
             with open(self.mypokemon_path, 'r+') as file:
                 pokemon_list = json.load(file)
 
@@ -616,7 +781,11 @@ class PokemonTrade:
                 file.truncate()
                 json.dump(pokemon_list, file, indent=2)
 
-            self.logger.log_and_showinfo("warning",f"Successfully traded for {new_pokemon['name']}!")
+            if evolved:
+                self.logger.log_and_showinfo("info", f"Congratulations! Your {original_name} evolved into {new_pokemon['name']}!")
+            else:
+                self.logger.log_and_showinfo("info", f"Successfully traded for {new_pokemon['name']}!")
+            
             self.refresh_callback()
 
         except (FileNotFoundError, json.JSONDecodeError) as e:

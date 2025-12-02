@@ -2,6 +2,7 @@ from typing import Union
 import uuid
 import json
 import os
+from typing import Optional
 
 from ..poke_engine.objects import Pokemon
 from ..resources import pkmnimgfolder, mainpokemon_path, mypokemon_path
@@ -19,7 +20,7 @@ class PokemonObject:
         ability,
         gender: str,
         growth_rate: str,
-        captured_date: str | None,
+        captured_date: Optional[str],
         tier: str,
         individual_id: str,
 
@@ -41,6 +42,8 @@ class PokemonObject:
         pokemon_defeated=0,
         is_favorite=False,
         held_item: Union[str, None]=None,
+        battles_won=0,
+        battles_lost=0,
         **kwargs
     ):
         # Unique identifier
@@ -95,6 +98,10 @@ class PokemonObject:
 
         self.is_favorite = is_favorite
         self.captured_date = captured_date
+        
+        # Battle statistics tracking
+        self.battles_won = battles_won
+        self.battles_lost = battles_lost
 
     @classmethod
     def calc_stat(
@@ -190,6 +197,9 @@ class PokemonObject:
             # Additional fields from your example
             "current_hp": getattr(self, "current_hp", "hp"),  # For backward compatibility
             "held_item": self.held_item,
+            # Battle statistics
+            "battles_won": getattr(self, "battles_won", 0),
+            "battles_lost": getattr(self, "battles_lost", 0),
         }
 
     @classmethod

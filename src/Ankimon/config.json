@@ -7,6 +7,7 @@
     "controls.pokemon_buttons": true,
     "controls.defeat_key": "5",
     "controls.catch_key": "6",
+    "controls.item_key": "7",
     "controls.key_for_opening_closing_ankimon": "Ctrl+N",
     "controls.allow_to_choose_moves": false,
 
@@ -20,6 +21,7 @@
     "gui.reviewer_text_message_box": true,
     "gui.reviewer_text_message_box_time": 3,
     "gui.show_mainpkmn_in_reviewer": 1,
+    "gui.team_deck_view": true,
     "gui.view_main_front": true,
     "gui.xp_bar_config": true,
     "gui.xp_bar_location": 2,
@@ -38,6 +40,7 @@
     "misc.gen8": false,
     "misc.gen9": false,
     "misc.remove_level_cap": false,
+    "misc.auto_switch_fainted": false,
     "misc.leaderboard": false,
     "misc.language": 9,
     "misc.ssh": true,

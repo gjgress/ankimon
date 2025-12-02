@@ -11,7 +11,6 @@ from aqt.utils import qconnect
 
 
 from .gui_classes.choose_trainer_sprite_graphical import TrainerSpriteGraphicalDialog
-
 from .pyobj.trainer_card_window import TrainerCardGUI
 from .gui_classes.pokemon_team_window import PokemonTeamDialog
 from .gui_classes.check_files import FileCheckerApp
@@ -34,6 +33,10 @@ from .pyobj.achievement_window import AchievementWindow
 from .pyobj.ankimon_tracker_window import AnkimonTrackerWindow
 from .pyobj.backup_manager import BackupManager
 from .gui_classes.backup_manager_dialog import BackupManagerDialog
+from .gui_classes.quick_team_swap_dialog import show_quick_team_swap_dialog
+from .gui_classes.egg_collection import show_egg_collection
+from .gui_classes.encounter_log_window import show_encounter_log_window
+from .pyobj.quick_item_use import QuickItemDialog
 from .gui_entities import (
     License,
     Credits,
@@ -54,6 +57,8 @@ export_menu = mw.pokemenu.addMenu(mw.translator.translate("ankimon_export_button
 help_menu = mw.pokemenu.addMenu(mw.translator.translate("ankimon_help_button_title"))
 if debug is True:
     debug_menu = mw.pokemenu.addMenu(mw.translator.translate("ankimon_debug_button_title"))
+
+from .showdown import main
 
 def create_menu_actions(
     database_complete: bool,
@@ -89,6 +94,8 @@ def create_menu_actions(
     data_handler_obj: DataHandler,
     pokemon_pc: PokemonPC,
     backup_manager: BackupManager,
+    team_overview_window: show_quick_team_swap_dialog,
+    main_pokemon=None,
 ):
     actions = []
 
@@ -99,6 +106,13 @@ def create_menu_actions(
             pokecol_action.setMenuRole(QAction.MenuRole.NoRole)
             collection_menu.addAction(pokecol_action)
             qconnect(pokecol_action.triggered, pokecollection_win.show)
+
+        #Pokemon Team Quick Swap
+        quick_swap_action = QAction(mw.translator.translate("quick_team_swap_button"), mw)
+        quick_swap_action.setMenuRole(QAction.MenuRole.NoRole)
+        collection_menu.addAction(quick_swap_action)
+        quick_swap_action.setShortcut(QKeySequence("Tab+P"))
+        qconnect(quick_swap_action.triggered, team_overview_window)
 
         # Pokémon PC
         pokemon_pc_action = QAction("Pokémon PC", mw)
@@ -161,6 +175,12 @@ def create_menu_actions(
         pokedex_action.setMenuRole(QAction.MenuRole.NoRole)
         qconnect(pokedex_action.triggered, pokedex_window.show)
         collection_menu.addAction(pokedex_action)
+
+        # Egg Collection
+        egg_collection_action = QAction("Egg Collection", mw)
+        egg_collection_action.setMenuRole(QAction.MenuRole.NoRole)
+        qconnect(egg_collection_action.triggered, show_egg_collection)
+        collection_menu.addAction(egg_collection_action)
 
     # Backup Manager
     backup_manager_action = QAction("Backup Manager", mw)
@@ -279,6 +299,18 @@ def create_menu_actions(
     pokemon_team_action.setMenuRole(QAction.MenuRole.NoRole)
     pokemon_team_action.triggered.connect(lambda: PokemonTeamDialog(settings_obj, logger))
     game_menu.addAction(pokemon_team_action)
+
+    # Encounter Log Action
+    encounter_log_action = QAction("📋 Encounter Log", mw)
+    encounter_log_action.setMenuRole(QAction.MenuRole.NoRole)
+    encounter_log_action.triggered.connect(show_encounter_log_window)
+    game_menu.addAction(encounter_log_action)
+
+    # Quick Item Use Action
+    quick_item_action = QAction("💊 Quick Item Use", mw)
+    quick_item_action.setMenuRole(QAction.MenuRole.NoRole)
+    quick_item_action.triggered.connect(lambda: QuickItemDialog(main_pokemon, mw).exec())
+    game_menu.addAction(quick_item_action)
 
     file_check_action = QAction(mw.translator.translate("ankimon_file_checker_button"), mw)
     file_check_action.setMenuRole(QAction.MenuRole.NoRole)

@@ -20,6 +20,7 @@ except ModuleNotFoundError:
 import json
 import random
 import copy
+from typing import Union
 
 import aqt
 from anki.hooks import addHook, wrap
@@ -41,6 +42,7 @@ no_more_news = settings_obj.get("misc.YouShallNotPass_Ankimon_News")
 ssh = settings_obj.get("misc.ssh")
 defeat_shortcut = settings_obj.get("controls.defeat_key") #default: 5; ; Else if not 5 => controll + Key for capture
 catch_shortcut = settings_obj.get("controls.catch_key") #default: 6; Else if not 6 => controll + Key for capture
+item_shortcut = settings_obj.get("controls.item_key") #default: 7; Quick item use shortcut
 reviewer_buttons = settings_obj.get("controls.pokemon_buttons") #default: true; false = no pokemon buttons in reviewer
 
 from .resources import (
@@ -49,6 +51,7 @@ from .resources import (
     mypokemon_path,
     itembag_path,
     sound_list_path,
+    check_current_files
 )
 from .menu_buttons import create_menu_actions
 from .hooks import setupHooks
@@ -81,6 +84,17 @@ from .functions.encounter_functions import (
     handle_enemy_faint,
     handle_main_pokemon_faint
 )
+from .functions.reviewer_handlers import setup_reviewer_handlers
+from .functions.shortcut_functions import (
+    add_catch_pokemon_hook,
+    add_defeat_pokemon_hook,
+    create_catch_pokemon_hook,
+    create_defeat_pokemon_hook,
+    create_catch_shortcut_function,
+    create_defeat_shortcut_function,
+    create_item_shortcut_function,
+    setup_reviewer_shortcuts,
+)
 from .gui_entities import UpdateNotificationWindow, CheckFiles
 from .pyobj.download_sprites import show_agreement_and_download_dialog
 from .pyobj.help_window import HelpWindow
@@ -88,6 +102,7 @@ from .pyobj.backup_files import run_backup
 from .pyobj.backup_manager import BackupManager
 from .pyobj.ankimon_sync import setup_ankimon_sync_hooks, check_and_sync_pokemon_data
 from .pyobj.tip_of_the_day import show_tip_of_the_day
+from .pyobj.quick_item_use import QuickItemDialog
 from .classes.choose_move_dialog import MoveSelectionDialog
 from .poke_engine.ankimon_hooks_to_poke_engine import simulate_battle_with_poke_engine
 from .singletons import (
@@ -120,6 +135,11 @@ from .singletons import (
 )
 
 from .pyobj.pokemon_trade import check_and_award_monthly_pokemon
+from .pyobj.egg_reward_system import (
+    check_egg_reward_on_startup,
+    on_review_completed as egg_reward_on_review,
+    get_egg_reward_status,
+)
 
 from .functions.battle_functions import (
     update_pokemon_battle_status,
@@ -133,6 +153,12 @@ mw.settings_ankimon = settings_window
 mw.logger = logger
 mw.translator = translator
 mw.settings_obj = settings_obj
+
+from .gui_classes.overview_team import *
+from .gui_classes.quick_team_swap_dialog import *
+
+if check_current_files() == False:
+    show_agreement_and_download_dialog(force_download=True)
 
 # Log an startup message
 logger.log_and_showinfo('game', translator.translate("startup"))
@@ -165,8 +191,6 @@ if not _collection_loaded: # If the collection hasn't already been loaded
     collected_pokemon_ids = load_collected_pokemon_ids()
     _collection_loaded = True
 
-
-
 with open(sound_list_path, "r", encoding="utf-8") as json_file:
     sound_list = json.load(json_file)
 
@@ -185,8 +209,6 @@ def on_webview_will_set_content(web_content: WebContent, context) -> None:
         return
     ankimon_package = mw.addonManager.addonFromModule(__name__)
     web_content.js.append(f"/_addons/{ankimon_package}/user_files/web/ankimon_hud_portal.js")
-
-
 
 webview_will_set_content.append(on_webview_will_set_content)
 
@@ -210,27 +232,8 @@ if not database_complete:
 
 sync_dialog = None
 
-#If reviewer showed question; start card_timer for answering card
-def on_show_question(Card):
-    """
-    This function is called when a question is shown.
-    You can access and manipulate the card object here.
-    """
-    ankimon_tracker_obj.start_card_timer()  # This line should have 4 spaces of indentation
-
-def on_show_answer(Card):
-    """
-    This function is called when a question is shown.
-    You can access and manipulate the card object here.
-    """
-    ankimon_tracker_obj.stop_card_timer()  # This line should have 4 spaces of indentation
-
-def on_reviewer_did_show_question(card):
-    reviewer_obj.update_life_bar(mw.reviewer, None, None)
-
-gui_hooks.reviewer_did_show_question.append(on_show_question)
-gui_hooks.reviewer_did_show_answer.append(on_show_answer)
-gui_hooks.reviewer_did_show_question.append(on_reviewer_did_show_question)
+# Set up reviewer show question/answer handlers
+setup_reviewer_handlers(ankimon_tracker_obj, reviewer_obj)
 
 setupHooks(None, ankimon_tracker_obj)
 
@@ -256,7 +259,7 @@ def download_changelog():
         return e
 
 if online_connectivity and ssh:
-    def done(result: Exception | str | None):
+    def done(result: Union[Exception, str, None]):
         if isinstance(result, Exception):
             show_warning_with_traceback(parent=mw, exception=result, message="Error connecting to GitHub:")
             return
@@ -357,6 +360,13 @@ item_receive_value = random.randint(3, 385)
 # Hook into Anki's card review event
 def on_review_card(*args):
     try:
+        # Track daily usage for egg reward system
+        try:
+            egg_reward_on_review(logger=logger)
+        except Exception as e:
+            # Don't let egg reward errors break the main review flow
+            logger.log("warning", f"Egg reward tracking error: {e}")
+        
         multiplier = ankimon_tracker_obj.multiplier
         mainpokemon_type = main_pokemon.type
         mainpokemon_name = main_pokemon.name
@@ -445,7 +455,9 @@ def on_review_card(*args):
             if ankimon_tracker_obj.pokemon_encouter > 0 and main_pokemon.hp > 0 and enemy_pokemon.hp > 0:
 
                 if settings_obj.get("controls.allow_to_choose_moves") == True:
-                    dialog = MoveSelectionDialog(main_pokemon.attacks)
+                    # Pass enemy types for effectiveness preview
+                    enemy_types = getattr(enemy_pokemon, 'type', []) or []
+                    dialog = MoveSelectionDialog(main_pokemon.attacks, enemy_types=enemy_types)
                     if dialog.exec() == QDialog.DialogCode.Accepted:
                         if dialog.selected_move:
                             user_attack = dialog.selected_move
@@ -583,6 +595,7 @@ def on_review_card(*args):
             # if enemy pokemon faints, this handles AUTOMATIC BATTLE
             if enemy_pokemon.hp < 1:
                 enemy_pokemon.hp = 0
+                test_window.display_battle()
                 handle_enemy_faint(
                     main_pokemon,
                     enemy_pokemon,
@@ -673,6 +686,8 @@ create_menu_actions(
     data_handler_obj,
     pokemon_pc,
     backup_manager,
+    show_quick_team_swap_dialog,
+    main_pokemon
 )
 
     #https://goo.gl/uhAxsg
@@ -680,33 +695,16 @@ create_menu_actions(
     #https://archive.org/details/pokemon-dp-sound-library-disc-2_202205
     #https://www.sounds-resource.com/nintendo_switch/pokemonswordshield/
 
-# Define lists to hold hook functions
-catch_pokemon_hooks = []
-defeat_pokemon_hooks = []
+# Create hook functions using the factory functions from shortcut_functions module
+CatchPokemonHook = create_catch_pokemon_hook(
+    enemy_pokemon, ankimon_tracker_obj, logger, collected_pokemon_ids,
+    achievements, main_pokemon, test_window, reviewer_obj
+)
 
-# Function to add hooks to catch_pokemon event
-def add_catch_pokemon_hook(func):
-    catch_pokemon_hooks.append(func)
-
-# Function to add hooks to defeat_pokemon event
-def add_defeat_pokemon_hook(func):
-    defeat_pokemon_hooks.append(func)
-
-# Custom function that triggers the catch_pokemon hook
-def CatchPokemonHook():
-    if enemy_pokemon.hp < 1:
-        catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements)
-        new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
-    for hook in catch_pokemon_hooks:
-        hook()
-
-# Custom function that triggers the defeat_pokemon hook
-def DefeatPokemonHook():
-    if enemy_pokemon.hp < 1:
-        kill_pokemon(main_pokemon, enemy_pokemon, evo_window, logger , achievements, trainer_card)
-        new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
-    for hook in defeat_pokemon_hooks:
-        hook()
+DefeatPokemonHook = create_defeat_pokemon_hook(
+    enemy_pokemon, main_pokemon, evo_window, logger,
+    achievements, trainer_card, test_window, ankimon_tracker_obj, reviewer_obj
+)
 
 def on_profile_did_open():
     """Initialize services after profile is loaded."""
@@ -716,6 +714,13 @@ def on_profile_did_open():
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="Error showing tip of the day:")
 
+    # Check for pending reviews from other devices
+    try:
+        from .pyobj.ankimon_sync import check_pending_reviews_on_startup
+        check_pending_reviews_on_startup()
+    except Exception as e:
+        show_warning_with_traceback(parent=mw, exception=e, message="Error checking pending reviews:")
+
     # Award monthly pokemon if applicable
     try:
         if online_connectivity:
@@ -724,6 +729,14 @@ def on_profile_did_open():
             logger.log("info", "Skipping monthly pokemon check due to no internet connectivity.")
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="Error awarding monthly pokemon:")
+
+    # Check egg reward system on startup
+    try:
+        check_egg_reward_on_startup(logger)
+        status = get_egg_reward_status()
+        logger.log("info", f"Egg reward: {status['consecutive_days']}/{3} days, {status['total_eggs_awarded']} total eggs earned")
+    except Exception as e:
+        show_warning_with_traceback(parent=mw, exception=e, message="Error checking egg reward system:")
 
     # AnkiWeb Sync
     try:
@@ -745,6 +758,14 @@ def on_profile_did_open():
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="Error setting up sync system:")
 
+    # Set up reviewer egg widget hooks
+    try:
+        from .gui_classes.egg_widget_in_reviewer import setup_reviewer_egg_hooks
+        setup_reviewer_egg_hooks()
+        logger.log("info", "Reviewer egg widget hooks set up successfully")
+    except Exception as e:
+        show_warning_with_traceback(parent=mw, exception=e, message="Error setting up reviewer egg widget:")
+
 # Hook to expose the function
 def on_profile_loaded():
     mw.defeatpokemon = DefeatPokemonHook
@@ -758,30 +779,24 @@ addHook("profileLoaded", on_profile_loaded)
 gui_hooks.profile_did_open.append(on_profile_did_open)
 gui_hooks.profile_will_close.append(backup_manager.on_anki_close)
 
-def catch_shortcut_function():
-    if enemy_pokemon.hp < 1:
-        catch_pokemon(enemy_pokemon, ankimon_tracker_obj, logger, "", collected_pokemon_ids, achievements)
-        new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
-    else:
-        tooltip("You only catch a pokemon once it's fainted!")
+# Create shortcut functions using factory functions from shortcut_functions module
+catch_shortcut_function = create_catch_shortcut_function(
+    enemy_pokemon, ankimon_tracker_obj, logger, collected_pokemon_ids,
+    achievements, main_pokemon, test_window, reviewer_obj
+)
 
-def defeat_shortcut_function():
-    if enemy_pokemon.hp < 1:
-        kill_pokemon(main_pokemon, enemy_pokemon, evo_window, logger , achievements, trainer_card)
-        new_pokemon(enemy_pokemon, test_window, ankimon_tracker_obj, reviewer_obj)  # Show a new random Pokémon
-    else:
-        tooltip("Wild pokemon has to be fainted to defeat it!")
+defeat_shortcut_function = create_defeat_shortcut_function(
+    enemy_pokemon, main_pokemon, evo_window, logger,
+    achievements, trainer_card, test_window, ankimon_tracker_obj, reviewer_obj
+)
 
-catch_shortcut = catch_shortcut.lower()
-defeat_shortcut = defeat_shortcut.lower()
-#// adding shortcuts to _shortcutKeys function in anki
-def _shortcutKeys_wrap(self, _old):
-    original = _old(self)
-    original.append((catch_shortcut, lambda: catch_shortcut_function()))
-    original.append((defeat_shortcut, lambda: defeat_shortcut_function()))
-    return original
+item_shortcut_function = create_item_shortcut_function(main_pokemon, mw, QuickItemDialog)
 
-Reviewer._shortcutKeys = wrap(Reviewer._shortcutKeys, _shortcutKeys_wrap, 'around')
+# Set up keyboard shortcuts
+setup_reviewer_shortcuts(
+    catch_shortcut, defeat_shortcut, item_shortcut,
+    catch_shortcut_function, defeat_shortcut_function, item_shortcut_function
+)
 
 if reviewer_buttons is True:
     #// Choosing styling for review other buttons in reviewer bottombar based on chosen style
@@ -842,3 +857,7 @@ if settings_obj.get("misc.discord_rich_presence") == True:
     gui_hooks.reviewer_did_answer_card.append(on_reviewer_initialized)
     gui_hooks.reviewer_will_end.append(mw.ankimon_presence.stop_presence)
     gui_hooks.sync_did_finish.append(mw.ankimon_presence.stop)
+
+# register shortcut (Tab then P) — replace with your preferred key if desired
+#shortcut = QShortcut(QKeySequence("Tab, P"), mw)
+#shortcut.activated.connect(open_quick_swap_with_context)

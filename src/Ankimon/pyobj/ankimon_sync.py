@@ -1052,6 +1052,55 @@ def read_ankimon_configs(settings_obj, media_sync_status: bool = False):
 # Global flag to track if automatic sync is enabled
 _automatic_sync_enabled = False
 
+# Track the last known review ID to detect new reviews from sync
+_last_review_id_before_sync = None
+
+
+def get_reviews_done_elsewhere() -> int:
+    """
+    Detect reviews that were done on another device (synced from elsewhere).
+    
+    This works by comparing revlog entries before and after sync.
+    Reviews with IDs greater than our last known review were done elsewhere.
+    
+    Returns:
+        int: Number of reviews done on another device since last sync.
+    """
+    global _last_review_id_before_sync
+    
+    if not mw or not mw.col:
+        return 0
+    
+    if _last_review_id_before_sync is None:
+        return 0
+    
+    try:
+        # Count reviews with ID greater than our last known review
+        # The revlog id is a timestamp in milliseconds
+        result = mw.col.db.scalar(
+            "SELECT COUNT(*) FROM revlog WHERE id > ?",
+            _last_review_id_before_sync
+        )
+        return result or 0
+    except Exception:
+        return 0
+
+
+def record_last_review_id():
+    """Record the current last review ID before sync starts."""
+    global _last_review_id_before_sync
+    
+    if not mw or not mw.col:
+        return
+    
+    try:
+        # Get the most recent review ID
+        result = mw.col.db.scalar("SELECT MAX(id) FROM revlog")
+        _last_review_id_before_sync = result or 0
+    except Exception:
+        _last_review_id_before_sync = 0
+
+
 def setup_ankimon_sync_hooks(settings_obj, logger):
     """Set up hooks for automatic Ankimon data syncing - but disabled by default."""
     ankiweb_sync = settings_obj.get("misc.ankiweb_sync")
@@ -1063,6 +1112,9 @@ def setup_ankimon_sync_hooks(settings_obj, logger):
 
     def on_sync_will_start():
         """Called before sync starts - only auto-sync if enabled."""
+        # Always record last review ID before sync (to detect reviews from elsewhere)
+        record_last_review_id()
+        
         if not _automatic_sync_enabled:
             logger.log("info", "Anki sync starting - automatic Ankimon sync disabled (awaiting manual sync)")
             return
@@ -1076,6 +1128,20 @@ def setup_ankimon_sync_hooks(settings_obj, logger):
 
     def on_sync_did_finish():
         """Called after sync finishes - only auto-read if enabled."""
+        # Check for reviews done elsewhere and open egg collection if found
+        reviews_elsewhere = get_reviews_done_elsewhere()
+        if reviews_elsewhere > 0:
+            # Open egg collection window - it will detect the reviews and show the apply dialog
+            try:
+                from ..gui_classes.egg_collection import EggCollectionDialog
+                # Store the count so the dialog can access it
+                import builtins
+                builtins._ankimon_reviews_elsewhere = reviews_elsewhere
+                dialog = EggCollectionDialog(mw)
+                dialog.show()
+            except Exception as e:
+                logger.log("error", f"Failed to open egg collection for elsewhere reviews: {str(e)}")
+        
         if not _automatic_sync_enabled:
             logger.log("info", "Anki sync finished - automatic Ankimon sync disabled (awaiting manual sync)")
             return
@@ -1103,3 +1169,18 @@ def enable_automatic_sync():
 def is_automatic_sync_enabled():
     """Check if automatic sync is enabled."""
     return _automatic_sync_enabled
+
+
+def check_pending_reviews_on_startup():
+    """Check for saved pending reviews on Anki startup and notify user."""
+    try:
+        from ..gui_classes.egg_collection import load_pending_reviews
+        pending = load_pending_reviews()
+        if pending > 0:
+            showInfo(
+                f"You have {pending} unclaimed reviews!\n\n"
+                f"Open the Egg Collection to apply them to an egg's hatching progress.",
+                title="Ankimon - Pending Reviews"
+            )
+    except Exception:
+        pass

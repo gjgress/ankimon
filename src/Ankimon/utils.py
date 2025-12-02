@@ -4,6 +4,8 @@ import requests
 import json
 import random
 import csv
+from typing import Optional
+import base64
 
 from aqt import mw
 from aqt.utils import showWarning, showInfo
@@ -380,7 +382,7 @@ def daily_item_list():
     return item_names
 
 # Function to give an item to the player
-def give_item(item_name, item_type: str | None=None):
+def give_item(item_name: str, item_type: Optional[str] = None):
     with open(itembag_path, "r", encoding="utf-8") as json_file:
         itembag_list = json.load(json_file)
         # Check if the item exists and update quantity, otherwise append
@@ -838,7 +840,7 @@ def get_ev_spread(mode: str="random") -> dict[str, int]:
 
     raise ValueError(f"Received unknown value for 'mode': {mode}")
 
-def get_tier_by_id(pokemon_id: int) -> str | None:
+def get_tier_by_id(pokemon_id: int) -> Optional[str]:
     """
     Determines the tier category of a Pokémon based on its ID.
 
@@ -861,7 +863,7 @@ def get_tier_by_id(pokemon_id: int) -> str | None:
 
 def safe_get_random_move(
     pokemon_moves: list[str],
-    logger: ShowInfoLogger | None = None
+    logger: Optional[ShowInfoLogger] = None
 ) -> dict:
     """
     Attempts to retrieve details of a randomly selected move from a list of Pokémon moves.
@@ -962,6 +964,30 @@ def substract_item_from_itembag(item: str, quantity: int=1) -> None:
         with open(str(itembag_path), "w") as f:
             json.dump(items_list, f, indent=2)
         return
+    
+def png_to_base64(path):
+    """Convert a PNG file to a base64 data URI for embedding into HTML.
+
+    Args:
+        path (str): absolute or relative filesystem path to a PNG file. The
+            function is tolerant of missing files and returns an empty string
+            when the file cannot be opened.
+
+    Returns:
+        str: a data URI string beginning with `data:image/png;base64,...`
+             suitable as an `<img src="...">` value, or an empty string if
+             the file does not exist or cannot be read.
+
+    Note:
+        Embedding base64 images increases HTML size but makes the resulting
+        snippet self-contained (no external image files needed). Use this for
+        small sprites; for large images prefer copying files and referencing
+        them by relative path.
+    """
+    if not os.path.exists(path):
+        return ""  # fallback: empty string if file doesn't exist
+    with open(path, "rb") as f:
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode("utf-8")
 
 def close_anki():
     mw.close()

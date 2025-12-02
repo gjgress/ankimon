@@ -1,5 +1,7 @@
 import copy
 import json
+import random
+
 from ..poke_engine import constants
 from ..resources import move_names_file_path
 from ..pyobj.error_handler import show_warning_with_traceback

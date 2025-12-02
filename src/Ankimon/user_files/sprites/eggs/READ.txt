@@ -1,0 +1,19 @@
+DESCRIPTION:
+
+Re-scale of the original compilation made by Appletun's Apples for v19 of Pok�mon Essentials,
+now available for v20 and v20.1. You can copy the content of both folders on the same path
+inside the main Pok�mon essentials project, which is the following:
+
+Graphics -> Pok�mon -> Eggs
+
+To test it, use the debug option while selecting a Pok�mon in your party and use the "Set egg" option.
+
+Check the last changes at: https://reliccastle.com/resources/1260/
+
+CREDITS:
+
+Credit for the eggs main sprites go to the Pok�mon Reborn and Rejuvenation team,
+the original compilation and renaming was made by user Appletun's Apples and the
+icons of the eggs were made by me, LilMicolash
+
+The Phione Egg main sprite and icon are the same as Manaphy, so credit to Game Freak for those ones

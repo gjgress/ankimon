@@ -11,7 +11,6 @@ from aqt import mw
 import re
 
 from ..pyobj.InfoLogger import ShowInfoLogger
-from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.settings import Settings
 from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.InfoLogger import ShowInfoLogger
@@ -330,6 +329,9 @@ class PokemonCollectionDialog(QDialog):
             remove_levelcap=self.remove_levelcap,
             logger=self.logger,
             refresh_callback=self.refresh_collection,
+            close_callback=self.refresh_collection,
+            battles_won=pokemon.get('battles_won', 0),
+            battles_lost=pokemon.get('battles_lost', 0),
         )
 
     def get_gender_symbol(self, gender):
@@ -632,18 +634,36 @@ def MainPokemon(
         reviewer_obj: Reviewer_Manager,
         test_window: TestWindow,
         ):
-    from ..functions.migration import migrate_starter_individual_id
-    migrate_starter_individual_id()
+    # perform any migration step if available, but don't crash if not
+    try:
+        from ..functions.migration import migrate_starter_individual_id
+        migrate_starter_individual_id()
+    except Exception:
+        # migration is best-effort
+        pass
+
     # --- Save the existing mainpokemon to mypokemon before replacing ---
     try:
-        # Load the current mainpokemon
-        with open(mainpokemon_path, "r", encoding="utf-8") as f:
-            current_main_list = json.load(f)
-        if current_main_list:
-            current_main = current_main_list[0]
-            # Load mypokemon
-            with open(mypokemon_path, "r", encoding="utf-8") as f:
-                mypokemondata = json.load(f)
+        current_main = None
+        # Load the current mainpokemon (if present)
+        try:
+            with open(mainpokemon_path, "r", encoding="utf-8") as f:
+                current_main_list = json.load(f)
+                if isinstance(current_main_list, list) and current_main_list:
+                    current_main = current_main_list[0]
+        except (FileNotFoundError, json.JSONDecodeError):
+            current_main = None
+
+        if current_main:
+            # Load mypokemon (create empty list if missing)
+            try:
+                with open(mypokemon_path, "r", encoding="utf-8") as f:
+                    mypokemondata = json.load(f)
+                    if not isinstance(mypokemondata, list):
+                        mypokemondata = []
+            except (FileNotFoundError, json.JSONDecodeError):
+                mypokemondata = []
+
             # Update or append the current mainpokemon in mypokemon
             found = False
             for idx, pkmn in enumerate(mypokemondata):
@@ -653,38 +673,55 @@ def MainPokemon(
                     break
             if not found:
                 mypokemondata.append(current_main)
-            with open(mypokemon_path, "w", encoding="utf-8") as f:
-                json.dump(mypokemondata, f, indent=2)
-    except Exception:
-        pass  # If files don't exist, just continue
 
-    # --- Now proceed to set the new mainpokemon as before ---
+            # write back safely with utf-8 encoding
+            try:
+                with open(mypokemon_path, "w", encoding="utf-8") as f:
+                    json.dump(mypokemondata, f, indent=2, ensure_ascii=False)
+            except Exception:
+                logger.log("error", "Failed to write mypokemon file when saving previous mainpokemon.")
+    except Exception:
+        # Do not let save failures break the flow of selecting a new main pokemon
+        logger.log("warning", "Error while migrating/saving previous mainpokemon.")
+
+    # --- Now proceed to set the new mainpokemon ---
     pokemon_id = pokemon_data.get("id")
     pokemon_name = search_pokedex_by_id(pokemon_id)
-    base_stats = search_pokedex(pokemon_name, "baseStats")
+    base_stats = search_pokedex(pokemon_name, "baseStats") or {}
+
+    # Safe extraction of level / IV / EV / nature values
+    level = int(pokemon_data.get('level', 5) or 5)
+    ivs = pokemon_data.get('iv') or {}
+    evs = pokemon_data.get('ev') or {}
+    nature = pokemon_data.get('nature', 'serious')
+
+    hp_base = base_stats.get('hp', 1)
+    hp_iv = int(ivs.get('hp', 0) or 0)
+    hp_ev = int(evs.get('hp', 0) or 0)
+
     current_hp = PokemonObject.calc_stat(
         "hp",
-        base_stats["hp"],
-        pokemon_data['level'],
-        pokemon_data['iv']['hp'],
-        pokemon_data['ev']['hp'],
-        pokemon_data.get("nature", "serious")
+        hp_base,
+        level,
+        hp_iv,
+        hp_ev,
+        nature,
         )
     # Create NEW PokemonObject instance using class constructor
     new_main_pokemon = PokemonObject(
         name=pokemon_name,
-        level=pokemon_data.get('level', 5),
+        level=level,
         ability=pokemon_data.get('ability', ['none']),
         type=pokemon_data.get('type', ['Normal']),
         base_stats=base_stats,
-        ev=pokemon_data.get('ev', defaultdict(int)),
-        iv=pokemon_data.get('iv', defaultdict(int)),
+        ev=evs if isinstance(evs, dict) else defaultdict(int),
+        iv=ivs if isinstance(ivs, dict) else defaultdict(int),
         attacks=pokemon_data.get('attacks', ['Struggle']),
         base_experience=pokemon_data.get('base_experience', 0),
         growth_rate=pokemon_data.get('growth_rate', 'medium'),
         current_hp=current_hp,
         gender=pokemon_data.get('gender', 'N'),
-        shiny=pokemon_data.get('shiny', False),
+        shiny=bool(pokemon_data.get('shiny', False)),
         individual_id=pokemon_data.get('individual_id', str(uuid.uuid4())),
         id=pokemon_data.get('id', 133),
         status=pokemon_data.get('status', None),
@@ -694,13 +731,13 @@ def MainPokemon(
         # Add common extra fields if constructor supports them
         friendship=pokemon_data.get('friendship', 0),
         pokemon_defeated=pokemon_data.get('pokemon_defeated', 0),
-        everstone=pokemon_data.get('everstone', False),
-        mega=pokemon_data.get('mega', False),
+        everstone=bool(pokemon_data.get('everstone', False)),
+        mega=bool(pokemon_data.get('mega', False)),
         special_form=pokemon_data.get('special_form', None),
         tier=pokemon_data.get('tier', None),
         captured_date=pokemon_data.get('captured_date', None),
-        is_favorite = pokemon_data.get('is_favorite', False),
-        held_item = pokemon_data.get('held_item'),
+        is_favorite=bool(pokemon_data.get('is_favorite', False)),
+        held_item=pokemon_data.get('held_item'),
     )
     # Set any additional fields not in constructor
     extra_fields = [
@@ -711,23 +748,40 @@ def MainPokemon(
             setattr(new_main_pokemon, attr, pokemon_data[attr])
 
     # Update existing reference
-    main_pokemon.__dict__.update(new_main_pokemon.__dict__)
+    try:
+        main_pokemon.__dict__.update(new_main_pokemon.__dict__)
+    except Exception:
+        logger.log("error", "Failed to update in-memory main_pokemon object.")
 
     # Save to JSON using the object's native serialization
     main_pokemon_data = [main_pokemon.to_dict()]
-    with open(mainpokemon_path, "w") as f:
-        json.dump(main_pokemon_data, f, indent=2)
+    try:
+        with open(mainpokemon_path, "w", encoding="utf-8") as f:
+            json.dump(main_pokemon_data, f, indent=2, ensure_ascii=False)
+    except Exception:
+        logger.log("error", "Failed to write mainpokemon file.")
 
     logger.log_and_showinfo(
         "info",
         translator.translate("picked_main_pokemon",main_pokemon_name=main_pokemon.name.capitalize())
         )
 
-    # Update UI components
-    class Container(object): pass
-    reviewer = Container()
-    reviewer.web = mw.reviewer.web
-    reviewer_obj.update_life_bar(reviewer, 0, 0)
+    # Update UI components (best-effort, don't crash if UI objects are missing)
+    try:
+        class Container(object):
+            pass
+        reviewer = Container()
+        reviewer.web = mw.reviewer.web
+        reviewer_obj.update_life_bar(reviewer, 0, 0)
+    except Exception:
+        logger.log("warning", "Could not update reviewer life bar; skipping UI update.")
 
-    if test_window.isVisible():
-        test_window.display_first_encounter()
+    try:
+        if test_window and hasattr(test_window, 'isVisible') and test_window.isVisible():
+            test_window.display_first_encounter()
+    except Exception:
+        # Don't propagate UI display errors
+        logger.log("warning", "Could not trigger first encounter display on test window.")
+
+    # Return the new main pokemon object for callers/tests
+    return main_pokemon
