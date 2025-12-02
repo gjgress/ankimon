@@ -1,6 +1,6 @@
 from ..functions.sprite_functions import get_sprite_path
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPushButton, QScrollArea, QGroupBox, QFrame, QGridLayout, QComboBox, QDialogButtonBox
+from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea, QGroupBox, QFrame, QGridLayout, QComboBox, QDialogButtonBox
 from PyQt6.QtGui import QPixmap
 import json
 import os
@@ -8,6 +8,38 @@ from typing import Optional, List, Dict, Any
 from aqt import mw
 from aqt.utils import showInfo, showWarning
 from ..resources import mypokemon_path, frontdefault, team_pokemon_path
+
+
+# Pokemon type colors (same as overview_team.py)
+TYPE_COLORS = {
+    "fire": "#F08030",
+    "water": "#6890F0",
+    "grass": "#78C850",
+    "electric": "#F8D030",
+    "normal": "#A8A878",
+    "psychic": "#F85888",
+    "rock": "#B8A038",
+    "ground": "#E0C068",
+    "ice": "#98D8D8",
+    "dragon": "#7038F8",
+    "dark": "#705848",
+    "fairy": "#EE99AC",
+    "poison": "#A040A0",
+    "bug": "#A8B820",
+    "fighting": "#C03028",
+    "ghost": "#705898",
+    "steel": "#B8B8D0",
+    "flying": "#A890F0"
+}
+
+
+def get_type_color(types: List[str]) -> str:
+    """Return a single hex color based on Pokemon's primary type."""
+    if not types:
+        return TYPE_COLORS.get("normal", "#A8A878")
+    
+    primary_type = types[0].lower() if types else "normal"
+    return TYPE_COLORS.get(primary_type, TYPE_COLORS.get("normal", "#A8A878"))
 
 
 class PokemonTeamDialog(QDialog):
@@ -72,92 +104,100 @@ class PokemonTeamDialog(QDialog):
             return
 
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.setWindowTitle("Choose Your Pokémon Team (Max 6 Pokémon)")
+        self.setWindowTitle("Choose Pokémon Team")
         self.settings = settings_obj
         self.logger = logger
 
         # Set the minimum size of the dialog
-        self.setMinimumSize(900, 500)  # Minimum size of 900x500 pixels
+        self.setMinimumSize(700, 450)
 
         # Load the Pokémon team data
         self.my_pokemon: List[Dict[str, Any]] = self.load_my_pokemon()
-        self.team_pokemon: List[Optional[Dict[str, Any]]] = [None] * 6  # Assuming a team can hold 6 Pokémon
+        self.team_pokemon: List[Optional[Dict[str, Any]]] = [None] * 6
         self.team_pokemon = self.load_pokemon_team()
 
         # Layout
         layout = QVBoxLayout()
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
 
-        # Label
-        label = QLabel("Choose your Pokémon team (up to 6 Pokémon):")
-        layout.addWidget(label)
+        # Title label
+        title_label = QLabel("Select up to 6 Pokémon for your team:")
+        layout.addWidget(title_label)
 
         # Team selection area (scrollable)
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
 
         team_widget = QGroupBox()
-        team_layout = QGridLayout()  # Change this to QGridLayout for grid arrangement
+        team_layout = QGridLayout()
 
         # Create a frame for each Pokémon in the team
         self.pokemon_frames = []
         for i in range(6):
-            row = i // 3  # Determine the row (0 or 1)
-            col = i % 3  # Determine the column (0, 1, or 2)
+            row = i // 3
+            col = i % 3
 
             frame = QFrame()
             frame.setFrameShape(QFrame.Shape.StyledPanel)
-            frame.setFrameShadow(QFrame.Shadow.Raised)
 
             pokemon_layout = QVBoxLayout()
+            pokemon_layout.setSpacing(5)
+
+            # Add Pokémon sprite preview with dark background
+            sprite_frame = QFrame()
+            sprite_frame.setFixedSize(72, 72)
+            sprite_frame.setStyleSheet("QFrame { background-color: #2A2A2A; border-radius: 6px; }")
+            sprite_frame_layout = QVBoxLayout(sprite_frame)
+            sprite_frame_layout.setContentsMargins(4, 4, 4, 4)
+            
+            sprite_label = QLabel()
+            sprite_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            sprite_label.setMinimumSize(64, 64)
+            sprite_frame_layout.addWidget(sprite_label)
+            
+            pokemon_layout.addWidget(sprite_frame, alignment=Qt.AlignmentFlag.AlignCenter)
 
             # Label for Pokémon name and level
-            pokemon_label = QLabel(f"Pokémon {i+1}: Not Selected")
+            pokemon_label = QLabel(f"Slot {i+1}: Empty")
+            pokemon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             pokemon_layout.addWidget(pokemon_label)
 
-            # Add Pokémon sprite preview
-            sprite_label = QLabel()
-            pokemon_layout.addWidget(sprite_label)
-
-            # "Switch out Pokémon" button
-            switch_button = QPushButton(f"Switch out Pokémon {i+1}")
+            # Buttons
+            button_layout = QHBoxLayout()
+            
+            switch_button = QPushButton("Switch")
             switch_button.clicked.connect(lambda _, i=i: self.switch_out_pokemon(i))
-            pokemon_layout.addWidget(switch_button)
+            button_layout.addWidget(switch_button)
 
-            # "Remove Pokémon" button
-            remove_button = QPushButton(f"Remove Pokémon {i+1}")
+            remove_button = QPushButton("Remove")
             remove_button.clicked.connect(lambda _, i=i: self.remove_pokemon(i))
-            pokemon_layout.addWidget(remove_button)
+            button_layout.addWidget(remove_button)
+
+            pokemon_layout.addLayout(button_layout)
 
             frame.setLayout(pokemon_layout)
-            team_layout.addWidget(frame, row, col)  # Add frame to grid layout at specific row and column
-            self.pokemon_frames.append({'frame': frame, 'label': pokemon_label, 'sprite': sprite_label, 'switch_button': switch_button, 'remove_button': remove_button})
+            team_layout.addWidget(frame, row, col)
+            self.pokemon_frames.append({'frame': frame, 'label': pokemon_label, 'sprite': sprite_label, 'sprite_frame': sprite_frame, 'switch_button': switch_button, 'remove_button': remove_button})
 
         team_widget.setLayout(team_layout)
         scroll_area.setWidget(team_widget)
         layout.addWidget(scroll_area)
 
-        # XP Share dropdown
+        # XP Share section
+        xp_share_layout = QHBoxLayout()
+        xp_share_label = QLabel("XP Share:")
+        xp_share_layout.addWidget(xp_share_label)
+        
         self.xp_share_combo = QComboBox()
-        self.xp_share_combo.addItem("No XP Share")
-        for pokemon in self.my_pokemon:
-            self.xp_share_combo.addItem(f"{pokemon['name']} (Level {pokemon['level']})", pokemon['individual_id'])
-
-            # Set a preview image as item data
-            sprite_path = get_sprite_path("front", "png", pokemon['id'], pokemon["shiny"], pokemon["gender"])
-            pixmap = QPixmap(sprite_path)
-            self.xp_share_combo.setItemData(self.xp_share_combo.count() - 1, pixmap, Qt.ItemDataRole.DecorationRole)
-
-        # Set the initial XP Share Pokémon (based on settings)
-        xp_share_pokemon_individual_id = self.settings.get("trainer.xp_share")
-        if xp_share_pokemon_individual_id:
-            xp_share_index = next((i for i, p in enumerate(self.my_pokemon) if p['individual_id'] == xp_share_pokemon_individual_id), 0) + 1
-            self.xp_share_combo.setCurrentIndex(xp_share_index)
-
-        layout.addWidget(QLabel("Choose Pokémon with XP Share:"))
-        layout.addWidget(self.xp_share_combo)
+        self.xp_share_combo.setMinimumWidth(200)
+        xp_share_layout.addWidget(self.xp_share_combo)
+        xp_share_layout.addStretch()
+        
+        layout.addLayout(xp_share_layout)
 
         # OK Button
-        ok_button = QPushButton("OK")
+        ok_button = QPushButton("Save Team")
         ok_button.clicked.connect(self.on_ok)
         layout.addWidget(ok_button)
 
@@ -207,84 +247,139 @@ class PokemonTeamDialog(QDialog):
             # Check if a Pokémon is selected for this slot (i.e., it's not None)
             if self.team_pokemon[i] is not None:
                 pokemon = self.team_pokemon[i]
-                pokemon_name = pokemon['name']
+                pokemon_name = pokemon['name'].capitalize()
                 pokemon_level = pokemon['level']
                 sprite_path = os.path.join(frontdefault, f"{pokemon['id']}.png")
 
                 # Update label with name and level
-                frame_data['label'].setText(f"{pokemon_name} (Level {pokemon_level})")
+                frame_data['label'].setText(f"{pokemon_name}\nLv. {pokemon_level}")
+                frame_data['label'].setStyleSheet("color: #E8E8E8; font-size: 11px; font-weight: bold;")
+
+                # Apply type-based background color to sprite frame
+                types = pokemon.get('type', [])
+                type_color = get_type_color(types)
+                frame_data['sprite_frame'].setStyleSheet(f"QFrame {{ background-color: {type_color}; border-radius: 6px; }}")
+                frame_data['frame'].setStyleSheet("QFrame { background-color: transparent; }")
 
                 # Display the sprite image
                 if os.path.exists(sprite_path):
                     pixmap = QPixmap(sprite_path)
-                    frame_data['sprite'].setPixmap(pixmap.scaled(50, 50))  # Resize sprite for preview
-                    frame_data['sprite'].setAlignment(Qt.AlignmentFlag.AlignCenter)
+                    frame_data['sprite'].setPixmap(pixmap.scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
                 else:
                     frame_data['sprite'].clear()
             else:
-                frame_data['label'].setText("Pokémon Not Selected")
-                frame_data['sprite'].clear()  # Clear the sprite if not selected
+                frame_data['label'].setText(f"Slot {i+1}: Empty")
+                frame_data['label'].setStyleSheet("color: #888888; font-size: 11px;")
+                frame_data['sprite_frame'].setStyleSheet("QFrame { background-color: #2A2A2A; border-radius: 6px; }")
+                frame_data['frame'].setStyleSheet("QFrame { background-color: transparent; }")
+                frame_data['sprite'].clear()
+        
+        # Update the XP Share dropdown to only show team members
+        self.update_xp_share_combo()
+
+    def update_xp_share_combo(self):
+        """Update the XP Share dropdown to only show Pokémon currently in the team."""
+        current_xp_share_id = self.xp_share_combo.currentData()
+        
+        self.xp_share_combo.clear()
+        self.xp_share_combo.addItem("No XP Share", None)
+        
+        for pokemon in self.team_pokemon:
+            if pokemon is not None:
+                pokemon_name = pokemon['name'].capitalize()
+                self.xp_share_combo.addItem(f"{pokemon_name} (Lv. {pokemon['level']})", pokemon['individual_id'])
+                
+                sprite_path = get_sprite_path("front", "png", pokemon['id'], pokemon.get("shiny", False), pokemon.get("gender", "male"))
+                pixmap = QPixmap(sprite_path)
+                self.xp_share_combo.setItemData(self.xp_share_combo.count() - 1, pixmap, Qt.ItemDataRole.DecorationRole)
+        
+        # Restore previous selection if still valid
+        if current_xp_share_id:
+            for i in range(self.xp_share_combo.count()):
+                if self.xp_share_combo.itemData(i) == current_xp_share_id:
+                    self.xp_share_combo.setCurrentIndex(i)
+                    return
+        
+        # Try to restore from settings
+        xp_share_pokemon_individual_id = self.settings.get("trainer.xp_share")
+        if xp_share_pokemon_individual_id:
+            for i in range(self.xp_share_combo.count()):
+                if self.xp_share_combo.itemData(i) == xp_share_pokemon_individual_id:
+                    self.xp_share_combo.setCurrentIndex(i)
+                    return
 
     def switch_out_pokemon(self, slot):
         """Allow the player to switch out a Pokémon for the selected slot"""
-
-        # Create a dialog to choose a new Pokémon for the slot
         dialog = QDialog(self)
-        dialog.setWindowTitle("Select Pokémon to Switch In")
-        dialog.setMinimumSize(300, 200)
+        dialog.setWindowTitle(f"Select Pokémon for Slot {slot + 1}")
+        dialog.setMinimumSize(280, 280)
+        dialog.setStyleSheet("QDialog { background-color: #2D2D30; } QLabel { color: #E8E8E8; }")
 
         layout = QVBoxLayout()
 
-        label = QLabel("Choose a Pokémon to switch in:")
+        label = QLabel("Choose a Pokémon:")
         layout.addWidget(label)
 
-        # Create a dropdown to select a new Pokémon
         combo_box = QComboBox()
+        combo_box.setStyleSheet("QComboBox { background-color: #3C3C3C; color: #E8E8E8; padding: 4px; }")
 
-        # Add only those Pokémon to the combo box that are not already in the team (checked by individual_id)
+        # Add only Pokémon not already in the team
         used_pokemon_ids = []
         for i, pokemon in enumerate(self.team_pokemon):
             if pokemon is not None and i != slot:
                 used_pokemon_ids.append(pokemon['individual_id'])
-        # Check if there are Pokémon left to choose from (those whose individual_id is not in used_pokemon_ids)
-        available_pokemon = [pokemon for pokemon in self.my_pokemon if pokemon and pokemon['individual_id'] not in used_pokemon_ids]
+        
+        available_pokemon = [p for p in self.my_pokemon if p and p['individual_id'] not in used_pokemon_ids]
 
         if available_pokemon:
             for pokemon in available_pokemon:
-                combo_box.addItem(f"{pokemon['name']} (Level {pokemon['level']})", pokemon)
-
-                # Set a preview image as item data
-                sprite_path = get_sprite_path("front", "png", pokemon['id'], pokemon["shiny"], pokemon["gender"])
+                combo_box.addItem(f"{pokemon['name'].capitalize()} (Lv. {pokemon['level']})", pokemon)
+                sprite_path = get_sprite_path("front", "png", pokemon['id'], pokemon.get("shiny", False), pokemon.get("gender", "male"))
                 pixmap = QPixmap(sprite_path)
                 combo_box.setItemData(combo_box.count() - 1, pixmap, Qt.ItemDataRole.DecorationRole)
         else:
-            combo_box.addItem("No available Pokémon", None)  # Display a message if no Pokémon are available
+            combo_box.addItem("No available Pokémon", None)
 
         layout.addWidget(combo_box)
 
-        # Label for the image preview
+        # Preview with type-based background
         preview_label = QLabel("Preview:")
         layout.addWidget(preview_label)
+        
+        preview_frame = QFrame()
+        preview_frame.setMinimumSize(100, 100)
+        preview_frame.setStyleSheet("QFrame { background-color: #3C3C3C; border-radius: 8px; }")
+        preview_layout = QVBoxLayout(preview_frame)
+        preview_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
         image_label = QLabel()
-        layout.addWidget(image_label)
+        image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        image_label.setMinimumSize(96, 96)
+        preview_layout.addWidget(image_label)
+        
+        layout.addWidget(preview_frame)
 
-        # Function to update the image preview when a new item is selected
         def update_preview(index):
             pokemon = combo_box.itemData(index)
             if pokemon:
-                sprite_path = get_sprite_path("front", "png", pokemon['id'], pokemon["shiny"], pokemon["gender"])
+                sprite_path = get_sprite_path("front", "png", pokemon['id'], pokemon.get("shiny", False), pokemon.get("gender", "male"))
                 pixmap = QPixmap(sprite_path)
-                image_label.setPixmap(pixmap.scaled(100, 100, Qt.AspectRatioMode.KeepAspectRatio))
-                image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                image_label.setPixmap(pixmap.scaled(96, 96, Qt.AspectRatioMode.KeepAspectRatio))
+                
+                # Apply type-based background color
+                types = pokemon.get('type', [])
+                type_color = get_type_color(types)
+                preview_frame.setStyleSheet(f"QFrame {{ background-color: {type_color}; border-radius: 8px; }}")
 
-        # Connect the selection change to the preview update
         combo_box.currentIndexChanged.connect(lambda: update_preview(combo_box.currentIndex()))
+        
+        if combo_box.count() > 0:
+            update_preview(0)
 
-        # Button to confirm the selection
         button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        button_box.setStyleSheet("QPushButton { background-color: #3C3C3C; color: #E8E8E8; padding: 6px 12px; border-radius: 4px; } QPushButton:hover { background-color: #505050; }")
         button_box.accepted.connect(lambda: self.confirm_switch(combo_box.currentIndex(), slot, dialog))
         button_box.rejected.connect(dialog.reject)
-
         layout.addWidget(button_box)
 
         dialog.setLayout(layout)
@@ -292,13 +387,10 @@ class PokemonTeamDialog(QDialog):
 
     def confirm_switch(self, selected_index, slot, dialog):
         """Confirm the Pokémon switch and update the team"""
-        # Get the selected Pokémon from combo_box.itemData()
         selected_pokemon = dialog.findChild(QComboBox).itemData(selected_index)
 
         if selected_pokemon:
-            self.team_pokemon[slot] = selected_pokemon  # Replace the Pokémon in the team slot
-
-            # Update the team display
+            self.team_pokemon[slot] = selected_pokemon
             self.update_team_display()
 
         dialog.accept()
