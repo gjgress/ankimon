@@ -2,6 +2,7 @@ from typing import Union
 import uuid
 import json
 import os
+from typing import Optional
 
 from ..functions.sprite_functions import get_sprite_path
 
@@ -21,7 +22,7 @@ class PokemonObject:
         ability,
         gender: str,
         growth_rate: str,
-        captured_date: str | None,
+        captured_date: Optional[str],
         tier: str,
         individual_id: str,
 
