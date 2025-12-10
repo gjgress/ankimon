@@ -391,7 +391,7 @@ class PokemonTrade:
 
         their_version = their_part_entered[-2:]
         if their_version != self.TRADE_VERSION:
-            showWarning(f"Trade incompatible due to Ankimon trade versions. \n\nYour verison: {self.TRADE_VERSION}, partner's version: {their_version}.\n\nPlease get the latest version of Ankimon for both users!")
+            showWarning(f"Trade incompatible due to Ankimon trade versions. \n\nYour version: {self.TRADE_VERSION}, partner's version: {their_version}.\n\nPlease get the latest version of Ankimon for both users!")
             return
 
         if their_part_entered == self._their_password_part:
