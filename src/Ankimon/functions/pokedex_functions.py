@@ -252,17 +252,14 @@ def get_all_pokemon_moves(pk_name, level):
     with open(learnset_path, "r", encoding="utf-8") as file:
         learnsets = json.load(file)
 
-    # Normalize the Pokémon name to lowercase for consistency
-    pk_name = pk_name.lower()
-
     # Retrieve the learnset for the specified Pokémon
-    pokemon_learnset = learnsets[pk_name]
+    pokemon_learnset = learnsets.get(pk_name.lower(), {})
 
     # Create a dictionary to store moves and their corresponding highest levels
     moves_at_level_and_lower = {}
 
     # Loop through the learnset dictionary
-    for move, levels in pokemon_learnset["learnset"].items():
+    for move, levels in pokemon_learnset.get("learnset", {}).items():
         highest_level = float("-inf")  # Initialize with negative infinity
         eligible_moves = []  # Store moves eligible for inclusion
 
