@@ -49,10 +49,3 @@ class LegendaryCatching:
             if self.can_catch(caught_pokemon, pokemon):
                 catchable.add(pokemon)
         return catchable
-
-
-# Example usage
-caught = {151, 243, 244, 245}  # Already caught Mew, Raikou, Entei, Suicune
-catching = LegendaryCatching()
-
-print("Catchable Pokémon:", catching.get_catchable_pokemon(caught))

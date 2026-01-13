@@ -563,9 +563,9 @@ def check_key_in_table(column_name, value, file_path):
                     break  # Exit the loop once the matching row is found
 
     except FileNotFoundError:
-        print(f"Error: The file {file_path} does not exist.")
+        mw.logger.log("error", f"Error: The file {file_path} does not exist.")
     except Exception as e:
-        print(f"Error: {e}")
+        mw.logger.log("error", f"Error: {e}")
 
     # Return the matching row or None if no match is found
     return matching_row

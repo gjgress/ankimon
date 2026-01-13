@@ -591,7 +591,7 @@ def PokemonTradeIn(number_code, old_pokemon_name, position):
                 "growth_rate": growth_rate,
         }
         trade_pokemon(f"{old_pokemon_name}", pokemon_trade, position)
-        logger.log_and_showinfo("info",f"You have sucessfully traded your {old_pokemon_name} for {name} ")
+        mw.logger.log_and_showinfo("info",f"You have sucessfully traded your {old_pokemon_name} for {name} ")
     else:
         showWarning("Please enter a valid Code !")
 
@@ -602,10 +602,10 @@ def trade_pokemon(old_pokemon_name, pokemon_trade, position):
         with open(mypokemon_path, "r", encoding="utf-8") as file:
             pokemon_list = json.load(file)
     except FileNotFoundError:
-        print("The Pokemon file was not found. Please check the file path.")
+        mw.logger.log_and_showinfo("error", "The Pokemon file was not found. Please check the file path.")
         return
     except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
+        mw.logger.log_and_showinfo("error", f"Error decoding JSON: {e}")
         return
 
     # Find and replace the specific Pokemon's information

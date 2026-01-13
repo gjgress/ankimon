@@ -3,6 +3,7 @@ import json
 from ..poke_engine import constants
 from ..resources import move_names_file_path
 from ..pyobj.error_handler import show_warning_with_traceback
+from aqt import mw
 
 with open(move_names_file_path, "r", encoding="utf-8") as f:
     MOVE_NAME_LOOKUP = json.load(f)
@@ -117,7 +118,7 @@ def update_pokemon_battle_status(battle_info: dict, enemy_pokemon, main_pokemon)
             from ..pyobj.error_handler import show_warning_with_traceback
             show_warning_with_traceback(e, "Failed to update pokemon battle status")
         except ImportError:
-            print(f"ERROR in update_pokemon_battle_status: {e}")
+            mw.logger.log("error", f"ERROR in update_pokemon_battle_status: {e}")
         return False, False
 
 
@@ -154,7 +155,7 @@ def _process_battle_effects(
                 if result and result.strip():
                     return result
         except (KeyError, AttributeError, Exception) as e:
-            print(f"Translation error for key '{key}': {e}")
+            mw.logger.log("error", f"Translation error for key '{key}': {e}")
 
         if 'pokemon_name' in kwargs and 'status_name' in kwargs:
             if 'apply' in key or 'still' in key:
@@ -486,7 +487,7 @@ def _process_battle_effects(
                         effect_messages.append(message)
 
         except Exception as e:
-            print(f"Error processing state change {change}: {e}")
+            mw.logger.log("error", f"Error processing state change {change}: {e}")
             effect_messages.append(f"Battle effect occurred (processing error)")
             continue
 

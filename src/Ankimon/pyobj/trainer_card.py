@@ -76,10 +76,10 @@ class TrainerCard:
             highest_pokemon = max(pokemon_data, key=lambda p: p.get("level", 0))
             return f"{highest_pokemon.get('name', 'None')} (Level {highest_pokemon.get('level', 0)})"
         except FileNotFoundError:
-            showInfo(f"File not found: {mypokemon_path}")
+            self.logger.log_and_showinfo("error", f"File not found: {mypokemon_path}")
             return "None"
         except json.JSONDecodeError:
-            showInfo(f"Error decoding JSON from file: {mypokemon_path}")
+            self.logger.log_and_showinfo("error", f"Error decoding JSON from file: {mypokemon_path}")
             return "None"
 
     def highest_pokemon_level(self):
@@ -96,10 +96,10 @@ class TrainerCard:
             highest_pokemon = max(pokemon_data, key=lambda p: p.get("level", 0))
             return int(highest_pokemon.get('level', 0))
         except FileNotFoundError:
-            showInfo(f"File not found: {mypokemon_path}")
+            self.logger.log_and_showinfo("error", f"File not found: {mypokemon_path}")
             return int(0)
         except json.JSONDecodeError:
-            showInfo(f"Error decoding JSON from file: {mypokemon_path}")
+            self.logger.log_and_showinfo("error", f"Error decoding JSON from file: {mypokemon_path}")
             return int(0)
 
     def add_achievement(self, achievement):
@@ -140,7 +140,7 @@ class TrainerCard:
         if allow_to_choose_move is True:
             xp_gained = xp_gained * 0.5
         self.xp += xp_gained
-        print(f"Gained {xp_gained} XP from defeating a {tier} Pokémon!")
+        self.logger.log("info", f"Gained {xp_gained} XP from defeating a {tier} Pokémon!")
         self.check_level_up()
 
     def check_level_up(self):

@@ -9,6 +9,7 @@ from .objects import Pokemon, State, StateMutator, Side
 from .helpers import normalize_name
 from .find_state_instructions import get_all_state_instructions
 from ..pyobj.error_handler import show_warning_with_traceback
+from aqt import mw
 
 def reset_stat_boosts(pokemon: Pokemon) -> Pokemon:
     """
@@ -302,7 +303,7 @@ def simulate_battle_with_poke_engine(
             'state': new_state
             }
 
-        print(f"{unlucky_life * 100}% chance: {battle_effects}")
+        mw.logger.log("info", f"{unlucky_life * 100}% chance: {battle_effects}")
         return battle_info, new_state, dmg_from_enemy_move, dmg_from_user_move, mutator_full_reset, battle_info_changes
 
     except Exception as e:
@@ -443,5 +444,5 @@ def print_state_changes(changes):
         key = change['key']
         before = change['before']
         after = change['after']
-        print(f"{key}: {before} -> {after}")
+        mw.logger.log("info", f"{key}: {before} -> {after}")
 

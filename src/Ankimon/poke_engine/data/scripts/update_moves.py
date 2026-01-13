@@ -3,6 +3,9 @@ import requests
 import json
 import copy
 import subprocess
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 """
@@ -39,7 +42,7 @@ stderr = p.stderr.read()
 
 # exit if stderr is not empty
 if stderr:
-    print("Something went wrong? stderr: {}".format(stderr))
+    logging.error("Something went wrong? stderr: {}".format(stderr))
 
 # add a console log to the .js file. This will error if the file doesn't exist
 with open("/tmp/moves.js", "a") as f:

@@ -6,6 +6,7 @@ from ..resources import mypokemon_path
 from .pokemon_functions import find_experience_for_level
 from .pokedex_functions import check_evolution_for_pokemon, return_name_for_id
 from aqt.utils import showInfo, showWarning
+from aqt import mw
 
 def find_trainer_rank(highest_level, trainer_level):
     """
@@ -59,7 +60,7 @@ def find_trainer_rank(highest_level, trainer_level):
         return rank
 
     except FileNotFoundError:
-        print("Error: One of the files (Pokedex or MyPokemon) could not be found.")
+        mw.logger.log("error", "Error: One of the files (Pokedex or MyPokemon) could not be found.")
         return "Unknown Rank"
 
 def xp_share_gain_exp(logger, settings_obj, evo_window, main_pokemon_id, exp, xp_share_individual_id):

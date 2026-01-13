@@ -53,7 +53,7 @@ from .resources import addon_dir, itembag_path
 logger = ShowInfoLogger()
 
 # Create the Settings object
-settings_obj = Settings()
+settings_obj = Settings(logger)
 
 # Pass the correct attributes to SettingsWindow
 settings_window = SettingsWindow(
@@ -151,7 +151,7 @@ test_window = TestWindow(
 
 achievement_bag = AchievementWindow()
 
-data_handler_obj = DataHandler()
+data_handler_obj = DataHandler(logger)
 data_handler_window = DataHandlerWindow(data_handler = data_handler_obj)
 
 # Initialize the Pokémon Shop Manager

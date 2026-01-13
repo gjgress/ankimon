@@ -67,7 +67,8 @@ DEFAULT_CONFIG = {
 }
 
 class Settings:
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.config = self.load_config()
         self.compute_gui_config()
 
@@ -94,7 +95,7 @@ class Settings:
                         with open(items_path, 'w', encoding='utf-8') as f:
                             json.dump(config["items"], f, indent=4)
                     except Exception as e:
-                        print(f"Ankimon: Error migrating 'items' data during load_config: {e}")
+                        self.logger.log("error", f"Ankimon: Error migrating 'items' data during load_config: {e}")
                     del config["items"]
 
                 if "trainer.team" in config:
@@ -113,10 +114,10 @@ class Settings:
                         try:
                             config[key] = int(config[key])
                         except ValueError:
-                            print(f"Ankimon: Warning: Could not convert '{config[key]}' for key '{key}' to int. Keeping as string.")
+                            self.logger.log("warning", f"Ankimon: Warning: Could not convert '{config[key]}' for key '{key}' to int. Keeping as string.")
 
             except Exception as e:
-                print(f"Ankimon: Error loading config from config.obf: {e}. Falling back to default config.")
+                self.logger.log("error", f"Ankimon: Error loading config from config.obf: {e}. Falling back to default config.")
                 config = {} # Fallback to default if error occurs
 
         modified = False
@@ -143,7 +144,7 @@ class Settings:
             with open(obfuscated_config_path, 'w', encoding='utf-8') as f:
                 f.write(file_content)
         except Exception as e:
-            print(f"Ankimon: Could not save obfuscated config: {e}")
+            self.logger.log("error", f"Ankimon: Could not save obfuscated config: {e}")
 
     def get(self, key):
         return self.config.get(key)

@@ -26,7 +26,8 @@ new_values = {
 }
 
 class DataHandler:
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.new_values = new_values
         self.path = user_path  # Store the provided path
         self.data = {}         # Store any potential errors or file read issues
@@ -59,7 +60,7 @@ class DataHandler:
                             if isinstance(entry, dict):
                                 valid_content.append(entry)
                             else:
-                                print(f"Skipping invalid entry in {file}: {entry}")
+                                self.logger.log("warning", f"Skipping invalid entry in {file}: {entry}")
                         setattr(self, attr_name, valid_content)
                     else:
                         setattr(self, attr_name, content)
@@ -78,7 +79,7 @@ class DataHandler:
         unique_ids = set()
         for idx, entry in enumerate(pokemon_list):
             if not isinstance(entry, dict):
-                print(f"Skipping invalid entry at index {idx} - not a dictionary")
+                self.logger.log("warning", f"Skipping invalid entry at index {idx} - not a dictionary")
                 continue
         try:
             unique_ids = set(pokemon.get("individual_id") for pokemon in pokemon_list if "individual_id" in pokemon)
@@ -97,7 +98,7 @@ class DataHandler:
                         unique_ids.add(new_id)
                         break
         except:
-            print("Unique ID assignment failed")
+            self.logger.log("error", "Unique ID assignment failed")
 
     def assign_new_variables(self, pokemon_list):
         """

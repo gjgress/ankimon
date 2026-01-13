@@ -511,7 +511,7 @@ def count_items_and_rewrite(file_path):
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(updated_items, f, indent=4, ensure_ascii=False)
 
-        print("items.json has been updated with aggregated quantities!")
+        mw.logger.log("info", "items.json has been updated with aggregated quantities!")
 
     except Exception as e:
         show_warning_with_traceback(exception=e, message=f"An unexpected error occurred: {e}")
@@ -586,7 +586,7 @@ def get_all_sprites(directory):
         ]
         return sprite_names
     except FileNotFoundError:
-        print(f"Error: The directory '{directory}' does not exist.")
+        mw.logger.log("error", f"Error: The directory '{directory}' does not exist.")
         return []
 
 def play_effect_sound(settings_obj, sound_type):
