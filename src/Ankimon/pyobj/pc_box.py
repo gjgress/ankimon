@@ -906,6 +906,17 @@ class GiveItemWindow(QDialog):
     """
     Small window that opens up when the user gives an item to the Pokemon from a PC box
     """
+    # Make it a class variable so it can be accessed from other classes
+    NOT_YET_IMPLEMENTED_ITEMS = [
+            "focus-sash",
+            "focus-band",
+            "white-herb",
+            "mental-herb",
+            "power-herb",
+            "throat-spray",
+            "weakness-policy",
+        ]
+        
     def __init__(self, item_list: list[str], give_item_func: Callable, logger):
         super().__init__()
         self.setWindowTitle("Give an Item")
@@ -924,16 +935,6 @@ class GiveItemWindow(QDialog):
 
         self.give_item_func = give_item_func
         self.logger = logger
-
-        NOT_YET_IMPLEMENTED_ITEMS = [
-            "focus-sash",
-            "focus-band",
-            "white-herb",
-            "mental-herb",
-            "power-herb",
-            "throat-spray",
-            "weakness-policy",
-        ]
 
         # Add item rows
         for item in item_list:
