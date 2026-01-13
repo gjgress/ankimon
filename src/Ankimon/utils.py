@@ -4,7 +4,7 @@ import requests
 import json
 import random
 import csv
-from typing import Optional
+from typing import Optional, Union
 
 from aqt import mw
 from aqt.utils import showWarning, showInfo
@@ -157,25 +157,26 @@ def read_html_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         return file.read()
 
-def random_battle_scene():
-    # TODO: choice?
-    # TODO: merge with random_berries and
-    battle_scenes = {}
-    for index, filename in enumerate(os.listdir(battlescene_path)):
-        if filename.endswith(".png"):
-            battle_scenes[index + 1] = filename
-    # Get the corresponding file name
-    battlescene_file = battle_scenes.get(random.randint(1, len(battle_scenes)))
-    return battlescene_file
+def get_random_file_from_directory(directory: Union[str, Path], extension: str = ".png") -> Optional[str]:
+    """
+    Returns a random file with the specified extension from the given directory.
+    If no files are found or the directory is empty, returns None and logs an error.
+    """
+    try:
+        files = [f for f in os.listdir(directory) if f.endswith(extension)]
+        if not files:
+            mw.logger.log_and_showinfo("error", f"No {extension} files found in {directory}")
+            return None
+        return random.choice(files)
+    except FileNotFoundError:
+        mw.logger.log_and_showinfo("error", f"Directory not found: {directory}")
+        return None
+    except Exception as e:
+        mw.logger.log_and_showinfo("error", f"Error accessing directory {directory}: {e}")
+        return None
 
-def random_berries():
-    berries = {}
-    for index, filename in enumerate(os.listdir(berries_path)):
-        if filename.endswith(".png"):
-            berries[index + 1] = filename
-    # Get the corresponding file name
-    berries_file = berries.get(random.randint(1, len(berries)))
-    return berries_file
+def random_battle_scene():
+    return get_random_file_from_directory(battlescene_path)
 
 def filter_item_sprites(string):
     # Initialize an empty list to store the file names
