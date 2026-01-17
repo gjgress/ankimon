@@ -907,7 +907,7 @@ class GiveItemWindow(QDialog):
     Small window that opens up when the user gives an item to the Pokemon from a PC box
     """
     # Make it a class variable so it can be accessed from other classes
-    NOT_YET_IMPLEMENTED_ITEMS = [
+    NOT_YET_IMPLEMENTED_ITEMS = {
             "focus-sash",
             "focus-band",
             "white-herb",
@@ -915,7 +915,7 @@ class GiveItemWindow(QDialog):
             "power-herb",
             "throat-spray",
             "weakness-policy",
-        ]
+        }
         
     def __init__(self, item_list: list[str], give_item_func: Callable, logger):
         super().__init__()
@@ -943,7 +943,7 @@ class GiveItemWindow(QDialog):
             item_label = QLabel(format_item_name(item))
             give_button = QPushButton(f"Give {format_item_name(item)}")
             give_button.clicked.connect(lambda clicked, i=item: self.expanded_give_item_func(i))
-            if item in NOT_YET_IMPLEMENTED_ITEMS or item.endswith("-berry") or item.endswith("-gem"):
+            if item in GiveItemWindow.NOT_YET_IMPLEMENTED_ITEMS or item.endswith("-berry") or item.endswith("-gem"):
                 # NOTE (Axil): As time of writing, single use items are not yet implemented.
                 # It seems to me that, actually, they are not even implemented in the Poke-engine. Although
                 # I haven't dug too much.

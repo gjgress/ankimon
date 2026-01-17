@@ -118,7 +118,7 @@ class ItemWindow(QWidget):
             'ultra-ball': 13      # Increased catch rate (original was 10, now 13)
         }
 
-        self.evolution_items = {}
+        self.evolution_items = set()
         self.load_evolution_items()
 
         self.setWindowIcon(QIcon(str(icon_path)))  # Add a Pokeball icon
@@ -492,7 +492,7 @@ class ItemWindow(QWidget):
                 reader = csv.DictReader(items_file)
                 for row in reader:
                     if row['id'] in evolution_item_ids:
-                        self.evolution_items[row['identifier']] = True
+                        self.evolution_items.add(row['identifier'])
             
         except Exception as e:
             self.logger.log_and_showinfo("error", f"Error loading evolution items: {e}")
