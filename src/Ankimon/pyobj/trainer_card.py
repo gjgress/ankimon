@@ -135,21 +135,6 @@ class TrainerCard:
         """Method to add a new achievement"""
         self.achievements.append(achievement)
 
-    def get_pokemon_name_and_level_by_id(self, individual_id):
-        """Retrieves the name and level of a pokemon by its individual_id from mypokemon.json"""
-        try:
-            with open(mypokemon_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for pokemon in data:
-                if pokemon.get("individual_id") == str(individual_id):
-                    name = pokemon.get("name")
-                    level = pokemon.get("level")
-                    return f"{name} (Level {level})"
-            return "Unknown Pokemon"
-        except Exception as e:
-            print(f"Error finding pokemon by id: {e}")
-            return "Error"
-
     def get_team(self):
         """Method to get the trainer's active team (team as a string)"""
         try:
