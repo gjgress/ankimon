@@ -284,7 +284,7 @@ class ItemWindow(QWidget):
                 if target_pokemon_data:
                     pokemon_obj = PokemonObject.from_dict(target_pokemon_data)
                     pokemon_obj.give_held_item(item_name)
-                    self.logger.log_and_showinfo("info", f"{item_name} was given to {pokemon.get('name')}.")
+                    self.logger.log_and_showinfo("info", f"{item_name} was given to {target_pokemon_data.get('name')}.")
                     self.renewWidgets()
                 else:
                     self.logger.log_and_showinfo("error", "Could not find Pokemon data.")
