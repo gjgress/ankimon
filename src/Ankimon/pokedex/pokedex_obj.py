@@ -73,6 +73,8 @@ class Pokedex(QDialog):
             except Exception as e:
                 print("POKEDEX_DEBUG: Error reading mypokemon.json at", mypokemon_path, ":", str(e))
 
+        # Extract shiny Pokémon IDs
+        shiny_pokemon_ids = []
         if pokemon_list:
             total_caught_count = len(pokemon_list)  # Count total instances, not just unique IDs
             for pokemon in pokemon_list:
@@ -83,6 +85,12 @@ class Pokedex(QDialog):
                     #print(f"POKEDEX_DEBUG: Pokemon ID {pokemon.get('id', 'unknown')}: pokemon_defeated = {defeated_num}")
                 except (TypeError, ValueError):
                     print(f"POKEDEX_DEBUG: Invalid pokemon_defeated for ID {pokemon.get('id', 'unknown')}: {defeated}")
+                
+                # Check if Pokémon is shiny
+                if pokemon.get("shiny") is True:
+                    pokemon_id = pokemon.get("id")
+                    if pokemon_id and pokemon_id not in shiny_pokemon_ids:
+                        shiny_pokemon_ids.append(pokemon_id)
         else:
             print("POKEDEX_DEBUG: No valid mypokemon.json found")
             total_caught_count = 0
@@ -106,6 +114,7 @@ class Pokedex(QDialog):
                 print(f"POKEDEX_DEBUG: Error reading pokemon_history.json: {e}")
 
         #print("POKEDEX_DEBUG: Total defeated_count =", defeated_count)
+        #print("POKEDEX_DEBUG: Shiny Pokémon IDs:", shiny_pokemon_ids)
 
         file_path = os.path.join(self.addon_dir, "pokedex", "pokedex.html").replace("\\", "/")
         #print("POKEDEX_DEBUG: Loading HTML from:", file_path)
@@ -118,6 +127,9 @@ class Pokedex(QDialog):
         query.addQueryItem("released", str(released_count))
         # Pass total caught count (instances, not unique IDs) for accurate "Seen" calculation
         query.addQueryItem("caught_total", str(total_caught_count))
+        # Add shiny Pokémon IDs
+        str_shiny_pokemon_ids = ",".join(map(str, shiny_pokemon_ids)) if shiny_pokemon_ids else ""
+        query.addQueryItem("shinies", str_shiny_pokemon_ids)
         url.setQuery(query)
         #print("POKEDEX_DEBUG: Final URL:", url.toString())
 
