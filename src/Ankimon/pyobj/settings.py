@@ -12,6 +12,7 @@ DEFAULT_CONFIG = {
     "battle.cards_per_round": 2,
     "battle.daily_average": 100,
     "battle.card_max_time": 60,
+    "battle.review_based_damage": True,
 
     "controls.pokemon_buttons": True,
     "controls.defeat_key": "5",
