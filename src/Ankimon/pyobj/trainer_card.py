@@ -48,6 +48,7 @@ class TrainerCard:
         self.trainer_id = trainer_id  # Unique ID for the trainer
         self.level = int(settings_obj.get("trainer.level"))  # Trainer's level
         self.xp = int(settings_obj.get("trainer.xp"))  # Experience points
+        self.total_xp = int(settings_obj.get("trainer.total_xp", 0)) # Total Experience points
         self.achievements = (
             achievements if achievements else []
         )  # List of achievements (if any)
@@ -146,6 +147,7 @@ class TrainerCard:
             "trainer_id": self.trainer_id,
             "level": self.level,
             "xp": self.xp,
+            "total_xp": self.total_xp,
             "badges": self.badge_count(),
             "favorite_pokemon": self.main_pokemon.name,
             "highest_level_pokemon": self.get_highest_level_pokemon(),
@@ -173,7 +175,11 @@ class TrainerCard:
         self.settings_obj.set(
             "trainer.xp", int(self.settings_obj.get("trainer.xp") + xp_gained)
         )
+        self.settings_obj.set(
+            "trainer.total_xp", int(self.settings_obj.get("trainer.total_xp", 0) + xp_gained)
+        )
         self.xp = self.settings_obj.get("trainer.xp")
+        self.total_xp = self.settings_obj.get("trainer.total_xp")
         print(f"Gained {xp_gained} XP from defeating a {tier} Pokémon!")
         self.check_level_up()
 
