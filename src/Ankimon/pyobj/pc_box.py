@@ -237,7 +237,13 @@ class PokemonPC(QDialog):
         next_box_button.setFont(QFont('System', 25))
         prev_box_button.clicked.connect(lambda: self.looparound_go_to_box(self.current_box_idx - 1, max_box_idx))
         next_box_button.clicked.connect(lambda: self.looparound_go_to_box(self.current_box_idx + 1, max_box_idx))
-        curr_box_label = QLabel(f"Box {self.current_box_idx + 1}/{max_box_idx + 1}")
+        curr_box_label = QLabel(
+            self.translator.translate(
+                "pc_box_label",
+                current=self.current_box_idx + 1,
+                total=max_box_idx + 1,
+            )
+        )
         curr_box_label.setFixedSize(150, 50)
         curr_box_label.setFont(load_custom_font(20, int(self.settings.get("misc.language"))))
         curr_box_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -600,9 +606,14 @@ class PokemonPC(QDialog):
 
         def sort_key(p):
             if sort_key_str == "name":
-                return (p.get("name", ""), p.get("nickname", ""))
+                name = p.get("name") or ""
+                nickname = p.get("nickname") or ""
+                return (name.lower(), nickname.lower())
             else:
-                return p.get(sort_key_str, 0)
+                val = p.get(sort_key_str)
+                if val is None:
+                    return 0 if sort_key_str in ["id", "level", "original_index"] else ""
+                return val
 
         return sorted(
             pokemon_list,
@@ -906,6 +917,17 @@ class GiveItemWindow(QDialog):
     """
     Small window that opens up when the user gives an item to the Pokemon from a PC box
     """
+    # Make it a class variable so it can be accessed from other classes
+    NOT_YET_IMPLEMENTED_ITEMS = {
+            "focus-sash",
+            "focus-band",
+            "white-herb",
+            "mental-herb",
+            "power-herb",
+            "throat-spray",
+            "weakness-policy",
+        }
+        
     def __init__(self, item_list: list[str], give_item_func: Callable, logger):
         super().__init__()
         self.setWindowTitle("Give an Item")
@@ -925,16 +947,6 @@ class GiveItemWindow(QDialog):
         self.give_item_func = give_item_func
         self.logger = logger
 
-        NOT_YET_IMPLEMENTED_ITEMS = [
-            "focus-sash",
-            "focus-band",
-            "white-herb",
-            "mental-herb",
-            "power-herb",
-            "throat-spray",
-            "weakness-policy",
-        ]
-
         # Add item rows
         for item in item_list:
             row_layout = QHBoxLayout()
@@ -942,7 +954,7 @@ class GiveItemWindow(QDialog):
             item_label = QLabel(format_item_name(item))
             give_button = QPushButton(f"Give {format_item_name(item)}")
             give_button.clicked.connect(lambda clicked, i=item: self.expanded_give_item_func(i))
-            if item in NOT_YET_IMPLEMENTED_ITEMS or item.endswith("-berry") or item.endswith("-gem"):
+            if item in GiveItemWindow.NOT_YET_IMPLEMENTED_ITEMS or item.endswith("-berry") or item.endswith("-gem"):
                 # NOTE (Axil): As time of writing, single use items are not yet implemented.
                 # It seems to me that, actually, they are not even implemented in the Poke-engine. Although
                 # I haven't dug too much.

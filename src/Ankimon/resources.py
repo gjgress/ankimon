@@ -20,6 +20,7 @@ frontdefault = addon_dir / "user_files" / "sprites" / "front_default"
 #Assign saved Pokemon Directory
 mypokemon_path = addon_dir / "user_files" / "mypokemon.json"
 mainpokemon_path = addon_dir / "user_files" / "mainpokemon.json"
+pokemon_history_path = addon_dir / "user_files" / "pokemon_history.json"
 battlescene_path = addon_dir / "addon_sprites" / "battle_scenes"
 trainer_sprites_path = addon_dir / "addon_sprites" / "trainers"
 battlescene_path_without_dialog = addon_dir / "addon_sprites" / "battle_scenes_without_dialog"
@@ -94,6 +95,7 @@ lang_path_it = addon_dir / "lang" / "it_text.json"
 lang_path_cz = addon_dir / "lang" / "cz_text.json"
 lang_path_po = addon_dir / "lang" / "po_text.json"
 lang_path_kr = addon_dir / "lang" / "kr_text.json"
+lang_path_es_latam = addon_dir / "lang" / "es_latam_text.json"
 
 #backup_routes
 backup_root = addon_dir / "user_files" / "backups"
