@@ -1,4 +1,4 @@
-from ..resources import trainer_sprites_path, mypokemon_path
+from ..resources import trainer_sprites_path, mypokemon_path, team_pokemon_path
 from ..functions.trainer_functions import find_trainer_rank
 from ..functions.badges_functions import get_achieved_badges
 from aqt.utils import showWarning, showInfo
@@ -36,7 +36,7 @@ class TrainerCard:
         trainer_id,
         level=1,
         achievements=None,
-        team="",
+        team=None,
         image_path=trainer_sprites_path,
         league="unranked",
     ):
@@ -52,7 +52,7 @@ class TrainerCard:
         self.achievements = (
             achievements if achievements else []
         )  # List of achievements (if any)
-        self.team = team  # Team as a simple string
+        self.team = team if team is not None else self.get_team()  # Team as a simple string
         highest_level = self.get_highest_level_pokemon()
         self.highest_level = highest_level  # Highest level Pokémon
         highest_pokemon_level = int(self.highest_pokemon_level())
@@ -136,9 +136,48 @@ class TrainerCard:
         """Method to add a new achievement"""
         self.achievements.append(achievement)
 
+    def get_team(self):
+        """Method to get the trainer's active team (team as a string)"""
+        try:
+            with open(team_pokemon_path, "r", encoding="utf-8") as f:
+                team_data = json.load(f)
+            if not team_data:
+                return "No Team Set"
+
+            # Optimization: Load mypokemon data once
+            try:
+                with open(mypokemon_path, "r", encoding="utf-8") as f:
+                    my_pokemon_data = json.load(f)
+            except Exception:
+                my_pokemon_data = []
+
+            # Create lookup dict
+            pokemon_map = {str(p.get("individual_id")): p for p in my_pokemon_data}
+
+            pokemon_strings = []
+            for pokemon in team_data:
+                ind_id = str(pokemon.get("individual_id"))
+                if ind_id in pokemon_map:
+                    p = pokemon_map[ind_id]
+                    pokemon_strings.append(f"{p.get('name')} (Level {p.get('level')})")
+                else:
+                    pokemon_strings.append("Unknown Pokemon")
+
+            return ", ".join(pokemon_strings)
+
+        except FileNotFoundError:
+            return "No Team Set"
+        except Exception as e:
+            self.logger.log_and_showinfo("error", f"Error ; team.json: {e}")
+            return "Error Loading Team"
+
     def set_team(self, team_pokemons):
         """Method to set the trainer's active team (team as a string)"""
         self.team = ", ".join(team_pokemons)
+
+    def reload_team(self):
+        """Reload the team data from the file"""
+        self.team = self.get_team()
 
     def display_card_data(self):
         """Method to return trainer card data as a dictionary"""

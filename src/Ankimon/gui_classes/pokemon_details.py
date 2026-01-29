@@ -42,6 +42,7 @@ from ..resources import (
     addon_dir,
     mainpokemon_path,
     mypokemon_path,
+    pokemon_history_path,
     pokemon_tm_learnset_path,
     itembag_path,
 )
@@ -51,6 +52,18 @@ from ..texts import (
     remember_attack_details_window_template,
     remember_attack_details_window_template_end,
 )
+
+
+def _lookup_move_data(attack: str):
+    """Find move data using raw/normalized keys, without localized names."""
+    move = find_details_move(attack)
+    if move:
+        return move
+    normalized = re.sub(r"[^a-z0-9]", "", attack.lower())
+    move = find_details_move(normalized)
+    if move:
+        return move
+    return find_details_move("tackle")
 
 
 def PokemonCollectionDetails(
@@ -444,21 +457,11 @@ def attack_details_window(attacks):
     html_content = attack_details_window_template
     # Loop through the list of attacks and add them to the HTML content
     for attack in attacks:
-        move = find_details_move(format_move_name(attack))
-        if move is None:
-            attack = attack.replace(" ", "")
-            try:
-                move = find_details_move(format_move_name(attack))
-            except:
-                logger.log_and_showinfo(
-                    "info", f"Can't find the attack {attack} in the database."
-                )
-                move = find_details_move("tackle")
-        if move is None:
-            continue
+        move = _lookup_move_data(attack)
+        display_name = format_move_name(attack)
         html_content += f"""
         <tr>
-          <td class="move-name">{move["name"]}</td>
+          <td class="move-name">{display_name}</td>
           <td><img src="{type_icon_path(move["type"])}" alt="{move["type"]}"/></td>
           <td><img src="{move_category_path(move["category"].lower())}" alt="{move["category"]}"/></td>
           <td class="basePower">{move["basePower"]}</td>
@@ -491,10 +494,10 @@ def remember_attack_details_window(individual_id, attack_set, all_attacks, logge
     layout = QHBoxLayout(content_widget)
     html_content = remember_attack_details_window_template
     for attack in all_attacks:
-        move = find_details_move(attack)
+        move = find_details_move(attack) or _lookup_move_data(attack)
         html_content += f"""
         <tr>
-          <td class="move-name">{move["name"]}</td>
+          <td class="move-name">{format_move_name(attack)}</td>
           <td><img src="{type_icon_path(move["type"])}" alt="{move["type"]}"/></td>
           <td><img src="{move_category_path(move["category"].lower())}" alt="{move["category"]}"/></td>
           <td class="basePower">{move["basePower"]}</td>
@@ -550,12 +553,11 @@ def forget_attack_details_window(
     layout = QHBoxLayout(content_widget)
     html_content = remember_attack_details_window_template
     for attack in attack_set:
-        move = find_details_move(format_move_name(attack))
-        if move is None:
-            continue
+        move = _lookup_move_data(attack)
+        display_name = format_move_name(attack)
         html_content += f"""
         <tr>
-          <td class="move-name">{move["name"]}</td>
+          <td class="move-name">{display_name}</td>
           <td><img src="{type_icon_path(move["type"])}" alt="{move["type"]}"/></td>
           <td><img src="{move_category_path(move["category"].lower())}" alt="{move["category"]}"/></td>
           <td class="basePower">{move["basePower"]}</td>
@@ -761,14 +763,12 @@ def tm_attack_details_window(
 
     # Loop through the list of attacks and add them to the HTML content
     for attack in attack_set:
-        move = find_details_move(attack) or find_details_move(format_move_name(attack))
-
-        if move is None:
-            continue
+        move = find_details_move(attack) or _lookup_move_data(attack)
+        display_name = format_move_name(attack)
 
         html_content += f"""
         <tr>
-          <td class="move-name">{move["name"]}</td>
+          <td class="move-name">{display_name}</td>
           <td><img src="{type_icon_path(move["type"])}" alt="{move["type"]}"/></td>
           <td><img src="{move_category_path(move["category"].lower())}" alt="{move["category"]}"/></td>
           <td class="basePower">{move["basePower"]}</td>
@@ -896,13 +896,43 @@ def PokemonFree(
 
     # Find the position of the Pokémon with the given individual_id
     position = -1
+    pokemon_to_release = None
     for idx, pokemon in enumerate(pokemon_list):
         if pokemon.get("individual_id") == individual_id:
             position = idx
+            pokemon_to_release = pokemon
             break
 
-    # If the Pokémon was found, remove it from the list
+    # If the Pokémon was found, save its data to history before removing
     if position != -1:
+        # Save important stats to history before release
+        from datetime import datetime
+        history_data = {
+            "id": pokemon_to_release.get("id"),
+            "name": pokemon_to_release.get("name"),
+            "shiny": pokemon_to_release.get("shiny", False),
+            "pokemon_defeated": pokemon_to_release.get("pokemon_defeated", 0),
+            "individual_id": pokemon_to_release.get("individual_id"),
+            "released_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        # Load existing history or create new
+        history_list = []
+        if pokemon_history_path.is_file():
+            try:
+                with open(pokemon_history_path, "r", encoding="utf-8") as file:
+                    history_list = json.load(file)
+            except (json.JSONDecodeError, Exception):
+                history_list = []
+        
+        # Add to history (only save essential stats, not full Pokémon data)
+        history_list.append(history_data)
+        
+        # Save history
+        with open(pokemon_history_path, "w", encoding="utf-8") as file:
+            json.dump(history_list, file, indent=2)
+        
+        # Now remove from active collection
         pokemon_list.pop(position)
         with open(mypokemon_path, "w") as file:
             json.dump(pokemon_list, file, indent=2)
