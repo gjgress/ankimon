@@ -12,14 +12,10 @@ from aqt.qt import (
     QVBoxLayout,
     QLabel,
     QPushButton,
-    QGridLayout,
     QFrame,
     QPixmap,
     QMessageBox,
-    QSizePolicy,
-    QFont,
-    QFontDatabase,
-    QToolTip
+    QFont
 )
 from aqt.theme import theme_manager
 

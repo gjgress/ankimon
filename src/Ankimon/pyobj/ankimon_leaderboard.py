@@ -1,6 +1,5 @@
-import sys
 import json
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from aqt.utils import showInfo
 from ..resources import user_path_credentials, mypokemon_path
 import json

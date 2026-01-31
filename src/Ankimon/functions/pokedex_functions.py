@@ -1,4 +1,3 @@
-from typing import Literal
 from ..resources import (
     pokedex_path,
     pokedesc_lang_path,

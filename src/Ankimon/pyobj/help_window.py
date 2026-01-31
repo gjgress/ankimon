@@ -2,8 +2,9 @@ from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtWidgets import QVBoxLayout, QTextEdit
 from PyQt6.QtCore import Qt, QUrl, QObject, pyqtSlot
 from aqt.qt import QDialog
-from aqt.utils import showWarning, QWebEngineSettings, QWebEnginePage, QWebEngineView
+from aqt.utils import QWebEngineSettings, QWebEnginePage
 from PyQt6.QtWebChannel import QWebChannel  # Add this import
+from importlib.util import find_spec
 
 from ..resources import icon_path, addon_dir
 from ..utils import read_local_file, read_github_file, compare_files, write_local_file, test_online_connectivity
@@ -52,11 +53,7 @@ class HelpWindow(QDialog):
         self.setGeometry(100, 100, 1000, 700)
 
         # Check for QWebEngineView availability
-        try:
-            from PyQt6.QtWebEngineWidgets import QWebEngineView
-            self.use_web_engine = True
-        except ImportError:
-            self.use_web_engine = False
+        self.use_web_engine = find_spec("PyQt6.QtWebEngineWidgets") is not None
 
         # Create layout
         layout = QVBoxLayout()

@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QLabel,
-                           QHBoxLayout, QWidget, QGridLayout)
+                           QHBoxLayout, QWidget)
 from PyQt6.QtGui import QPixmap, QFont
 from PyQt6.QtCore import Qt
 from ..resources import trainer_sprites_path

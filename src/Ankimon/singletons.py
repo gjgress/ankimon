@@ -13,7 +13,6 @@ Author: Axil
 Created: 2025-06-03 (YYY-MM-DD)
 """
 
-import json
 import uuid
 
 from aqt import mw

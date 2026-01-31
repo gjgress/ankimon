@@ -15,7 +15,7 @@ from ..resources import user_path, addon_dir
 from ..utils import close_anki
 
 from PyQt6.QtGui import QTextOption
-from PyQt6.QtWidgets import QLabel, QVBoxLayout, QTextEdit, QPushButton, QDialog, QHBoxLayout, QScrollArea, QWidget
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QTextEdit, QPushButton, QDialog, QHBoxLayout, QWidget
 
 class ImprovedPokemonDataSync(QDialog):
     """
@@ -126,8 +126,7 @@ class ImprovedPokemonDataSync(QDialog):
 
     def _display_differences(self, differences: Dict[str, Dict]):
         """Display improved JSON differences, showing only what changed per file with specific key differences."""
-        import json
-        from typing import Any, Dict, List, Tuple, Set
+        from typing import Any, Dict, List, Tuple
 
         def format_value(value: Any) -> str:
             """Format a value for display."""

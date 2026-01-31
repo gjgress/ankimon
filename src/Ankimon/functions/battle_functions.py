@@ -1,5 +1,3 @@
-import copy
-import json
 from ..poke_engine import constants
 from ..pyobj.error_handler import show_warning_with_traceback
 from ..move_names import format_move_name

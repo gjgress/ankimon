@@ -5,7 +5,6 @@ from .pokedex_functions import extract_ids_from_file
 from ..resources import mypokemon_path
 from .pokemon_functions import find_experience_for_level
 from .pokedex_functions import check_evolution_for_pokemon, return_name_for_id
-from aqt.utils import showInfo, showWarning
 
 def find_trainer_rank(highest_level, trainer_level):
     """

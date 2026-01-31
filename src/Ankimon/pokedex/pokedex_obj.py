@@ -1,9 +1,8 @@
 import os
 import json
-from aqt import QDialog, QVBoxLayout, QWebEngineView, mw
+from aqt import QDialog, QVBoxLayout, QWebEngineView
 from PyQt6.QtCore import QUrlQuery
-from aqt.qt import Qt, QFile, QUrl, QFrame, QPushButton
-from aqt.utils import showInfo
+from aqt.qt import Qt, QUrl, QFrame
 from ..resources import mypokemon_path, pokemon_history_path
 
 class Pokedex(QDialog):

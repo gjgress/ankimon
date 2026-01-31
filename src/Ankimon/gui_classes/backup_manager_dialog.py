@@ -3,11 +3,8 @@ from PyQt6.QtWidgets import (
     QLabel, QMessageBox, QListWidgetItem, QWidget
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontDatabase, QFont, QIcon
-from pathlib import Path
 
 from ..pyobj.backup_manager import BackupManager
-from ..resources import addon_dir
 
 class BackupItemWidget(QWidget):
     """Custom widget for displaying a single backup's information."""

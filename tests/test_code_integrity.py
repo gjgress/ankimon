@@ -1,11 +1,6 @@
-import pytest
 import os
 import sys
-import json
-import ast
 import importlib.util
-import platform
-from unittest.mock import MagicMock, patch
 
 # Define ANKIMON_ROOT_DIR and ANKIMON_SRC_PARENT_DIR first
 ANKIMON_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")) # /var/home/uwu/Documents/ankimon

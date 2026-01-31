@@ -14,7 +14,6 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     )
 
-import os
 
 from ..resources import rate_path
 from ..texts import rate_addon_text_label, thankyou_message_text, dont_show_this_button_text

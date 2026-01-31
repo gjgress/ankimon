@@ -1,5 +1,4 @@
-from aqt import gui_hooks, mw, utils
-from aqt.utils import showInfo
+from aqt import gui_hooks, mw
 from ..functions.pokemon_functions import find_experience_for_level
 from ..business import get_image_as_base64
 from ..functions.create_css_for_reviewer import create_css_for_reviewer

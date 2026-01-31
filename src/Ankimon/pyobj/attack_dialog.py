@@ -1,5 +1,4 @@
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QScrollArea
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
 
 class AttackDialog(QDialog):
     def __init__(self, attacks, new_attack):

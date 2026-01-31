@@ -2,7 +2,7 @@ import json
 import hashlib
 import requests
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QHBoxLayout, QFrame
-from PyQt6.QtGui import QPixmap, QFont, QIcon, QColor
+from PyQt6.QtGui import QPixmap, QFont, QColor
 from PyQt6.QtCore import QSize, Qt
 from aqt.utils import showWarning, showInfo
 from aqt import mw, utils

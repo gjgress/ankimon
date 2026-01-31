@@ -3,8 +3,7 @@ import json
 from PyQt6.QtGui import QMovie, QIcon
 from PyQt6.QtWidgets import QLabel, QVBoxLayout, QTextEdit, QCheckBox, QPushButton, QMessageBox, QWidget, QScrollArea, QGridLayout, QTextBrowser
 from aqt import mw
-from aqt.qt import QDialog, qconnect
-from aqt.utils import showWarning, showInfo, tooltip
+from aqt.qt import QDialog
 from PyQt6.QtCore import Qt
 
 from .resources import icon_path, addon_dir, eff_chart_html_path, table_gen_id_html_path, mypokemon_path

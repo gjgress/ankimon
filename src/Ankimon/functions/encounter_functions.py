@@ -34,7 +34,7 @@ from ..pyobj.error_handler import show_warning_with_traceback
 from ..functions.trainer_functions import xp_share_gain_exp
 from ..functions.badges_functions import check_for_badge, receive_badge
 from ..functions.drawing_utils import tooltipWithColour
-from ..utils import limit_ev_yield, play_effect_sound, iv_rand_gauss, get_ev_spread
+from ..utils import limit_ev_yield, play_effect_sound, get_ev_spread
 from ..business import calc_experience
 from ..const import gen_ids
 from ..singletons import (

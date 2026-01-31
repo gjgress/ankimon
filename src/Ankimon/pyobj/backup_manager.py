@@ -7,7 +7,6 @@ import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-from aqt import mw
 from aqt.utils import showInfo, showWarning, askUser
 
 from ..utils import close_anki

@@ -12,7 +12,7 @@
 # aswell as ask for permission to modify / redistribute this addon or the code itself
 
 try:
-    from .debug_console import show_ankimon_dev_console
+    from .debug_console import show_ankimon_dev_console as show_ankimon_dev_console
 except ModuleNotFoundError:
     # Debug console should not be available to non devs, so it's fine if this import doesn't succeed
     pass
@@ -34,7 +34,7 @@ from aqt.gui_hooks import webview_will_set_content
 from aqt.webview import WebContent
 import markdown
 
-from .resources import generate_startup_files, user_path, IS_EXPERIMENTAL_BUILD, addon_ver, addon_dir
+from .resources import generate_startup_files, user_path, addon_ver, addon_dir
 generate_startup_files(addon_dir, user_path)
 
 from .singletons import settings_obj

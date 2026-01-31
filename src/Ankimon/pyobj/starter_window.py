@@ -1,9 +1,7 @@
-from datetime import datetime
 import random
 import json
 import uuid
 
-from aqt.utils import showWarning
 from aqt.qt import (
     QFont,
     QLabel,
@@ -29,7 +27,6 @@ from ..business import resize_pixmap_img
 from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.settings import Settings
 from ..pyobj.InfoLogger import ShowInfoLogger
-from ..functions.badges_functions import check_for_badge, receive_badge
 from ..functions.battle_functions import calculate_hp
 from ..functions.pokedex_functions import get_base_experience, get_growth_rate, search_pokedex
 from ..functions.pokemon_functions import get_random_moves_for_pokemon, pick_random_gender

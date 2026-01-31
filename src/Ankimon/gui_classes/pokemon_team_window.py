@@ -1,11 +1,10 @@
 from ..functions.sprite_functions import get_sprite_path
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPushButton, QScrollArea, QGroupBox, QFrame, QGridLayout, QComboBox, QDialogButtonBox
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QScrollArea, QGroupBox, QFrame, QGridLayout, QComboBox, QDialogButtonBox
 from PyQt6.QtGui import QPixmap
 import json
 import os
 from aqt import mw
-from aqt.utils import showInfo, showWarning
 from ..resources import mypokemon_path, frontdefault, team_pokemon_path
 
 class PokemonTeamDialog(QDialog):

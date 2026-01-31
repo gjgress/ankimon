@@ -4,9 +4,8 @@ import time
 
 from ..pyobj.ankimon_tracker import AnkimonTracker
 from ..addon_files.lib.pypresence import Presence
-from aqt.utils import showWarning, tooltip
+from aqt.utils import tooltip
 from aqt import mw
-from ..pyobj.error_handler import show_warning_with_traceback
 logger = mw.logger
 
 class DiscordPresence:

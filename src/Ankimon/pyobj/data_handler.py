@@ -1,4 +1,3 @@
-import sys
 import json
 from ..resources import user_path
 import os

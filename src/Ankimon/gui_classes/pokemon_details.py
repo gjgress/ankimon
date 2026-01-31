@@ -747,7 +747,6 @@ def tm_attack_details_window(
 
     # HTML content
     html_content = remember_attack_details_window_template
-    from pathlib import Path
 
     with open(pokemon_tm_learnset_path, "r") as f:
         pokemon_tm_learnset = json.load(f)

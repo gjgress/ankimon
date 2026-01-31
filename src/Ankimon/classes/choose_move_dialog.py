@@ -1,5 +1,4 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 from ..functions.pokedex_functions import find_details_move

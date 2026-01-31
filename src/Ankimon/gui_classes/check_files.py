@@ -1,16 +1,13 @@
-import sys
 import os
 import json
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QLabel, QPushButton,
-    QLineEdit, QFileDialog, QTextEdit, QWidget, QDialog
+    QVBoxLayout, QLabel, QPushButton,
+    QTextEdit, QDialog
 )
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QPushButton, QLabel, QTextEdit, QWidget
+    QDialog, QVBoxLayout, QPushButton, QLabel, QTextEdit
 )
 from  ..resources import addon_dir, json_file_structure
-from aqt import mw
-from aqt.utils import showWarning
 
 def check_files_in_json(json_file=json_file_structure, root_directory=addon_dir):
     """

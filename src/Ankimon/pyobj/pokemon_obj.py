@@ -1,13 +1,11 @@
 from typing import Union
-import uuid
 import json
-import os
 from typing import Optional
 
 from ..functions.sprite_functions import get_sprite_path
 
 from ..poke_engine.objects import Pokemon
-from ..resources import pkmnimgfolder, mainpokemon_path, mypokemon_path
+from ..resources import mainpokemon_path, mypokemon_path
 from ..utils import substract_item_from_itembag, give_item
 
 class PokemonObject:

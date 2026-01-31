@@ -1,10 +1,4 @@
 import json
-import os
-from aqt import mw
-from aqt.utils import showInfo
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
-from PyQt6.QtWidgets import QRadioButton, QHBoxLayout, QMainWindow, QScrollArea
-from pathlib import Path
 from ..resources import user_path
 
 DEFAULT_CONFIG = {

@@ -41,7 +41,6 @@ status_colors_html = {
 
 # Get the profile folder
 from aqt import mw
-from pathlib import Path
 profilename = mw.pm.name
 #profilefolder = Path(mw.pm.profileFolder())
 #mediafolder = Path(mw.col.media.dir())

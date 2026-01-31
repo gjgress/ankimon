@@ -1,10 +1,7 @@
-import os
 import json
 from aqt import QDialog, QVBoxLayout, QWebEngineView, mw
-from aqt.qt import QPushButton, QCheckBox, QFrame, Qt
 from PyQt6.QtCore import QUrl, QUrlQuery
 from PyQt6.QtGui import QGuiApplication
-from pathlib import Path
 
 class AchievementsDialog(QDialog):
     def __init__(self, addon_dir, data_handler):

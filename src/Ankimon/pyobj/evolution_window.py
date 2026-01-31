@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 )
 
 from ..utils import load_custom_font
-from ..functions.pokedex_functions import get_base_experience, get_growth_rate, return_name_for_id, search_pokedex
+from ..functions.pokedex_functions import get_growth_rate, return_name_for_id, search_pokedex
 from ..functions.pokemon_functions import get_random_moves_for_pokemon
 from ..functions.battle_functions import calculate_hp
 from ..functions.update_main_pokemon import update_main_pokemon
