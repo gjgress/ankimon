@@ -9,3 +9,5 @@
 + Implemented Gen 9
 + Setting to disable review multiplier
 + New encounter probabilities
+
+DOWNLOAD: https://github.com/Someon1e/ankimon/releases/tag/nightly
