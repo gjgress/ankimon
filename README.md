@@ -1,5 +1,9 @@
 # UNOFFICIAL Ankimon Nightly Branch
- This repository is an **unofficial nightly branch** for [Ankimon](https://github.com/h0tp-ftw/ankimon) with the newest features.
+ This repository is an **unofficial nightly branch** for [Ankimon](https://github.com/h0tp-ftw/ankimon) with the newest changes.
+
+## Project Goals
++ More features, less bugs
++ Backwards compatibility with the official Ankimon
 
 ## (non-exhaustive) List of differences compared to latest official branch:
 + Implemented Gen 9
