@@ -1,4 +1,5 @@
 from aqt import gui_hooks
+
 from .utils import addon_config_editor_will_display_json
 
 

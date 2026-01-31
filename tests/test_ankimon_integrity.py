@@ -1,8 +1,8 @@
+import ast
+import importlib.util
 import os
 import sys
-import ast
 from pathlib import Path
-import importlib.util
 from unittest.mock import MagicMock
 
 # Define the base directory for the Ankimon source code

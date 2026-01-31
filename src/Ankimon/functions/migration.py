@@ -1,5 +1,7 @@
 import json
+
 from aqt.utils import showWarning
+
 from ..resources import mainpokemon_path, mypokemon_path
 
 

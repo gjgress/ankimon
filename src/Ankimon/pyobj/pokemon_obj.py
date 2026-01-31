@@ -1,12 +1,10 @@
-from typing import Union
 import json
-from typing import Optional
+from typing import Optional, Union
 
 from ..functions.sprite_functions import get_sprite_path
-
 from ..poke_engine.objects import Pokemon
 from ..resources import mainpokemon_path, mypokemon_path
-from ..utils import substract_item_from_itembag, give_item
+from ..utils import give_item, substract_item_from_itembag
 
 
 class PokemonObject:

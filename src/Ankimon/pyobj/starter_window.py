@@ -1,20 +1,24 @@
-import random
 import json
+import random
 import uuid
 
-from aqt.qt import QFont, QLabel, QPainter, QPixmap, Qt, QVBoxLayout, QWidget, qconnect
-from aqt.qt import QColor
 from aqt.qt import (
-    QPushButton,
+    QColor,
+    QFont,
     QHBoxLayout,
+    QLabel,
+    QPainter,
+    QPixmap,
+    QPushButton,
+    Qt,
+    QVBoxLayout,
+    QWidget,
+    qconnect,
 )
 
-from ..functions import starters
-
 from ..business import resize_pixmap_img
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.settings import Settings
-from ..pyobj.InfoLogger import ShowInfoLogger
+from ..const import total_generations
+from ..functions import starters
 from ..functions.battle_functions import calculate_hp
 from ..functions.pokedex_functions import (
     get_base_experience,
@@ -25,9 +29,11 @@ from ..functions.pokemon_functions import (
     get_random_moves_for_pokemon,
     pick_random_gender,
 )
-from ..utils import load_custom_font, close_anki
+from ..pyobj.InfoLogger import ShowInfoLogger
+from ..pyobj.pokemon_obj import PokemonObject
+from ..pyobj.settings import Settings
 from ..resources import addon_dir, frontdefault, mainpokemon_path, mypokemon_path
-from ..const import total_generations
+from ..utils import close_anki, load_custom_font
 from .error_handler import show_warning_with_traceback
 
 

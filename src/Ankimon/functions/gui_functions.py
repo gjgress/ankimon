@@ -1,4 +1,4 @@
-from ..resources import type_icon_path_resources, addon_dir
+from ..resources import addon_dir, type_icon_path_resources
 
 
 def type_icon_path(type):

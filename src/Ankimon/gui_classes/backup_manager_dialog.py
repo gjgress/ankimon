@@ -1,15 +1,15 @@
 from aqt.qt import (
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
-    QPushButton,
-    QListWidget,
     QLabel,
-    QMessageBox,
+    QListWidget,
     QListWidgetItem,
+    QMessageBox,
+    QPushButton,
+    Qt,
+    QVBoxLayout,
     QWidget,
 )
-from aqt.qt import Qt
 
 from ..pyobj.backup_manager import BackupManager
 

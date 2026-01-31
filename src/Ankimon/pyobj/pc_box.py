@@ -2,46 +2,45 @@ import json
 import uuid
 from typing import Any, Callable
 
-from aqt import mw, gui_hooks
+from aqt import gui_hooks, mw
 from aqt.qt import (
-    Qt,
+    QAction,
+    QButtonGroup,
+    QCheckBox,
+    QCloseEvent,
+    QComboBox,
     QDialog,
-    QHBoxLayout,
-    QVBoxLayout,
-    QLabel,
-    QPushButton,
+    QFont,
+    QFrame,
     QGridLayout,
+    QHBoxLayout,
+    QIcon,
+    QLabel,
+    QLineEdit,
+    QMenu,
+    QMovie,
     QPixmap,
+    QPushButton,
+    QRadioButton,
+    QScrollArea,
+    QSize,
+    Qt,
+    QVBoxLayout,
+    QWidget,
 )
-
 from aqt.theme import theme_manager  # Check if light / dark mode in Anki
 
-from aqt.qt import (
-    QLineEdit,
-    QComboBox,
-    QCheckBox,
-    QMenu,
-    QWidget,
-    QScrollArea,
-    QFrame,
-    QRadioButton,
-    QButtonGroup,
-)
-from aqt.qt import QSize
-from aqt.qt import QIcon, QFont, QAction, QMovie, QCloseEvent
-
+from ..functions.sprite_functions import get_sprite_path
+from ..gui_classes.pokemon_details import PokemonCollectionDetails
+from ..pyobj.collection_dialog import MainPokemon
+from ..pyobj.InfoLogger import ShowInfoLogger
 from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.reviewer_obj import Reviewer_Manager
+from ..pyobj.settings import Settings
 from ..pyobj.test_window import TestWindow
 from ..pyobj.translator import Translator
-from ..pyobj.collection_dialog import MainPokemon
-from ..gui_classes.pokemon_details import PokemonCollectionDetails
-from ..pyobj.InfoLogger import ShowInfoLogger
-
-from ..pyobj.settings import Settings
-from ..functions.sprite_functions import get_sprite_path
-from ..utils import load_custom_font, get_tier_by_id
-from ..resources import mypokemon_path, itembag_path
+from ..resources import itembag_path, mypokemon_path
+from ..utils import get_tier_by_id, load_custom_font
 
 
 def format_item_name(item_name: str) -> str:

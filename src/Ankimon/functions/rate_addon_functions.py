@@ -1,25 +1,22 @@
 import json
 
 from aqt.qt import (
+    QDesktopServices,
     QDialog,
     QLabel,
+    QPushButton,
+    QUrl,
     QVBoxLayout,
 )
-from aqt.qt import QUrl
-from aqt.qt import QDesktopServices
-from aqt.qt import (
-    QPushButton,
-)
-
 
 from ..resources import rate_path
+from ..singletons import logger, test_window
 from ..texts import (
+    dont_show_this_button_text,
     rate_addon_text_label,
     thankyou_message_text,
-    dont_show_this_button_text,
 )
 from ..utils import give_item
-from ..singletons import logger, test_window
 
 
 def rate_this_addon():

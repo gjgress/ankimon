@@ -3,45 +3,44 @@ import random
 
 from aqt import mw
 from aqt.qt import (
+    QColor,
+    QDialog,
     QFont,
     QLabel,
     QPainter,
+    QPen,
     QPixmap,
+    QPushButton,
     QVBoxLayout,
     QWidget,
-    QDialog,
     qconnect,
 )
-from aqt.qt import QColor, QPen
-from aqt.qt import (
-    QPushButton,
-)
 
-from ..utils import load_custom_font
+from ..business import resize_pixmap_img
+from ..functions.badges_functions import check_for_badge, receive_badge
+from ..functions.battle_functions import calculate_hp
 from ..functions.pokedex_functions import (
     get_growth_rate,
     return_name_for_id,
     search_pokedex,
 )
 from ..functions.pokemon_functions import get_random_moves_for_pokemon
-from ..functions.battle_functions import calculate_hp
 from ..functions.update_main_pokemon import update_main_pokemon
-from ..functions.badges_functions import check_for_badge, receive_badge
 from ..pyobj.attack_dialog import AttackDialog
-from ..pyobj.settings import Settings
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.InfoLogger import ShowInfoLogger
-from ..pyobj.translator import Translator
-from ..pyobj.test_window import TestWindow
-from ..pyobj.reviewer_obj import Reviewer_Manager
 from ..pyobj.error_handler import show_warning_with_traceback
-from ..business import resize_pixmap_img
+from ..pyobj.InfoLogger import ShowInfoLogger
+from ..pyobj.pokemon_obj import PokemonObject
+from ..pyobj.reviewer_obj import Reviewer_Manager
+from ..pyobj.settings import Settings
+from ..pyobj.test_window import TestWindow
+from ..pyobj.translator import Translator
 from ..resources import (
     addon_dir,
-    frontdefault,
     evolve_image_path,
+    frontdefault,
     mypokemon_path,
 )
+from ..utils import load_custom_font
 
 
 class EvoWindow(QWidget):

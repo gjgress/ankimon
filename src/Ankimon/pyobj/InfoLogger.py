@@ -1,7 +1,7 @@
 import logging
-from aqt.qt import QMessageBox, QTextEdit, QVBoxLayout, QDialog, QPushButton
-from aqt.qt import Qt
 import os
+
+from aqt.qt import QDialog, QMessageBox, QPushButton, Qt, QTextEdit, QVBoxLayout
 
 
 class ShowInfoLogger:

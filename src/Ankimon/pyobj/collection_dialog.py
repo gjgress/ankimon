@@ -1,30 +1,30 @@
 import json
-from collections import defaultdict
-import uuid
-
-from aqt.utils import showInfo, showWarning
-from ..pyobj.error_handler import show_warning_with_traceback
-from PyQt6.QtWidgets import *
-from PyQt6.QtGui import *
-from PyQt6.QtCore import *
-from aqt import mw
 import re
+import uuid
+from collections import defaultdict
 
-from ..pyobj.InfoLogger import ShowInfoLogger
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.settings import Settings
-from ..pyobj.translator import Translator
-from ..pyobj.test_window import TestWindow
-from ..pyobj.reviewer_obj import Reviewer_Manager
-from ..functions.sprite_functions import get_sprite_path
+from aqt import mw
+from aqt.utils import showInfo, showWarning
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+
 from ..functions.pokedex_functions import (
     get_growth_rate,
     search_pokedex,
     search_pokedex_by_id,
 )
+from ..functions.sprite_functions import get_sprite_path
 from ..gui_classes.pokemon_details import PokemonCollectionDetails
 from ..gui_entities import MovieSplashLabel
-from ..resources import mypokemon_path, frontdefault, mainpokemon_path
+from ..pyobj.error_handler import show_warning_with_traceback
+from ..pyobj.InfoLogger import ShowInfoLogger
+from ..pyobj.pokemon_obj import PokemonObject
+from ..pyobj.reviewer_obj import Reviewer_Manager
+from ..pyobj.settings import Settings
+from ..pyobj.test_window import TestWindow
+from ..pyobj.translator import Translator
+from ..resources import frontdefault, mainpokemon_path, mypokemon_path
 
 
 class PokemonCollectionDialog(QDialog):

@@ -1,20 +1,28 @@
-from aqt.qt import QIcon, QDesktopServices
-from aqt.qt import QVBoxLayout, QTextEdit
-from aqt.qt import Qt, QUrl, QObject, pyqtSlot
-from aqt.qt import QDialog
-from aqt.utils import QWebEngineSettings, QWebEnginePage
-from aqt.qt import QWebChannel  # Add this import
 from importlib.util import find_spec
 
-from ..resources import icon_path, addon_dir
-from ..utils import (
-    read_local_file,
-    read_github_file,
-    compare_files,
-    write_local_file,
-    test_online_connectivity,
+from aqt.qt import (
+    QDesktopServices,
+    QDialog,
+    QIcon,
+    QObject,
+    Qt,
+    QTextEdit,
+    QUrl,
+    QVBoxLayout,
+    QWebChannel,  # Add this import
+    pyqtSlot,
 )
+from aqt.utils import QWebEnginePage, QWebEngineSettings
+
 from ..pyobj.error_handler import show_warning_with_traceback
+from ..resources import addon_dir, icon_path
+from ..utils import (
+    compare_files,
+    read_github_file,
+    read_local_file,
+    test_online_connectivity,
+    write_local_file,
+)
 
 
 class ExternalLinkWebEnginePage(QWebEnginePage):

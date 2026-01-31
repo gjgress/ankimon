@@ -1,4 +1,5 @@
 import json
+
 from ..resources import user_path
 
 DEFAULT_CONFIG = {

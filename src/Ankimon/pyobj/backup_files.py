@@ -1,14 +1,16 @@
 import os
 import shutil
 from datetime import datetime
+
 from aqt import mw
+
 from ..resources import (
-    mypokemon_path,
-    mainpokemon_path,
-    itembag_path,
-    badgebag_path,
-    user_path_credentials,
     backup_root,
+    badgebag_path,
+    itembag_path,
+    mainpokemon_path,
+    mypokemon_path,
+    user_path_credentials,
 )
 
 # Define backup directory and files to back up

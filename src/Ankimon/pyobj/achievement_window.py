@@ -2,23 +2,20 @@ import json
 
 from aqt import mw
 from aqt.qt import (
+    QColor,
     QGridLayout,
+    QIcon,
     QLabel,
+    QPainter,
     QPixmap,
+    QScrollArea,
     Qt,
     QVBoxLayout,
     QWidget,
-    QPainter,
 )
-from aqt.qt import QIcon
-from aqt.qt import (
-    QScrollArea,
-)
-from aqt.qt import QColor
 
 from ..functions.badges_functions import get_achieved_badges
-
-from ..resources import icon_path, badges_path, badges_list_path
+from ..resources import badges_list_path, badges_path, icon_path
 
 
 class AchievementWindow(QWidget):

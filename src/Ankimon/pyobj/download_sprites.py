@@ -1,22 +1,25 @@
-import os
-import zipfile
-import requests
-import time
 import hashlib  # Point 4: Add import for hashlib
+import os
+import time
+import zipfile
 from pathlib import Path
 from typing import Optional
 
-from ..resources import user_path
-from ..gui_entities import AgreementDialog
-from aqt.qt import Qt, QThread, pyqtSignal
+import requests
 from aqt.qt import (
     QDialog,
-    QVBoxLayout,
-    QProgressBar,
     QLabel,
-    QPushButton,
     QMessageBox,
+    QProgressBar,
+    QPushButton,
+    Qt,
+    QThread,
+    QVBoxLayout,
+    pyqtSignal,
 )
+
+from ..gui_entities import AgreementDialog
+from ..resources import user_path
 
 
 class DownloadThread(QThread):

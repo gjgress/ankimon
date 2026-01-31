@@ -1,12 +1,13 @@
-from aqt import gui_hooks, mw
-from ..functions.pokemon_functions import find_experience_for_level
-from ..business import get_image_as_base64
-from ..functions.create_css_for_reviewer import create_css_for_reviewer
 import json
 import os
+
+from aqt import gui_hooks, mw
+
+from ..business import get_image_as_base64
+from ..functions.create_css_for_reviewer import create_css_for_reviewer
 from ..functions.create_gui_functions import create_status_html
 from ..functions.pokedex_functions import get_pokemon_diff_lang_name
-
+from ..functions.pokemon_functions import find_experience_for_level
 from .pokemon_obj import PokemonObject
 
 

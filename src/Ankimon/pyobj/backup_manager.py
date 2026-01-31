@@ -1,15 +1,15 @@
 import base64
+import datetime
 import json
 import os
 import shutil
-import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from aqt.utils import showInfo, showWarning, askUser
+from aqt.utils import askUser, showInfo, showWarning
 
+from ..resources import addon_dir, user_path
 from ..utils import close_anki
-from ..resources import user_path, addon_dir
 
 
 class BackupManager:

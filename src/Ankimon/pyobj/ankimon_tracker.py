@@ -1,9 +1,11 @@
-from aqt.qt import QTimer
-from .pokemon_obj import PokemonObject
 from datetime import datetime
-from .error_handler import show_warning_with_traceback
+
+from aqt.qt import QTimer
+
 from ..functions.pokedex_functions import extract_ids_from_file
 from ..utils import random_battle_scene
+from .error_handler import show_warning_with_traceback
+from .pokemon_obj import PokemonObject
 
 
 class AnkimonTracker:

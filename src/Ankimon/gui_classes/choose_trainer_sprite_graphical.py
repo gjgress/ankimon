@@ -1,18 +1,21 @@
-from aqt.qt import Qt, QSize
+import os
+
+from aqt import mw
 from aqt.qt import (
     QDialog,
-    QVBoxLayout,
-    QLabel,
     QGridLayout,
-    QWidget,
-    QScrollArea,
+    QIcon,
+    QLabel,
     QPushButton,
+    QScrollArea,
+    QSize,
+    Qt,
+    QVBoxLayout,
+    QWidget,
 )
-from aqt.qt import QIcon
-from aqt import mw
-from ..utils import get_all_sprites
+
 from ..resources import trainer_sprites_path
-import os
+from ..utils import get_all_sprites
 
 
 class TrainerSpriteGraphicalDialog(QDialog):

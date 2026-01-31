@@ -1,7 +1,8 @@
-from PyQt6.QtWidgets import *
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
-from ..const import status_colors_label, status_colors_html
+from PyQt6.QtWidgets import *
+
+from ..const import status_colors_html, status_colors_label
 
 
 def create_status_label(status_name):

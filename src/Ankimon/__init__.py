@@ -17,23 +17,23 @@ except ModuleNotFoundError:
     # Debug console should not be available to non devs, so it's fine if this import doesn't succeed
     pass
 
+import copy
 import json
 import random
-import copy
 from typing import Union
 
 import aqt
+import markdown
 from anki.hooks import addHook, wrap
 from aqt import gui_hooks, mw, utils
-from aqt.qt import QDialog
-from aqt.operations import QueryOp
-from aqt.reviewer import Reviewer
-from aqt.utils import downArrow, showWarning, tr, tooltip
 from aqt.gui_hooks import webview_will_set_content
+from aqt.operations import QueryOp
+from aqt.qt import QDialog
+from aqt.reviewer import Reviewer
+from aqt.utils import downArrow, showWarning, tooltip, tr
 from aqt.webview import WebContent
-import markdown
 
-from .resources import generate_startup_files, user_path, addon_ver, addon_dir
+from .resources import addon_dir, addon_ver, generate_startup_files, user_path
 
 generate_startup_files(addon_dir, user_path)
 
@@ -51,106 +51,103 @@ reviewer_buttons = settings_obj.get(
     "controls.pokemon_buttons"
 )  # default: true; false = no pokemon buttons in reviewer
 
-from .resources import (
-    addon_dir,
-    pkmnimgfolder,
-    mypokemon_path,
-    itembag_path,
-    sound_list_path,
+from .classes.choose_move_dialog import MoveSelectionDialog
+from .functions.badges_functions import (
+    check_for_badge,
+    get_achieved_badges,
+    handle_review_count_achievement,
+    receive_badge,
 )
-from .menu_buttons import create_menu_actions
-from .hooks import setupHooks
-from .texts import _bottomHTML_template, button_style
-from .utils import (
-    check_folders_exist,
-    safe_get_random_move,
-    test_online_connectivity,
-    read_local_file,
-    read_github_file,
-    compare_files,
-    write_local_file,
-    count_items_and_rewrite,
-    play_effect_sound,
-    get_main_pokemon_data,
-    play_sound,
-    load_collected_pokemon_ids,
+from .functions.battle_functions import (
+    process_battle_data,
+    update_pokemon_battle_status,
+    validate_pokemon_status,
 )
+from .functions.discord_function import DiscordPresence
+from .functions.drawing_utils import tooltipWithColour
+from .functions.encounter_functions import (
+    catch_pokemon,
+    generate_random_pokemon,
+    handle_enemy_faint,
+    handle_main_pokemon_faint,
+    kill_pokemon,
+    new_pokemon,
+)
+from .functions.pokemon_showdown_functions import (
+    export_all_pkmn_showdown,
+    export_to_pkmn_showdown,
+    flex_pokemon_collection,
+)
+from .functions.rate_addon_functions import rate_this_addon
 from .functions.url_functions import (
+    join_discord_url,
+    open_leaderboard_url,
     open_team_builder,
     rate_addon_url,
     report_bug,
-    join_discord_url,
-    open_leaderboard_url,
 )
-from .functions.badges_functions import (
-    get_achieved_badges,
-    handle_review_count_achievement,
-    check_for_badge,
-    receive_badge,
-)
-from .functions.pokemon_showdown_functions import (
-    export_to_pkmn_showdown,
-    export_all_pkmn_showdown,
-    flex_pokemon_collection,
-)
-from .functions.drawing_utils import tooltipWithColour
-from .functions.discord_function import DiscordPresence
-from .functions.rate_addon_functions import rate_this_addon
-from .functions.encounter_functions import (
-    generate_random_pokemon,
-    new_pokemon,
-    catch_pokemon,
-    kill_pokemon,
-    handle_enemy_faint,
-    handle_main_pokemon_faint,
-)
-from .gui_entities import UpdateNotificationWindow, CheckFiles
-from .pyobj.download_sprites import show_agreement_and_download_dialog
-from .pyobj.help_window import HelpWindow
+from .gui_entities import CheckFiles, UpdateNotificationWindow
+from .hooks import setupHooks
+from .menu_buttons import create_menu_actions
+from .poke_engine.ankimon_hooks_to_poke_engine import simulate_battle_with_poke_engine
+from .pyobj.ankimon_sync import check_and_sync_pokemon_data, setup_ankimon_sync_hooks
 from .pyobj.backup_files import run_backup
 from .pyobj.backup_manager import BackupManager
-from .pyobj.ankimon_sync import setup_ankimon_sync_hooks, check_and_sync_pokemon_data
+from .pyobj.download_sprites import show_agreement_and_download_dialog
+from .pyobj.error_handler import show_warning_with_traceback
+from .pyobj.help_window import HelpWindow
+from .pyobj.pokemon_trade import check_and_award_monthly_pokemon
 from .pyobj.tip_of_the_day import show_tip_of_the_day
-from .classes.choose_move_dialog import MoveSelectionDialog
-from .poke_engine.ankimon_hooks_to_poke_engine import simulate_battle_with_poke_engine
+from .resources import (
+    addon_dir,
+    itembag_path,
+    mypokemon_path,
+    pkmnimgfolder,
+    sound_list_path,
+)
 from .singletons import (
-    reviewer_obj,
-    logger,
-    settings_obj,
-    settings_window,
-    translator,
-    main_pokemon,
-    enemy_pokemon,
-    trainer_card,
-    ankimon_tracker_obj,
-    test_window,
     achievement_bag,
+    achievements,
+    ankimon_tracker_obj,
+    ankimon_tracker_window,
+    credits,
     data_handler_obj,
     data_handler_window,
-    shop_manager,
-    ankimon_tracker_window,
-    pokedex_window,
     eff_chart,
-    gen_id_chart,
-    license,
-    credits,
+    enemy_pokemon,
     evo_window,
-    starter_window,
+    gen_id_chart,
     item_window,
-    version_dialog,
-    achievements,
+    license,
+    logger,
+    main_pokemon,
+    pokedex_window,
     pokemon_pc,
+    reviewer_obj,
+    settings_obj,
+    settings_window,
+    shop_manager,
+    starter_window,
+    test_window,
+    trainer_card,
+    translator,
+    version_dialog,
 )
-
-from .pyobj.pokemon_trade import check_and_award_monthly_pokemon
-
-from .functions.battle_functions import (
-    update_pokemon_battle_status,
-    validate_pokemon_status,
-    process_battle_data,
+from .texts import _bottomHTML_template, button_style
+from .utils import (
+    check_folders_exist,
+    compare_files,
+    count_items_and_rewrite,
+    get_main_pokemon_data,
+    load_collected_pokemon_ids,
+    play_effect_sound,
+    play_sound,
+    read_github_file,
+    read_local_file,
+    safe_get_random_move,
+    test_online_connectivity,
+    write_local_file,
 )
-
-from .pyobj.error_handler import show_warning_with_traceback
 
 mw.settings_ankimon = settings_window
 mw.logger = logger

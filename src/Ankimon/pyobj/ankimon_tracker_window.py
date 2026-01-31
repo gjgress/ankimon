@@ -1,16 +1,17 @@
+from aqt import mw
 from aqt.qt import (
-    QWidget,
-    QVBoxLayout,
+    QFont,
+    QGridLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
-    QGridLayout,
-    QSpacerItem,
     QSizePolicy,
-    QGroupBox,
+    QSpacerItem,
+    Qt,
+    QTimer,
+    QVBoxLayout,
+    QWidget,
 )
-from aqt.qt import Qt, QTimer
-from aqt.qt import QFont
-from aqt import mw
 
 
 class AnkimonTrackerWindow:

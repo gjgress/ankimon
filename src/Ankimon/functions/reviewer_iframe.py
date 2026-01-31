@@ -1,5 +1,5 @@
-import os
 import fnmatch
+import os
 
 
 def list_audio_files(folder_path):
@@ -28,6 +28,7 @@ def list_audio_files(folder_path):
 
 
 from aqt import mw
+
 from .pokemon_functions import find_experience_for_level
 
 

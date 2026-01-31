@@ -1,7 +1,7 @@
 import base64
 import csv
 
-from .resources import csv_file_items, csv_file_descriptions
+from .resources import csv_file_descriptions, csv_file_items
 
 
 def get_image_as_base64(path):

@@ -1,10 +1,13 @@
 import json
 
-from .badges_functions import get_achieved_badges
-from .pokedex_functions import extract_ids_from_file
 from ..resources import mypokemon_path
+from .badges_functions import get_achieved_badges
+from .pokedex_functions import (
+    check_evolution_for_pokemon,
+    extract_ids_from_file,
+    return_name_for_id,
+)
 from .pokemon_functions import find_experience_for_level
-from .pokedex_functions import check_evolution_for_pokemon, return_name_for_id
 
 
 def find_trainer_rank(highest_level, trainer_level):

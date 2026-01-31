@@ -1,56 +1,45 @@
 import json
 
 from aqt import mw
-
 from aqt.qt import (
+    QColor,
     QDialog,
     QFont,
+    QHBoxLayout,
+    QIcon,
     QLabel,
+    QLineEdit,
     QPainter,
+    QPainterPath,
     QPixmap,
+    QPushButton,
     Qt,
     QVBoxLayout,
     QWidget,
     qconnect,
 )
-
 from aqt.utils import showWarning
 
-from aqt.qt import QIcon, QColor, QPainterPath
-
-from aqt.qt import (
-    QPushButton,
-    QHBoxLayout,
-    QLineEdit,
-)
-
-from ..utils import random_item, load_custom_font
-
 from ..functions.drawing_utils import draw_gender_symbols, draw_stat_boosts
-
 from ..functions.pokedex_functions import get_pokemon_diff_lang_name, search_pokedex
-
 from ..functions.pokemon_functions import find_experience_for_level
-
 from ..pyobj.ankimon_tracker import AnkimonTracker
 from ..pyobj.InfoLogger import ShowInfoLogger
-
 from ..pyobj.translator import Translator
-
-from .error_handler import show_warning_with_traceback
-
 from ..resources import (
-    pkmnimgfolder,
     addon_dir,
-    icon_path,
+    badges_list_path,
+    battle_ui_path,
     battlescene_path,
     battlescene_path_without_dialog,
-    battle_ui_path,
-    user_path_sprites,
     frontdefault,
-    badges_list_path,
+    icon_path,
+    pkmnimgfolder,
     pokedex_image_path,
+    user_path_sprites,
 )
+from ..utils import load_custom_font, random_item
+from .error_handler import show_warning_with_traceback
 
 
 class TestWindow(QWidget):

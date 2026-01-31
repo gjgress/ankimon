@@ -1,6 +1,8 @@
-import os
 import json
-from aqt.qt import QVBoxLayout, QLabel, QPushButton, QTextEdit, QDialog
+import os
+
+from aqt.qt import QDialog, QLabel, QPushButton, QTextEdit, QVBoxLayout
+
 from ..resources import addon_dir, json_file_structure
 
 

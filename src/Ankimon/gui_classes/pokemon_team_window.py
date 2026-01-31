@@ -1,22 +1,24 @@
-from ..functions.sprite_functions import get_sprite_path
-from aqt.qt import Qt
-from aqt.qt import (
-    QDialog,
-    QVBoxLayout,
-    QLabel,
-    QPushButton,
-    QScrollArea,
-    QGroupBox,
-    QFrame,
-    QGridLayout,
-    QComboBox,
-    QDialogButtonBox,
-)
-from aqt.qt import QPixmap
 import json
 import os
+
 from aqt import mw
-from ..resources import mypokemon_path, frontdefault, team_pokemon_path
+from aqt.qt import (
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
+    QLabel,
+    QPixmap,
+    QPushButton,
+    QScrollArea,
+    Qt,
+    QVBoxLayout,
+)
+
+from ..functions.sprite_functions import get_sprite_path
+from ..resources import frontdefault, mypokemon_path, team_pokemon_path
 
 
 class PokemonTeamDialog(QDialog):

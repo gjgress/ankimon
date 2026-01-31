@@ -1,4 +1,4 @@
-from aqt.qt import QDialog, QVBoxLayout, QLabel, QPushButton
+from aqt.qt import QDialog, QLabel, QPushButton, QVBoxLayout
 
 
 class AttackDialog(QDialog):

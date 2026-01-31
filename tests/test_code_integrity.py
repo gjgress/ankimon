@@ -1,6 +1,6 @@
+import importlib.util
 import os
 import sys
-import importlib.util
 
 # Define ANKIMON_ROOT_DIR and ANKIMON_SRC_PARENT_DIR first
 ANKIMON_ROOT_DIR = os.path.abspath(

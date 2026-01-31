@@ -1,51 +1,47 @@
-from pathlib import Path
-import random
-import json
 import csv
+import json
+import random
+from pathlib import Path
 from typing import Any, Optional
 
 from aqt import mw
 from aqt.qt import (
+    QComboBox,
     QGridLayout,
-    QPixmap,
-    Qt,
-)
-from aqt.qt import QIcon
-from aqt.qt import (
+    QHBoxLayout,
+    QIcon,
     QLabel,
+    QLineEdit,
+    QPixmap,
     QPushButton,
+    QScrollArea,
+    Qt,
     QVBoxLayout,
     QWidget,
-    QHBoxLayout,
-    QComboBox,
-    QLineEdit,
-    QScrollArea,
 )
-
-from ..pyobj.InfoLogger import ShowInfoLogger
-from ..pyobj.evolution_window import EvoWindow
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.starter_window import StarterWindow
-from ..pyobj.pc_box import GiveItemWindow
 
 from ..business import get_id_and_description_by_item_name
+from ..functions.badges_functions import check_for_badge, receive_badge
 from ..functions.pokedex_functions import (
-    search_pokedex_by_id,
-    return_id_for_item_name,
     check_evolution_by_item,
     find_details_move,
+    return_id_for_item_name,
+    search_pokedex_by_id,
 )
-
+from ..functions.pokemon_functions import save_fossil_pokemon
+from ..pyobj.evolution_window import EvoWindow
+from ..pyobj.InfoLogger import ShowInfoLogger
+from ..pyobj.pc_box import GiveItemWindow
+from ..pyobj.pokemon_obj import PokemonObject
+from ..pyobj.starter_window import StarterWindow
 from ..resources import (
-    mypokemon_path,
-    icon_path,
-    items_path,
-    itembag_path,
     csv_file_items_cost,
+    icon_path,
+    itembag_path,
+    items_path,
+    mypokemon_path,
     poke_evo_path,
 )
-from ..functions.badges_functions import check_for_badge, receive_badge
-from ..functions.pokemon_functions import save_fossil_pokemon
 from ..utils import play_effect_sound
 from .error_handler import show_warning_with_traceback
 

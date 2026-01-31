@@ -1,44 +1,42 @@
-import os
-from pathlib import Path
-import requests
-import json
-import random
 import csv
+import json
+import os
+import random
+from pathlib import Path
 from typing import Optional
 
+import requests
 from aqt import mw
-from aqt.utils import showWarning, showInfo
-
-from aqt.qt import QFontDatabase, QFont, QUrl
+from aqt.qt import QFont, QFontDatabase, QUrl
+from aqt.utils import showInfo, showWarning
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
-
-from .pyobj.settings import Settings
-from .pyobj.InfoLogger import ShowInfoLogger
 
 from .functions.battle_functions import calculate_hp
 from .functions.pokedex_functions import find_details_move, search_pokedex
+from .move_names import format_move_name
 from .pyobj.error_handler import show_warning_with_traceback
+from .pyobj.InfoLogger import ShowInfoLogger
+from .pyobj.settings import Settings
 from .resources import (
+    POKEMON_TIERS,
+    addon_dir,
     battlescene_path,
     berries_path,
-    items_path,
-    itembag_path,
-    csv_file_items_cost,
     csv_file_descriptions,
+    csv_file_items_cost,
+    fainted_sound_path,
     font_path,
+    hpheal_sound_path,
     hurt_normal_sound_path,
     hurt_noteff_sound_path,
     hurt_supereff_sound_path,
-    hpheal_sound_path,
-    ownhplow_sound_path,
-    fainted_sound_path,
-    mypokemon_path,
+    itembag_path,
+    items_path,
     mainpokemon_path,
-    addon_dir,
-    POKEMON_TIERS,
+    mypokemon_path,
+    ownhplow_sound_path,
     pokedex_path,
 )
-from .move_names import format_move_name
 
 audio_output = QAudioOutput()
 media_player = QMediaPlayer()

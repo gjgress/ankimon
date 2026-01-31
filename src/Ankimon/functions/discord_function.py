@@ -1,11 +1,12 @@
-import threading
 import random
+import threading
 import time
 
-from ..pyobj.ankimon_tracker import AnkimonTracker
-from ..addon_files.lib.pypresence import Presence
-from aqt.utils import tooltip
 from aqt import mw
+from aqt.utils import tooltip
+
+from ..addon_files.lib.pypresence import Presence
+from ..pyobj.ankimon_tracker import AnkimonTracker
 
 logger = mw.logger
 

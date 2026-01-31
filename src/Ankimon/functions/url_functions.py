@@ -1,5 +1,4 @@
-from aqt.qt import QDesktopServices
-from aqt.qt import QUrl
+from aqt.qt import QDesktopServices, QUrl
 
 
 def open_browser_window():

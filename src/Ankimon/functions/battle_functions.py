@@ -1,6 +1,6 @@
+from ..move_names import format_move_name
 from ..poke_engine import constants
 from ..pyobj.error_handler import show_warning_with_traceback
-from ..move_names import format_move_name
 
 
 def update_pokemon_battle_status(battle_info: dict, enemy_pokemon, main_pokemon):

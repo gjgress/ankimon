@@ -1,38 +1,40 @@
-import markdown
 import json
-from aqt.qt import QMovie, QIcon
-from aqt.qt import (
-    QLabel,
-    QVBoxLayout,
-    QTextEdit,
-    QCheckBox,
-    QPushButton,
-    QMessageBox,
-    QWidget,
-    QScrollArea,
-    QGridLayout,
-    QTextBrowser,
-)
-from aqt import mw
-from aqt.qt import QDialog
-from aqt.qt import Qt
 
+import markdown
+from aqt import mw
+from aqt.qt import (
+    QCheckBox,
+    QDialog,
+    QGridLayout,
+    QIcon,
+    QLabel,
+    QMessageBox,
+    QMovie,
+    QPushButton,
+    QScrollArea,
+    Qt,
+    QTextBrowser,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+
+from .pyobj.error_handler import show_warning_with_traceback
 from .resources import (
-    icon_path,
     addon_dir,
     eff_chart_html_path,
-    table_gen_id_html_path,
+    icon_path,
     mypokemon_path,
+    table_gen_id_html_path,
 )
-from .texts import terms_text, pokedex_html_template
+from .texts import pokedex_html_template, terms_text
 from .utils import (
-    read_local_file,
-    read_github_file,
     compare_files,
-    write_local_file,
+    read_github_file,
     read_html_file,
+    read_local_file,
+    write_local_file,
 )
-from .pyobj.error_handler import show_warning_with_traceback
 
 
 class MovieSplashLabel(QLabel):

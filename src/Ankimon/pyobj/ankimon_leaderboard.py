@@ -1,9 +1,11 @@
 import json
-from aqt.qt import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
-from aqt.utils import showInfo
-from ..resources import user_path_credentials, mypokemon_path
+
 import requests
 from aqt import mw  # import setting values direct from init file
+from aqt.qt import QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from aqt.utils import showInfo
+
+from ..resources import mypokemon_path, user_path_credentials
 
 # ANKIMON_LEADERBOARD_API_URL = "https://ankimon.com/api/leaderboard"  # Replace with the actual API URL
 ANKIMON_LEADERBOARD_API_URL = "https://leaderboard-api.ankimon.com/update_stats"  # Replace with the actual API URL

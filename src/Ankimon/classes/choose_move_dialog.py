@@ -1,9 +1,9 @@
-from aqt.qt import QDialog, QVBoxLayout, QLabel
-from aqt.qt import QFont
-from aqt.qt import Qt
+import random
+
+from aqt.qt import QDialog, QFont, QLabel, Qt, QVBoxLayout
+
 from ..functions.pokedex_functions import find_details_move
 from ..move_names import format_move_name
-import random
 
 
 class MoveSelectionDialog(QDialog):

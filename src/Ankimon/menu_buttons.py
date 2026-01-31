@@ -1,46 +1,42 @@
-from typing import Callable
 from pathlib import Path
-from typing import Union
+from typing import Callable, Union
 
-from aqt.utils import *
-from aqt.qt import *
-from aqt.qt import QMenu
-from aqt.qt import QAction, QKeySequence
 from aqt import mw  # The main window object
+from aqt.qt import *
+from aqt.qt import QAction, QKeySequence, QMenu
+from aqt.utils import *
 from aqt.utils import qconnect
 
-
-from .gui_classes.choose_trainer_sprite_graphical import TrainerSpriteGraphicalDialog
-
-from .pyobj.trainer_card_window import TrainerCardGUI
-from .gui_classes.pokemon_team_window import PokemonTeamDialog
-from .gui_classes.check_files import FileCheckerApp
-from .pyobj.download_sprites import show_agreement_and_download_dialog
-from .pyobj.ankimon_leaderboard import show_api_key_dialog
-from .pyobj.settings import Settings
-from .pyobj.translator import Translator
-from .pyobj.InfoLogger import ShowInfoLogger
-from .pyobj.collection_dialog import PokemonCollectionDialog
-from .pyobj.item_window import ItemWindow
-from .pyobj.pc_box import PokemonPC
-from .pyobj.trainer_card import TrainerCard
-from .pyobj.data_handler_window import DataHandlerWindow
-from .pyobj.settings_window import SettingsWindow
-from .pyobj.test_window import TestWindow
-from .pyobj.data_handler import DataHandler
-from .pyobj.ankimon_shop import PokemonShopManager
-from .pokedex.pokedex_obj import Pokedex
-from .pyobj.achievement_window import AchievementWindow
-from .pyobj.ankimon_tracker_window import AnkimonTrackerWindow
-from .pyobj.backup_manager import BackupManager
 from .gui_classes.backup_manager_dialog import BackupManagerDialog
+from .gui_classes.check_files import FileCheckerApp
+from .gui_classes.choose_trainer_sprite_graphical import TrainerSpriteGraphicalDialog
+from .gui_classes.pokemon_team_window import PokemonTeamDialog
 from .gui_entities import (
-    License,
     Credits,
-    TableWidget,
     IDTableWidget,
+    License,
+    TableWidget,
     Version_Dialog,
 )
+from .pokedex.pokedex_obj import Pokedex
+from .pyobj.achievement_window import AchievementWindow
+from .pyobj.ankimon_leaderboard import show_api_key_dialog
+from .pyobj.ankimon_shop import PokemonShopManager
+from .pyobj.ankimon_tracker_window import AnkimonTrackerWindow
+from .pyobj.backup_manager import BackupManager
+from .pyobj.collection_dialog import PokemonCollectionDialog
+from .pyobj.data_handler import DataHandler
+from .pyobj.data_handler_window import DataHandlerWindow
+from .pyobj.download_sprites import show_agreement_and_download_dialog
+from .pyobj.InfoLogger import ShowInfoLogger
+from .pyobj.item_window import ItemWindow
+from .pyobj.pc_box import PokemonPC
+from .pyobj.settings import Settings
+from .pyobj.settings_window import SettingsWindow
+from .pyobj.test_window import TestWindow
+from .pyobj.trainer_card import TrainerCard
+from .pyobj.trainer_card_window import TrainerCardGUI
+from .pyobj.translator import Translator
 
 debug = True
 

@@ -1,8 +1,9 @@
+import datetime
 import json
-from ..resources import user_path
 import os
 import uuid
-import datetime
+
+from ..resources import user_path
 
 new_values = {
     "everstone": False,

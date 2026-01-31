@@ -1,8 +1,9 @@
-import os
 import json
+import os
+
 from aqt import QDialog, QVBoxLayout, QWebEngineView
-from aqt.qt import QUrlQuery
-from aqt.qt import Qt, QUrl, QFrame
+from aqt.qt import QFrame, Qt, QUrl, QUrlQuery
+
 from ..resources import mypokemon_path, pokemon_history_path
 
 

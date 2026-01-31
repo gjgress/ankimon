@@ -17,36 +17,36 @@ import uuid
 
 from aqt import mw
 
-from .pyobj.collection_dialog import PokemonCollectionDialog
-from .pyobj.ankimon_tracker import AnkimonTracker
-from .pyobj.settings import Settings
-from .pyobj.settings_window import SettingsWindow
-from .pyobj.pokemon_obj import PokemonObject
-from .pyobj.InfoLogger import ShowInfoLogger
-from .pyobj.trainer_card import TrainerCard
-from .pyobj.translator import Translator
-from .pyobj.test_window import TestWindow
-from .pyobj.achievement_window import AchievementWindow
-from .pyobj.data_handler import DataHandler
-from .pyobj.data_handler_window import DataHandlerWindow
-from .pyobj.ankimon_tracker_window import AnkimonTrackerWindow
-from .pyobj.ankimon_shop import PokemonShopManager
-from .pokedex.pokedex_obj import Pokedex
-from .pyobj.reviewer_obj import Reviewer_Manager
-from .pyobj.evolution_window import EvoWindow
-from .pyobj.starter_window import StarterWindow
-from .pyobj.item_window import ItemWindow
-from .pyobj.pc_box import PokemonPC
+from .functions.badges_functions import populate_achievements_from_badges
+from .functions.update_main_pokemon import update_main_pokemon
 from .gui_entities import (
-    License,
     Credits,
-    TableWidget,
     IDTableWidget,
+    License,
     Pokedex_Widget,
+    TableWidget,
     Version_Dialog,
 )
-from .functions.update_main_pokemon import update_main_pokemon
-from .functions.badges_functions import populate_achievements_from_badges
+from .pokedex.pokedex_obj import Pokedex
+from .pyobj.achievement_window import AchievementWindow
+from .pyobj.ankimon_shop import PokemonShopManager
+from .pyobj.ankimon_tracker import AnkimonTracker
+from .pyobj.ankimon_tracker_window import AnkimonTrackerWindow
+from .pyobj.collection_dialog import PokemonCollectionDialog
+from .pyobj.data_handler import DataHandler
+from .pyobj.data_handler_window import DataHandlerWindow
+from .pyobj.evolution_window import EvoWindow
+from .pyobj.InfoLogger import ShowInfoLogger
+from .pyobj.item_window import ItemWindow
+from .pyobj.pc_box import PokemonPC
+from .pyobj.pokemon_obj import PokemonObject
+from .pyobj.reviewer_obj import Reviewer_Manager
+from .pyobj.settings import Settings
+from .pyobj.settings_window import SettingsWindow
+from .pyobj.starter_window import StarterWindow
+from .pyobj.test_window import TestWindow
+from .pyobj.trainer_card import TrainerCard
+from .pyobj.translator import Translator
 from .resources import addon_dir, itembag_path
 
 # start loggerobject for Ankimon

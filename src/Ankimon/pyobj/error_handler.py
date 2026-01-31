@@ -1,25 +1,27 @@
-import os
-import re
 import json
-import random
-import traceback
-import requests
+import os
 import platform
+import random
+import re
 import sys
+import traceback
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Dict, Optional
+
+import requests
+from anki.buildinfo import version as anki_version
+from aqt import mw
 from aqt.qt import (
     QDialog,
-    QVBoxLayout,
     QHBoxLayout,
+    QImage,
     QLabel,
+    QPixmap,
     QPushButton,
     QSizePolicy,
+    Qt,
+    QVBoxLayout,
 )
-from aqt.qt import QPixmap, QImage
-from aqt.qt import Qt
-from aqt import mw
-from anki.buildinfo import version as anki_version
 
 # Path configurations
 addon_dir = Path(__file__).parents[1]

@@ -5,25 +5,24 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
-from aqt import mw, gui_hooks
-from aqt.utils import showInfo, tooltip
-from ..pyobj.error_handler import show_warning_with_traceback
-
-from ..resources import user_path, addon_dir
-from ..utils import close_anki
-
-from aqt.qt import QTextOption
+from aqt import gui_hooks, mw
 from aqt.qt import (
-    QLabel,
-    QVBoxLayout,
-    QTextEdit,
-    QPushButton,
     QDialog,
     QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTextEdit,
+    QTextOption,
+    QVBoxLayout,
     QWidget,
 )
+from aqt.utils import showInfo, tooltip
+
+from ..pyobj.error_handler import show_warning_with_traceback
+from ..resources import addon_dir, user_path
+from ..utils import close_anki
 
 
 class ImprovedPokemonDataSync(QDialog):

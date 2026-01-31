@@ -1,22 +1,24 @@
-from ..resources import (
-    pokedex_path,
-    pokedesc_lang_path,
-    pokenames_lang_path,
-    mypokemon_path,
-    learnset_path,
-    moves_file_path,
-    poke_evo_path,
-    poke_species_path,
-    csv_file_items_cost,
-    stats_csv,
-    pokemon_csv,
-)
-from aqt.utils import showWarning
-from aqt import mw
+import csv
 import json
 import random
-import csv
+
+from aqt import mw
+from aqt.utils import showWarning
+
 from ..pyobj.error_handler import show_warning_with_traceback
+from ..resources import (
+    csv_file_items_cost,
+    learnset_path,
+    moves_file_path,
+    mypokemon_path,
+    poke_evo_path,
+    poke_species_path,
+    pokedesc_lang_path,
+    pokedex_path,
+    pokemon_csv,
+    pokenames_lang_path,
+    stats_csv,
+)
 
 GROWTH_RATES = {
     1: "slow",

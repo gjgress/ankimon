@@ -1,16 +1,17 @@
-from ..resources import trainer_sprites_path, mypokemon_path, team_pokemon_path
-from ..functions.trainer_functions import find_trainer_rank
-from ..functions.badges_functions import get_achieved_badges
-from aqt.utils import showInfo
-import math
 import json
-from .ankimon_leaderboard import (
-    sync_data_to_leaderboard,
-    get_unique_pokemon,
-    get_total_pokemon,
-    get_shinies,
-)
+import math
 
+from aqt.utils import showInfo
+
+from ..functions.badges_functions import get_achieved_badges
+from ..functions.trainer_functions import find_trainer_rank
+from ..resources import mypokemon_path, team_pokemon_path, trainer_sprites_path
+from .ankimon_leaderboard import (
+    get_shinies,
+    get_total_pokemon,
+    get_unique_pokemon,
+    sync_data_to_leaderboard,
+)
 
 # Constants for leveling
 BASE_XP = 50  # Base XP required for level 1

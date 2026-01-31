@@ -1,10 +1,10 @@
 from aqt.qt import (
-    QMainWindow,
-    QWidget,
-    QVBoxLayout,
     QLabel,
-    QTextEdit,
+    QMainWindow,
     QScrollArea,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
 
 

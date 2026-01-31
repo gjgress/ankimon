@@ -1,15 +1,14 @@
 import json
 
 from aqt import mw
-from aqt.qt import QDialog, QLabel, Qt, QVBoxLayout
-from aqt.qt import QPushButton, QLineEdit
+from aqt.qt import QDialog, QLabel, QLineEdit, QPushButton, Qt, QVBoxLayout
 
 from ..functions.pokedex_functions import search_pokedex
 from ..functions.url_functions import open_browser_window
-from ..utils import save_error_code
-from ..resources import mypokemon_path
-from ..singletons import main_pokemon, logger
 from ..pyobj.error_handler import show_warning_with_traceback
+from ..resources import mypokemon_path
+from ..singletons import logger, main_pokemon
+from ..utils import save_error_code
 
 
 def export_to_pkmn_showdown():

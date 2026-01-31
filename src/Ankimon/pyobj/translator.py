@@ -1,16 +1,17 @@
 import json
+
 from ..resources import (
-    lang_path_de,
     lang_path_ch,
-    lang_path_en,
-    lang_path_fr,
-    lang_path_jp,
-    lang_path_sp,
-    lang_path_kr,
-    lang_path_it,
     lang_path_cz,
-    lang_path_po,
+    lang_path_de,
+    lang_path_en,
     lang_path_es_latam,
+    lang_path_fr,
+    lang_path_it,
+    lang_path_jp,
+    lang_path_kr,
+    lang_path_po,
+    lang_path_sp,
 )
 
 LANG_PATHS = {

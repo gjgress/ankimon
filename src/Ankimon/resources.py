@@ -1,6 +1,6 @@
-from pathlib import Path
-import os
 import json
+import os
+from pathlib import Path
 
 addon_dir = Path(__file__).parents[0]
 

@@ -1,50 +1,51 @@
-from math import exp
 import json
+from math import exp
 from typing import Any
 
 from aqt import mw, qconnect
-from aqt.utils import showWarning
-from aqt.qt import QPixmap, QPainter, QIcon
-from aqt.qt import Qt
-from aqt.qt import QColor
-from aqt.qt import QScrollArea
 from aqt.qt import (
+    QColor,
     QDialog,
     QHBoxLayout,
-    QVBoxLayout,
+    QIcon,
     QLabel,
-    QPushButton,
     QLineEdit,
-    QWidget,
     QMessageBox,
+    QPainter,
+    QPixmap,
+    QPushButton,
+    QScrollArea,
+    Qt,
+    QVBoxLayout,
+    QWidget,
 )
+from aqt.utils import showWarning
 
-from ..pyobj.attack_dialog import AttackDialog
-from ..pyobj.pokemon_trade import PokemonTrade
-from ..pyobj.error_handler import show_warning_with_traceback
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.InfoLogger import ShowInfoLogger
+from ..business import split_string_by_length
+from ..functions.gui_functions import move_category_path, type_icon_path
 from ..functions.pokedex_functions import (
-    get_pokemon_diff_lang_name,
-    get_pokemon_descriptions,
-    get_all_pokemon_moves,
     find_details_move,
+    get_all_pokemon_moves,
+    get_pokemon_descriptions,
+    get_pokemon_diff_lang_name,
     search_pokedex_by_id,
 )
 from ..functions.pokemon_functions import find_experience_for_level
-from ..functions.gui_functions import type_icon_path, move_category_path
 from ..functions.sprite_functions import get_sprite_path
 from ..gui_entities import MovieSplashLabel
-from ..business import split_string_by_length
-from ..utils import format_move_name, load_custom_font
+from ..pyobj.attack_dialog import AttackDialog
+from ..pyobj.error_handler import show_warning_with_traceback
+from ..pyobj.InfoLogger import ShowInfoLogger
+from ..pyobj.pokemon_obj import PokemonObject
+from ..pyobj.pokemon_trade import PokemonTrade
 from ..resources import (
-    icon_path,
     addon_dir,
+    icon_path,
+    itembag_path,
     mainpokemon_path,
     mypokemon_path,
     pokemon_history_path,
     pokemon_tm_learnset_path,
-    itembag_path,
 )
 from ..texts import (
     attack_details_window_template,
@@ -52,6 +53,7 @@ from ..texts import (
     remember_attack_details_window_template,
     remember_attack_details_window_template_end,
 )
+from ..utils import format_move_name, load_custom_font
 
 
 def _lookup_move_data(attack: str):

@@ -1,27 +1,27 @@
 import json
 import os
+
+from aqt import mw
 from aqt.qt import (
-    QWidget,
-    QVBoxLayout,
+    QButtonGroup,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
-    QRadioButton,
-    QHBoxLayout,
     QMainWindow,
-    QScrollArea,
-    QButtonGroup,
     QMessageBox,
-    QPixmap,
     QPainter,
     QPainterPath,
-    Qt,
+    QPixmap,
+    QPushButton,
+    QRadioButton,
     QRectF,
+    QScrollArea,
+    Qt,
+    QVBoxLayout,
+    QWidget,
 )
-
-from aqt.utils import showWarning
-from aqt import mw
 from aqt.theme import theme_manager
+from aqt.utils import showWarning
 
 
 # create_rounded_pixmap function remains the same

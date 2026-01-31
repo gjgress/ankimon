@@ -1,8 +1,17 @@
-from aqt.qt import QDialog, QVBoxLayout, QLabel, QHBoxLayout, QWidget
-from aqt.qt import QPixmap, QFont
-from aqt.qt import Qt
-from ..resources import trainer_sprites_path
 import os
+
+from aqt.qt import (
+    QDialog,
+    QFont,
+    QHBoxLayout,
+    QLabel,
+    QPixmap,
+    Qt,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ..resources import trainer_sprites_path
 
 
 class TrainerCardGUI(QDialog):

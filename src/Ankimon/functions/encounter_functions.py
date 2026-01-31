@@ -1,29 +1,18 @@
 import json
-import random
 import math
-from typing import Union
-from datetime import datetime
+import random
 import uuid
+from datetime import datetime
+from typing import Union
 
 from aqt import mw
 from aqt.qt import QDialog
 from aqt.utils import showWarning
 
-from ..pyobj.ankimon_tracker import AnkimonTracker
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.reviewer_obj import Reviewer_Manager
-from ..pyobj.test_window import TestWindow
-from ..pyobj.trainer_card import TrainerCard
-from ..pyobj.InfoLogger import ShowInfoLogger
-from ..pyobj.evolution_window import EvoWindow
-from ..pyobj.attack_dialog import AttackDialog
-from ..pyobj.translator import Translator
-from ..functions.pokemon_functions import (
-    find_experience_for_level,
-    get_levelup_move_for_pokemon,
-    pick_random_gender,
-    shiny_chance,
-)
+from ..business import calc_experience
+from ..const import gen_ids
+from ..functions.badges_functions import check_for_badge, receive_badge
+from ..functions.drawing_utils import tooltipWithColour
 from ..functions.pokedex_functions import (
     check_evolution_for_pokemon,
     get_all_pokemon_moves,
@@ -34,24 +23,35 @@ from ..functions.pokedex_functions import (
     search_pokedex,
     search_pokedex_by_id,
 )
-from ..pyobj.error_handler import show_warning_with_traceback
+from ..functions.pokemon_functions import (
+    find_experience_for_level,
+    get_levelup_move_for_pokemon,
+    pick_random_gender,
+    shiny_chance,
+)
 from ..functions.trainer_functions import xp_share_gain_exp
-from ..functions.badges_functions import check_for_badge, receive_badge
-from ..functions.drawing_utils import tooltipWithColour
-from ..utils import limit_ev_yield, play_effect_sound, get_ev_spread
-from ..business import calc_experience
-from ..const import gen_ids
+from ..pyobj.ankimon_tracker import AnkimonTracker
+from ..pyobj.attack_dialog import AttackDialog
+from ..pyobj.error_handler import show_warning_with_traceback
+from ..pyobj.evolution_window import EvoWindow
+from ..pyobj.InfoLogger import ShowInfoLogger
+from ..pyobj.pokemon_obj import PokemonObject
+from ..pyobj.reviewer_obj import Reviewer_Manager
+from ..pyobj.test_window import TestWindow
+from ..pyobj.trainer_card import TrainerCard
+from ..pyobj.translator import Translator
+from ..resources import (
+    mainpokemon_path,
+    mypokemon_path,
+)
 from ..singletons import (
-    main_pokemon,
     ankimon_tracker_obj,
-    trainer_card,
+    main_pokemon,
     settings_obj,
+    trainer_card,
     translator,
 )
-from ..resources import (
-    mypokemon_path,
-    mainpokemon_path,
-)
+from ..utils import get_ev_spread, limit_ev_yield, play_effect_sound
 
 
 def modify_percentages(total_reviews, daily_average, trainer_level):

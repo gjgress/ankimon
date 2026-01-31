@@ -4,15 +4,14 @@ import random
 import uuid
 from datetime import datetime
 
-
-from .pokedex_functions import get_growth_rate, search_pokedex, search_pokedex_by_id
-from .battle_functions import calculate_hp
 from ..resources import (
-    pokedex_path,
-    next_lvl_file_path,
-    mypokemon_path,
     learnset_path,
+    mypokemon_path,
+    next_lvl_file_path,
+    pokedex_path,
 )
+from .battle_functions import calculate_hp
+from .pokedex_functions import get_growth_rate, search_pokedex, search_pokedex_by_id
 
 
 def pick_random_gender(pokemon_name):

@@ -2,8 +2,8 @@ import json
 from typing import Optional
 
 from ..functions.pokedex_functions import search_pokedex, search_pokedex_by_id
-from ..resources import mainpokemon_path
 from ..pyobj.pokemon_obj import PokemonObject
+from ..resources import mainpokemon_path
 
 # default values to fall back in case of load error
 MAIN_POKEMON_DEFAULT = {
