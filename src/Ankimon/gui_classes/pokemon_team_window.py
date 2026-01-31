@@ -1,6 +1,6 @@
 from ..functions.sprite_functions import get_sprite_path
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (
+from aqt.qt import Qt
+from aqt.qt import (
     QDialog,
     QVBoxLayout,
     QLabel,
@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QDialogButtonBox,
 )
-from PyQt6.QtGui import QPixmap
+from aqt.qt import QPixmap
 import json
 import os
 from aqt import mw

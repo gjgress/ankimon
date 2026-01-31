@@ -1,7 +1,7 @@
 import os
 import json
 from aqt import QDialog, QVBoxLayout, QWebEngineView
-from PyQt6.QtCore import QUrlQuery
+from aqt.qt import QUrlQuery
 from aqt.qt import Qt, QUrl, QFrame
 from ..resources import mypokemon_path, pokemon_history_path
 

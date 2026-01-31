@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QTimer
+from aqt.qt import QTimer
 from .pokemon_obj import PokemonObject
 from datetime import datetime
 from .error_handler import show_warning_with_traceback

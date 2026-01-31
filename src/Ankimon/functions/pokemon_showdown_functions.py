@@ -2,7 +2,7 @@ import json
 
 from aqt import mw
 from aqt.qt import QDialog, QLabel, Qt, QVBoxLayout
-from PyQt6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout, QLineEdit
+from aqt.qt import QDialog, QLabel, QPushButton, QVBoxLayout, QLineEdit
 
 from ..functions.pokedex_functions import search_pokedex
 from ..functions.url_functions import open_browser_window

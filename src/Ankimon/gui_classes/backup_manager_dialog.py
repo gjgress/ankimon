@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
     QWidget,
 )
-from PyQt6.QtCore import Qt
+from aqt.qt import Qt
 
 from ..pyobj.backup_manager import BackupManager
 

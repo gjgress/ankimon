@@ -3,8 +3,8 @@ import json
 import uuid
 
 from aqt.qt import QFont, QLabel, QPainter, QPixmap, Qt, QVBoxLayout, QWidget, qconnect
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (
+from aqt.qt import QColor
+from aqt.qt import (
     QLabel,
     QPushButton,
     QVBoxLayout,

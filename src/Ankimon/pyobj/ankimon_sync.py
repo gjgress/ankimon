@@ -14,8 +14,8 @@ from ..pyobj.error_handler import show_warning_with_traceback
 from ..resources import user_path, addon_dir
 from ..utils import close_anki
 
-from PyQt6.QtGui import QTextOption
-from PyQt6.QtWidgets import (
+from aqt.qt import QTextOption
+from aqt.qt import (
     QLabel,
     QVBoxLayout,
     QTextEdit,

@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtCore import QUrl
+from aqt.qt import QDesktopServices
+from aqt.qt import QUrl
 
 
 def open_browser_window():

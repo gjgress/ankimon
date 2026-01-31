@@ -4,11 +4,11 @@ from typing import Any
 
 from aqt import mw, qconnect
 from aqt.utils import showWarning
-from PyQt6.QtGui import QPixmap, QPainter, QIcon
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QScrollArea
-from PyQt6.QtWidgets import (
+from aqt.qt import QPixmap, QPainter, QIcon
+from aqt.qt import Qt
+from aqt.qt import QColor
+from aqt.qt import QScrollArea
+from aqt.qt import (
     QDialog,
     QHBoxLayout,
     QVBoxLayout,

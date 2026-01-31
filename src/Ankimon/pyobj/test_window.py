@@ -16,9 +16,9 @@ from aqt.qt import (
 
 from aqt.utils import showWarning
 
-from PyQt6.QtGui import QIcon, QColor, QPainterPath
+from aqt.qt import QIcon, QColor, QPainterPath
 
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QDialog,
     QLabel,
     QPushButton,

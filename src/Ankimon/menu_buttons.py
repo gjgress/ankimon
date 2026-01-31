@@ -4,8 +4,8 @@ from typing import Union
 
 from aqt.utils import *
 from aqt.qt import *
-from PyQt6.QtWidgets import QMenu
-from PyQt6.QtGui import QAction, QKeySequence
+from aqt.qt import QMenu
+from aqt.qt import QAction, QKeySequence
 from aqt import mw  # The main window object
 from aqt.utils import qconnect
 

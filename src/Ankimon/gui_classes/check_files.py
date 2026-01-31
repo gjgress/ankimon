@@ -1,7 +1,7 @@
 import os
 import json
-from PyQt6.QtWidgets import QVBoxLayout, QLabel, QPushButton, QTextEdit, QDialog
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QPushButton, QLabel, QTextEdit
+from aqt.qt import QVBoxLayout, QLabel, QPushButton, QTextEdit, QDialog
+from aqt.qt import QDialog, QVBoxLayout, QPushButton, QLabel, QTextEdit
 from ..resources import addon_dir, json_file_structure
 
 

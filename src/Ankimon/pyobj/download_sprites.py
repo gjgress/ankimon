@@ -8,8 +8,8 @@ from typing import Optional
 
 from ..resources import user_path
 from ..gui_entities import AgreementDialog
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtWidgets import (
+from aqt.qt import Qt, QThread, pyqtSignal
+from aqt.qt import (
     QDialog,
     QVBoxLayout,
     QProgressBar,

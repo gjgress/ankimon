@@ -1,6 +1,6 @@
 import logging
-from PyQt6.QtWidgets import QMessageBox, QTextEdit, QVBoxLayout, QDialog, QPushButton
-from PyQt6.QtCore import Qt
+from aqt.qt import QMessageBox, QTextEdit, QVBoxLayout, QDialog, QPushButton
+from aqt.qt import Qt
 import os
 
 

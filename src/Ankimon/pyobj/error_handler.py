@@ -8,7 +8,7 @@ import platform
 import sys
 from pathlib import Path
 from typing import Optional, Dict
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QDialog,
     QVBoxLayout,
     QHBoxLayout,
@@ -16,8 +16,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QSizePolicy,
 )
-from PyQt6.QtGui import QPixmap, QImage
-from PyQt6.QtCore import Qt
+from aqt.qt import QPixmap, QImage
+from aqt.qt import Qt
 from aqt import mw
 from anki.buildinfo import version as anki_version
 

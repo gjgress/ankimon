@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel
-from PyQt6.QtGui import QFont
-from PyQt6.QtCore import Qt
+from aqt.qt import QDialog, QVBoxLayout, QLabel
+from aqt.qt import QFont
+from aqt.qt import Qt
 from ..functions.pokedex_functions import find_details_move
 from ..move_names import format_move_name
 import random

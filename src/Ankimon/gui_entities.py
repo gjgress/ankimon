@@ -1,7 +1,7 @@
 import markdown
 import json
-from PyQt6.QtGui import QMovie, QIcon
-from PyQt6.QtWidgets import (
+from aqt.qt import QMovie, QIcon
+from aqt.qt import (
     QLabel,
     QVBoxLayout,
     QTextEdit,
@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
 )
 from aqt import mw
 from aqt.qt import QDialog
-from PyQt6.QtCore import Qt
+from aqt.qt import Qt
 
 from .resources import (
     icon_path,

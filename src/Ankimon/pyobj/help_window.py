@@ -1,9 +1,9 @@
-from PyQt6.QtGui import QIcon, QDesktopServices
-from PyQt6.QtWidgets import QVBoxLayout, QTextEdit
-from PyQt6.QtCore import Qt, QUrl, QObject, pyqtSlot
+from aqt.qt import QIcon, QDesktopServices
+from aqt.qt import QVBoxLayout, QTextEdit
+from aqt.qt import Qt, QUrl, QObject, pyqtSlot
 from aqt.qt import QDialog
 from aqt.utils import QWebEngineSettings, QWebEnginePage
-from PyQt6.QtWebChannel import QWebChannel  # Add this import
+from aqt.qt import QWebChannel  # Add this import
 from importlib.util import find_spec
 
 from ..resources import icon_path, addon_dir
@@ -80,7 +80,7 @@ class HelpWindow(QDialog):
         self.setLayout(layout)
 
     def _setup_web_engine_view(self, layout, online_connectivity):
-        from PyQt6.QtWebEngineWidgets import QWebEngineView
+        from aqt.qt import QWebEngineView
 
         self.web_view = QWebEngineView()
         # Set our custom page that opens links externally

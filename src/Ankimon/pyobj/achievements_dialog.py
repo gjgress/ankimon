@@ -1,7 +1,7 @@
 import json
 from aqt import QDialog, QVBoxLayout, QWebEngineView, mw
-from PyQt6.QtCore import QUrl, QUrlQuery
-from PyQt6.QtGui import QGuiApplication
+from aqt.qt import QUrl, QUrlQuery
+from aqt.qt import QGuiApplication
 
 
 class AchievementsDialog(QDialog):

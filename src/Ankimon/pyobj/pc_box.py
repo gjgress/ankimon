@@ -16,7 +16,7 @@ from aqt.qt import (
 
 from aqt.theme import theme_manager  # Check if light / dark mode in Anki
 
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QLineEdit,
     QComboBox,
     QCheckBox,
@@ -27,8 +27,8 @@ from PyQt6.QtWidgets import (
     QRadioButton,
     QButtonGroup,
 )
-from PyQt6.QtCore import QSize
-from PyQt6.QtGui import QIcon, QFont, QAction, QMovie, QCloseEvent
+from aqt.qt import QSize
+from aqt.qt import QIcon, QFont, QAction, QMovie, QCloseEvent
 
 from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.reviewer_obj import Reviewer_Manager

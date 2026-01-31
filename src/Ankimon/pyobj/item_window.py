@@ -10,8 +10,8 @@ from aqt.qt import (
     QPixmap,
     Qt,
 )
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import (
+from aqt.qt import QIcon
+from aqt.qt import (
     QLabel,
     QPushButton,
     QVBoxLayout,

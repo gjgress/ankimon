@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QMainWindow,
     QWidget,
     QVBoxLayout,

@@ -1,5 +1,5 @@
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtWidgets import (
+from aqt.qt import Qt, QSize
+from aqt.qt import (
     QDialog,
     QVBoxLayout,
     QLabel,
@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QPushButton,
 )
-from PyQt6.QtGui import QIcon
+from aqt.qt import QIcon
 from aqt import mw
 from ..utils import get_all_sprites
 from ..resources import trainer_sprites_path

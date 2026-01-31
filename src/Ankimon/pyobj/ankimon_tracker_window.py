@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -8,8 +8,8 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QGroupBox,
 )
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont
+from aqt.qt import Qt, QTimer
+from aqt.qt import QFont
 from aqt import mw
 
 

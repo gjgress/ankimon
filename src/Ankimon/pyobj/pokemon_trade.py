@@ -1,7 +1,7 @@
 import json
 import hashlib
 import requests
-from PyQt6.QtWidgets import (
+from aqt.qt import (
     QDialog,
     QVBoxLayout,
     QLabel,
@@ -10,8 +10,8 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QFrame,
 )
-from PyQt6.QtGui import QPixmap, QFont, QColor
-from PyQt6.QtCore import QSize, Qt
+from aqt.qt import QPixmap, QFont, QColor
+from aqt.qt import QSize, Qt
 from aqt.utils import showWarning, showInfo
 from aqt import mw, utils
 from ..resources import (
@@ -312,7 +312,7 @@ class PokemonTrade:
 
         your_pokemon_layout = QVBoxLayout()
         your_pokemon_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        from PyQt6.QtGui import QMovie, QImage, QPixmap
+        from aqt.qt import QMovie, QImage, QPixmap
 
         your_pokemon_sprite_label = QLabel()
         sprite_size = QSize(64, 64)
@@ -547,7 +547,7 @@ class PokemonTrade:
         showInfo("Trade code copied to clipboard!")
 
     def update_other_pokemon_sprite(self, code):
-        from PyQt6.QtGui import QMovie
+        from aqt.qt import QMovie
 
         try:
             sprite_size = QSize(64, 64)
@@ -634,7 +634,7 @@ class PokemonTrade:
         return str(pokemon_id)
 
     def confirm_trade(self, parent_window):
-        from PyQt6.QtWidgets import QMessageBox
+        from aqt.qt import QMessageBox
 
         code = self.trade_code_input.text()
         name = "the other Pokémon"

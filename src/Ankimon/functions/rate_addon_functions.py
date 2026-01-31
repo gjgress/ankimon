@@ -5,9 +5,9 @@ from aqt.qt import (
     QLabel,
     QVBoxLayout,
 )
-from PyQt6.QtCore import QUrl
-from PyQt6.QtGui import QDesktopServices
-from PyQt6.QtWidgets import (
+from aqt.qt import QUrl
+from aqt.qt import QDesktopServices
+from aqt.qt import (
     QDialog,
     QLabel,
     QPushButton,

@@ -12,8 +12,8 @@ from aqt.qt import (
     QDialog,
     qconnect,
 )
-from PyQt6.QtGui import QColor, QPen
-from PyQt6.QtWidgets import (
+from aqt.qt import QColor, QPen
+from aqt.qt import (
     QPushButton,
 )
 
