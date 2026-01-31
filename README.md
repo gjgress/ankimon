@@ -4,3 +4,4 @@
 ## (non-exhaustive) List of differences compared to latest official branch:
 + Implemented Gen 9
 + Setting to disable review multiplier
++ New encounter probabilities
