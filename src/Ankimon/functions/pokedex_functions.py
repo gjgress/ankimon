@@ -19,22 +19,23 @@ import csv
 from ..pyobj.error_handler import show_warning_with_traceback
 
 GROWTH_RATES = {
-    1: "slow", 
-    2: "medium", 
-    3: "fast", 
-    4: "medium-slow", 
-    5: "slow-then-very-fast", 
-    6: "fast-then-very-slow"
+    1: "slow",
+    2: "medium",
+    3: "fast",
+    4: "medium-slow",
+    5: "slow-then-very-fast",
+    6: "fast-then-very-slow",
 }
 
 STATS = {
     1: "hp",
     2: "attack",
-    3: "defense", 
-    4: "special-attack", 
-    5: "special-defense", 
-    6: "speed", 
+    3: "defense",
+    4: "special-attack",
+    5: "special-defense",
+    6: "speed",
 }
+
 
 def _normalize_language_id(language):
     """Map unsupported language IDs to a fallback that exists in data files."""
@@ -138,6 +139,7 @@ def search_pokedex(pokemon_name, variable):
         )
         return []
 
+
 def search_pokedex_by_id(species_id):
     with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
         pokedex_data = json.load(json_file)
@@ -156,15 +158,17 @@ def get_mainpokemon_evo(pokemon_name):
         evolutions = pokemon_info.get("evos", [])
         return evolutions
 
+
 def get_growth_rate(species_id: int) -> str:
     with open(poke_species_path, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
-        
+
         for row in reader:
             if int(row["id"]) == species_id:
                 return GROWTH_RATES[int(row["growth_rate_id"])]
 
     raise ValueError(species_id)
+
 
 def get_base_experience(actual_id: int) -> int:
     with open(pokemon_csv, mode="r", encoding="utf-8") as file:
@@ -176,11 +180,12 @@ def get_base_experience(actual_id: int) -> int:
 
     raise ValueError(actual_id)
 
+
 def get_effort_values(actual_id: int) -> dict[str, int]:
     evs = {}
     with open(stats_csv, mode="r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
-            
+
         for row in reader:
             if int(row["pokemon_id"]) == actual_id:
                 evs[STATS[int(row["stat_id"])]] = int(row["effort"])
@@ -189,10 +194,11 @@ def get_effort_values(actual_id: int) -> dict[str, int]:
         "hp": evs["hp"],
         "attack": evs["attack"],
         "defense": evs["defense"],
-        "special-attack": evs["special-attack"], 
+        "special-attack": evs["special-attack"],
         "special-defense": evs["special-defense"],
         "speed": evs["speed"],
     }
+
 
 def get_pokemon_descriptions(species_id, language):
     descriptions = []  # Initialize an empty list to store matching descriptions
@@ -467,9 +473,7 @@ def check_evolution_for_pokemon(
                         continue  # Skip this evolution if minimum_level is missing or not a number
                     min_level = int(min_level_str)
                     if min_level <= level:
-                        evo_window.ask_pokemon_evo(
-                            individual_id, pokemon_id, int(evos)
-                        )
+                        evo_window.ask_pokemon_evo(individual_id, pokemon_id, int(evos))
                         return int(evos)  # Return the evolution ID
 
             # If no evolutions fit the criteria

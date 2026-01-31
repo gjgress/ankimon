@@ -9,7 +9,12 @@ import sys
 from pathlib import Path
 from typing import Optional, Dict
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSizePolicy
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
 )
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtCore import Qt
@@ -20,6 +25,7 @@ from anki.buildinfo import version as anki_version
 addon_dir = Path(__file__).parents[1]
 pyobj_path = addon_dir / "pyobj"
 manifest_path = addon_dir / "manifest.json"
+
 
 def get_environment_info() -> str:
     """Collect add-on, Anki, Python, and OS version information."""
@@ -33,6 +39,7 @@ def get_environment_info() -> str:
     os_info = platform.platform()
     return f"Ankimon v{addon_ver} | Anki {anki_version} | Python {py_ver} | {os_info}"
 
+
 def set_image_from_url(label: QLabel, url: str, width: int = 140) -> None:
     """Load and display an image from URL in a QLabel."""
     try:
@@ -42,13 +49,16 @@ def set_image_from_url(label: QLabel, url: str, width: int = 140) -> None:
         image.loadFromData(response.content)
         pixmap = QPixmap.fromImage(image)
         if not pixmap.isNull():
-            pixmap = pixmap.scaledToWidth(width, Qt.TransformationMode.SmoothTransformation)
+            pixmap = pixmap.scaledToWidth(
+                width, Qt.TransformationMode.SmoothTransformation
+            )
             label.setPixmap(pixmap)
             label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
         else:
             label.setText("Image failed to load")
     except Exception:
         label.setText("Image failed to load")
+
 
 def scrub_traceback(tb_text: str) -> str:
     """Sanitize traceback text by removing user paths."""
@@ -65,16 +75,18 @@ def scrub_traceback(tb_text: str) -> str:
         tb_text = re.sub(pattern, "/home/USER", tb_text, flags=re.IGNORECASE)
     return tb_text
 
+
 def load_error_images(json_path: Path) -> Dict[str, str]:
     """Load and select random error image metadata."""
     default_image = {"path": "", "credit": "", "url": ""}
     try:
-        with open(json_path, 'r', encoding='utf-8') as f:
+        with open(json_path, "r", encoding="utf-8") as f:
             error_images = json.load(f)
         return random.choice(error_images)
     except Exception as e:
         mw.logger.log("error", f"Failed to load error images: {str(e)}")
         return default_image
+
 
 def create_error_label(message: str, exception: Exception) -> QLabel:
     """Create error label with just the message and exception (no environment info)."""
@@ -90,6 +102,7 @@ def create_error_label(message: str, exception: Exception) -> QLabel:
     label.setWordWrap(True)
     return label
 
+
 def create_credit_label(chosen_image: Dict[str, str]) -> Optional[QLabel]:
     """Create image credit label with optional link."""
     if not chosen_image.get("credit") or not chosen_image.get("url"):
@@ -102,11 +115,15 @@ def create_credit_label(chosen_image: Dict[str, str]) -> Optional[QLabel]:
     label.setStyleSheet("font-size:10px; color:#aaa;")
     label.setWordWrap(True)
     label.setFixedWidth(140)
-    label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding)
+    label.setSizePolicy(
+        QSizePolicy.Policy.Preferred, QSizePolicy.Policy.MinimumExpanding
+    )
     return label
 
-def build_dialog_ui(dialog: QDialog, message: str, exception: Exception,
-                   chosen_image: Dict[str, str]) -> None:
+
+def build_dialog_ui(
+    dialog: QDialog, message: str, exception: Exception, chosen_image: Dict[str, str]
+) -> None:
     """Construct dialog UI layout without environment info display."""
     main_layout = QHBoxLayout(dialog)
     main_layout.setContentsMargins(24, 18, 24, 18)
@@ -158,9 +175,13 @@ def build_dialog_ui(dialog: QDialog, message: str, exception: Exception,
         if local_path.exists():
             pixmap = QPixmap(str(local_path))
             if not pixmap.isNull():
-                pixmap = pixmap.scaledToWidth(140, Qt.TransformationMode.SmoothTransformation)
+                pixmap = pixmap.scaledToWidth(
+                    140, Qt.TransformationMode.SmoothTransformation
+                )
                 image_label.setPixmap(pixmap)
-                image_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+                image_label.setAlignment(
+                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop
+                )
             else:
                 image_label.setText("Image failed to load")
     right_layout.addWidget(image_label, alignment=Qt.AlignmentFlag.AlignRight)
@@ -175,6 +196,7 @@ def build_dialog_ui(dialog: QDialog, message: str, exception: Exception,
     main_layout.addLayout(left_layout)
     main_layout.addLayout(right_layout)
     dialog.setLayout(main_layout)
+
 
 def setup_dialog_style(dialog: QDialog) -> None:
     """Apply consistent visual styling to the dialog."""
@@ -207,10 +229,11 @@ def setup_dialog_style(dialog: QDialog) -> None:
         }
     """)
 
+
 def show_warning_with_traceback(
     parent: QDialog = mw,
     exception: Optional[Exception] = None,
-    message: str = "An error occurred during execution."
+    message: str = "An error occurred during execution.",
 ) -> None:
     """Display error dialog with environment info only in debug clipboard."""
     if not exception:
@@ -222,7 +245,7 @@ def show_warning_with_traceback(
     mw.logger.log("error", f"{message}: {exception}\n{env_info}\n{tb_text}")
 
     # Load error images
-    error_json_path = pyobj_path / 'error_images.json'
+    error_json_path = pyobj_path / "error_images.json"
     chosen_image = load_error_images(error_json_path)
 
     # Create and configure dialog

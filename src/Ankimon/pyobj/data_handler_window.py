@@ -1,4 +1,12 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QTextEdit, QScrollArea
+from PyQt6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QLabel,
+    QTextEdit,
+    QScrollArea,
+)
+
 
 class DataHandlerWindow(QMainWindow):
     def __init__(self, data_handler):
@@ -7,7 +15,7 @@ class DataHandlerWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('Data Viewer')
+        self.setWindowTitle("Data Viewer")
 
         # Create the central widget and the main layout
         central_widget = QWidget()
@@ -20,7 +28,14 @@ class DataHandlerWindow(QMainWindow):
         scroll_layout = QVBoxLayout(scroll_content)
 
         # List of attributes to process
-        attributes_to_handle = ['mypokemon', 'mainpokemon', 'items', 'team', 'data', 'badges']
+        attributes_to_handle = [
+            "mypokemon",
+            "mainpokemon",
+            "items",
+            "team",
+            "data",
+            "badges",
+        ]
 
         # Process each attribute using the modular function
         for attr_name in attributes_to_handle:
@@ -77,7 +92,7 @@ class DataHandlerWindow(QMainWindow):
             scroll_layout.addWidget(text_edit)
 
             # Assign unique IDs and save JSON data if necessary
-            if attr_name in ['mypokemon', 'mainpokemon']:
+            if attr_name in ["mypokemon", "mainpokemon"]:
                 self.data_handler.assign_unique_ids(content)
                 self.data_handler.assign_new_variables(content)
                 self.data_handler.save_file(attr_name)

@@ -906,15 +906,16 @@ def PokemonFree(
     if position != -1:
         # Save important stats to history before release
         from datetime import datetime
+
         history_data = {
             "id": pokemon_to_release.get("id"),
             "name": pokemon_to_release.get("name"),
             "shiny": pokemon_to_release.get("shiny", False),
             "pokemon_defeated": pokemon_to_release.get("pokemon_defeated", 0),
             "individual_id": pokemon_to_release.get("individual_id"),
-            "released_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "released_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
-        
+
         # Load existing history or create new
         history_list = []
         if pokemon_history_path.is_file():
@@ -923,14 +924,14 @@ def PokemonFree(
                     history_list = json.load(file)
             except (json.JSONDecodeError, Exception):
                 history_list = []
-        
+
         # Add to history (only save essential stats, not full Pokémon data)
         history_list.append(history_data)
-        
+
         # Save history
         with open(pokemon_history_path, "w", encoding="utf-8") as file:
             json.dump(history_list, file, indent=2)
-        
+
         # Now remove from active collection
         pokemon_list.pop(position)
         with open(mypokemon_path, "w") as file:

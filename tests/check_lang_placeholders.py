@@ -2,9 +2,11 @@ import json
 import re
 from pathlib import Path
 
+
 def find_placeholders(text):
     """Extracts all placeholders in the format {placeholder} from a string."""
     return set(re.findall(r"\{(.+?)\}", text))
+
 
 def check_language_files():
     """
@@ -12,7 +14,7 @@ def check_language_files():
     """
     lang_dir = Path("src/Ankimon/lang")
     en_file = lang_dir / "en_text.json"
-    
+
     if not en_file.exists():
         print(f"Error: Reference file not found at {en_file}")
         return
@@ -53,6 +55,7 @@ def check_language_files():
 
     if not errors_found:
         print("All placeholders are consistent across all language files.")
+
 
 if __name__ == "__main__":
     check_language_files()

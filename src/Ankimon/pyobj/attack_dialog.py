@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
 
+
 class AttackDialog(QDialog):
     def __init__(self, attacks, new_attack):
         super().__init__()
@@ -11,7 +12,9 @@ class AttackDialog(QDialog):
     def initUI(self):
         self.setWindowTitle(f"Select which Attack to Replace with {self.new_attack}")
         layout = QVBoxLayout()
-        layout.addWidget(QLabel(f"Select which Attack to Replace with {self.new_attack}"))
+        layout.addWidget(
+            QLabel(f"Select which Attack to Replace with {self.new_attack}")
+        )
         for attack in self.attacks:
             button = QPushButton(attack)
             button.clicked.connect(self.attackSelected)

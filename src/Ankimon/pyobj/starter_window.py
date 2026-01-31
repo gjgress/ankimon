@@ -2,16 +2,7 @@ import random
 import json
 import uuid
 
-from aqt.qt import (
-    QFont,
-    QLabel,
-    QPainter,
-    QPixmap,
-    Qt,
-    QVBoxLayout,
-    QWidget,
-    qconnect
-    )
+from aqt.qt import QFont, QLabel, QPainter, QPixmap, Qt, QVBoxLayout, QWidget, qconnect
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (
     QLabel,
@@ -19,7 +10,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHBoxLayout,
-    )
+)
 
 from ..functions import starters
 
@@ -28,34 +19,42 @@ from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.settings import Settings
 from ..pyobj.InfoLogger import ShowInfoLogger
 from ..functions.battle_functions import calculate_hp
-from ..functions.pokedex_functions import get_base_experience, get_growth_rate, search_pokedex
-from ..functions.pokemon_functions import get_random_moves_for_pokemon, pick_random_gender
+from ..functions.pokedex_functions import (
+    get_base_experience,
+    get_growth_rate,
+    search_pokedex,
+)
+from ..functions.pokemon_functions import (
+    get_random_moves_for_pokemon,
+    pick_random_gender,
+)
 from ..utils import load_custom_font, close_anki
 from ..resources import addon_dir, frontdefault, mainpokemon_path, mypokemon_path
 from ..const import total_generations
 from .error_handler import show_warning_with_traceback
 
+
 class StarterWindow(QWidget):
     def __init__(
-            self,
-            logger: ShowInfoLogger,
-            settings_obj: Settings,
-            ):
+        self,
+        logger: ShowInfoLogger,
+        settings_obj: Settings,
+    ):
         super().__init__()
         self.init_ui()
-        #self.update()
+        # self.update()
 
         # To avoid circular imports, instead of importing those things, we
         # save a reference to them as an attribute
         self.logger = logger
         self.settings_obj = settings_obj
 
-        self.current_gen = 0 # Start with Gen 1
+        self.current_gen = 0  # Start with Gen 1
 
     def init_ui(self):
         basic_layout = QVBoxLayout()
         # Set window
-        self.setWindowTitle('Choose a Starter')
+        self.setWindowTitle("Choose a Starter")
         self.setLayout(basic_layout)
         self.starter = False
 
@@ -71,6 +70,7 @@ class StarterWindow(QWidget):
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+
     def keyPressEvent(self, event):
         # Close the main window when the spacebar is pressed
         if event.key() == Qt.Key.Key_G:  # Updated to Key_G for PyQt 6
@@ -106,21 +106,14 @@ class StarterWindow(QWidget):
         base_experience = get_base_experience(search_pokedex(starter_name, "actual_id"))
         level = 5
         attacks = get_random_moves_for_pokemon(starter_name, level)
-        ev = {
-            "hp": 0,
-            "atk": 0,
-            "def": 0,
-            "spa": 0,
-            "spd": 0,
-            "spe": 0
-        }
+        ev = {"hp": 0, "atk": 0, "def": 0, "spa": 0, "spd": 0, "spe": 0}
         iv = {
             "hp": random.randint(0, 31),
             "atk": random.randint(0, 31),
             "def": random.randint(0, 31),
             "spa": random.randint(0, 31),
             "spd": random.randint(0, 31),
-            "spe": random.randint(0, 31)
+            "spe": random.randint(0, 31),
         }
         main_pokemon = PokemonObject(
             name=name,
@@ -160,7 +153,9 @@ class StarterWindow(QWidget):
         with open(mypokemon_path, "w") as json_file:
             json.dump(caught_pokemon_data, json_file, indent=2)
 
-        self.logger.log_and_showinfo("info",f"{name.capitalize()} has been chosen as Starter Pokemon !")
+        self.logger.log_and_showinfo(
+            "info", f"{name.capitalize()} has been chosen as Starter Pokemon !"
+        )
 
         self.display_chosen_starter_pokemon(starter_name)
 
@@ -188,7 +183,9 @@ class StarterWindow(QWidget):
             grass_start = f"{grass_starter[self.current_gen]}"
             return water_start, fire_start, grass_start
         except Exception as e:
-            show_warning_with_traceback(parent=mw, exception=e, message=f"Error in get_starters_of_gen: {e}")
+            show_warning_with_traceback(
+                parent=mw, exception=e, message=f"Error in get_starters_of_gen: {e}"
+            )
             return None, None, None
 
     def display_starter_pokemon(self):
@@ -197,8 +194,12 @@ class StarterWindow(QWidget):
         self.clear_layout(self.layout())
         layout = self.layout()
         water_start, fire_start, grass_start = self.get_starters_of_gen()
-        starter_label = self.pokemon_display_starter(water_start, fire_start, grass_start)
-        self.water_starter_button, self.fire_starter_button, self.grass_start_button = self.pokemon_display_starter_buttons(water_start, fire_start, grass_start)
+        starter_label = self.pokemon_display_starter(
+            water_start, fire_start, grass_start
+        )
+        self.water_starter_button, self.fire_starter_button, self.grass_start_button = (
+            self.pokemon_display_starter_buttons(water_start, fire_start, grass_start)
+        )
         layout.addWidget(starter_label)
         button_widget = QWidget()
         layout_buttons = QHBoxLayout()
@@ -222,10 +223,13 @@ class StarterWindow(QWidget):
         self.setMaximumHeight(340)
         self.show()
         self.starter = True
-        self.logger.log_and_showinfo("info","You have chosen your Starter Pokemon ! \n You can now close this window ! \n Please restart your Anki to restart your Pokemon Journey!")
-        #global achievments
-        #check = check_for_badge(achievements, 7)
-        #if check is False:
+        self.logger.log_and_showinfo(
+            "info",
+            "You have chosen your Starter Pokemon ! \n You can now close this window ! \n Please restart your Anki to restart your Pokemon Journey!",
+        )
+        # global achievments
+        # check = check_for_badge(achievements, 7)
+        # if check is False:
         #    receive_badge(7, achievements)
 
     def display_fossil_pokemon(self, fossil_id, fossil_name):
@@ -239,31 +243,40 @@ class StarterWindow(QWidget):
         self.setMaximumHeight(340)
         self.show()
         self.starter = True
-        self.logger.log_and_showinfo("info","You have received your Fossil Pokemon ! \n You can now close this window !")
+        self.logger.log_and_showinfo(
+            "info",
+            "You have received your Fossil Pokemon ! \n You can now close this window !",
+        )
         global achievments
-        #check = check_for_badge(achievements, 19)
-        #if check is False:
+        # check = check_for_badge(achievements, 19)
+        # if check is False:
         #    receive_badge(19, achievements)
 
     def pokemon_display_starter_buttons(self, water_start, fire_start, grass_start):
         # Create buttons for catching and killing the Pokémon
         water_starter_button = QPushButton(f"{(water_start).capitalize()}")
-        water_starter_button.setFont(QFont("Arial",12))  # Adjust the font size and style as needed
+        water_starter_button.setFont(
+            QFont("Arial", 12)
+        )  # Adjust the font size and style as needed
         water_starter_button.setStyleSheet("background-color: rgb(44,44,44);")
-        #qconnect(water_starter_button.clicked, choose_pokemon)
+        # qconnect(water_starter_button.clicked, choose_pokemon)
         qconnect(water_starter_button.clicked, lambda: self.choose_pokemon(water_start))
 
         fire_starter_button = QPushButton(f"{(fire_start).capitalize()}")
-        fire_starter_button.setFont(QFont("Arial", 12))  # Adjust the font size and style as needed
+        fire_starter_button.setFont(
+            QFont("Arial", 12)
+        )  # Adjust the font size and style as needed
         fire_starter_button.setStyleSheet("background-color: rgb(44,44,44);")
-        #qconnect(fire_starter_button.clicked, choose_pokemon)
+        # qconnect(fire_starter_button.clicked, choose_pokemon)
         qconnect(fire_starter_button.clicked, lambda: self.choose_pokemon(fire_start))
         # Set the merged image as the pixmap for the QLabel
 
         grass_start_button = QPushButton(f"{(grass_start).capitalize()}")
-        grass_start_button.setFont(QFont("Arial", 12))  # Adjust the font size and style as needed
+        grass_start_button.setFont(
+            QFont("Arial", 12)
+        )  # Adjust the font size and style as needed
         grass_start_button.setStyleSheet("background-color: rgb(44,44,44);")
-        #qconnect(grass_start_button.clicked, choose_pokemon)
+        # qconnect(grass_start_button.clicked, choose_pokemon)
         qconnect(grass_start_button.clicked, lambda: self.choose_pokemon(grass_start))
         # Set the merged image as the pixmap for the QLabel
 
@@ -312,26 +325,32 @@ class StarterWindow(QWidget):
 
         # Merge the background image and the Pokémon image
         merged_pixmap = QPixmap(pixmap_bckg.size())
-        merged_pixmap.fill(QColor(0, 0, 0, 0))  # RGBA where A (alpha) is 0 for full transparency
-        #merged_pixmap.fill(Qt.transparent)
+        merged_pixmap.fill(
+            QColor(0, 0, 0, 0)
+        )  # RGBA where A (alpha) is 0 for full transparency
+        # merged_pixmap.fill(Qt.transparent)
         # merge both images together
         painter = QPainter(merged_pixmap)
         # draw background to a specific pixel
         painter.drawPixmap(0, 0, pixmap_bckg)
 
-        painter.drawPixmap(57,-5,water_pixmap)
-        painter.drawPixmap(182,-5,fire_pixmap)
-        painter.drawPixmap(311,-3,grass_pixmap)
+        painter.drawPixmap(57, -5, water_pixmap)
+        painter.drawPixmap(182, -5, fire_pixmap)
+        painter.drawPixmap(311, -3, grass_pixmap)
 
         # custom font
-        custom_font = load_custom_font(int(28), int(self.settings_obj.get("misc.language")))
+        custom_font = load_custom_font(
+            int(28), int(self.settings_obj.get("misc.language"))
+        )
         message_box_text = "Choose your Starter Pokemon"
         # Draw the text on top of the image
         # Adjust the font size as needed
         painter.setFont(custom_font)
-        painter.setPen(QColor(255,255,255))  # Text color
+        painter.setPen(QColor(255, 255, 255))  # Text color
         painter.drawText(110, 310, message_box_text)
-        custom_font = load_custom_font(int(20), int(self.settings_obj.get("misc.language")))
+        custom_font = load_custom_font(
+            int(20), int(self.settings_obj.get("misc.language"))
+        )
         painter.setFont(custom_font)
         next_gen = (self.current_gen + 1) % total_generations + 1
         painter.drawText(10, 330, f"Press G for Gen {next_gen}")
@@ -359,21 +378,25 @@ class StarterWindow(QWidget):
 
         # Merge the background image and the Pokémon image
         merged_pixmap = QPixmap(pixmap_bckg.size())
-        #merged_pixmap.fill(Qt.transparent)
-        merged_pixmap.fill(QColor(0, 0, 0, 0))  # RGBA where A (alpha) is 0 for full transparency
+        # merged_pixmap.fill(Qt.transparent)
+        merged_pixmap.fill(
+            QColor(0, 0, 0, 0)
+        )  # RGBA where A (alpha) is 0 for full transparency
         # merge both images together
         painter = QPainter(merged_pixmap)
         # draw background to a specific pixel
         painter.drawPixmap(0, 0, pixmap_bckg)
-        painter.drawPixmap(125,10,image_pixmap)
+        painter.drawPixmap(125, 10, image_pixmap)
 
         # custom font
-        custom_font = load_custom_font(int(32), int(self.settings_obj.get("misc.language")))
+        custom_font = load_custom_font(
+            int(32), int(self.settings_obj.get("misc.language"))
+        )
         message_box_text = f"{(starter_name).capitalize()} was chosen as Starter !"
         # Draw the text on top of the image
         # Adjust the font size as needed
         painter.setFont(custom_font)
-        painter.setPen(QColor(255,255,255))  # Text color
+        painter.setPen(QColor(255, 255, 255))  # Text color
         painter.drawText(40, 290, message_box_text)
         painter.end()
         # Set the merged image as the pixmap for the QLabel
@@ -399,21 +422,25 @@ class StarterWindow(QWidget):
 
         # Merge the background image and the Pokémon image
         merged_pixmap = QPixmap(pixmap_bckg.size())
-        #merged_pixmap.fill(Qt.transparent)
-        merged_pixmap.fill(QColor(0, 0, 0, 0))  # RGBA where A (alpha) is 0 for full transparency
+        # merged_pixmap.fill(Qt.transparent)
+        merged_pixmap.fill(
+            QColor(0, 0, 0, 0)
+        )  # RGBA where A (alpha) is 0 for full transparency
         # merge both images together
         painter = QPainter(merged_pixmap)
         # draw background to a specific pixel
         painter.drawPixmap(0, 0, pixmap_bckg)
-        painter.drawPixmap(125,10,image_pixmap)
+        painter.drawPixmap(125, 10, image_pixmap)
 
         # custom font
-        custom_font = load_custom_font(int(32), int(self.settings_obj.get("misc.language")))
+        custom_font = load_custom_font(
+            int(32), int(self.settings_obj.get("misc.language"))
+        )
         message_box_text = f"{(fossil_name).capitalize()} was brought to life !"
         # Draw the text on top of the image
         # Adjust the font size as needed
         painter.setFont(custom_font)
-        painter.setPen(QColor(255,255,255))  # Text color
+        painter.setPen(QColor(255, 255, 255))  # Text color
         painter.drawText(40, 290, message_box_text)
         painter.end()
         # Set the merged image as the pixmap for the QLabel

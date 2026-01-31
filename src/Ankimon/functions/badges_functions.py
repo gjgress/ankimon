@@ -2,9 +2,11 @@ import json
 
 from ..resources import badgebag_path
 
+
 def get_achieved_badges():
     with open(badgebag_path, "r", encoding="utf-8") as json_file:
         return json.load(json_file)
+
 
 def populate_achievements_from_badges(achievements):
     # name change for clarification
@@ -16,21 +18,25 @@ def populate_achievements_from_badges(achievements):
         pass
     return achievements
 
+
 def check_for_badge(achievements, rec_badge_num):
     return achievements.get(str(rec_badge_num), False)
 
+
 def save_badges(badges_collection):
-    with open(badgebag_path, 'w') as json_file:
+    with open(badgebag_path, "w") as json_file:
         json.dump(badges_collection, json_file)
 
-def receive_badge(badge_num,achievements):
+
+def receive_badge(badge_num, achievements):
     achievements[str(badge_num)] = True
     badges_collection = []
-    for num in range(1,69):
+    for num in range(1, 69):
         if achievements.get(str(num)) is True:
             badges_collection.append(int(num))
     save_badges(badges_collection)
     return achievements
+
 
 def handle_review_count_achievement(review_count, achievements):
     milestones = {

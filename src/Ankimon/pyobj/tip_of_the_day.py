@@ -7,6 +7,7 @@ from aqt.qt import *
 from ..pyobj.settings import Settings
 from ..resources import rate_path
 
+
 class TipOfTheDayDialog(QDialog):
     def __init__(self, tip_text, tip_number, total_tips, parent=None):
         super().__init__(parent)
@@ -25,7 +26,9 @@ class TipOfTheDayDialog(QDialog):
         self.layout.addWidget(self.dont_show_again_checkbox)
 
         self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-        self.next_tip_button = self.button_box.addButton("Next Tip", QDialogButtonBox.ButtonRole.ActionRole)
+        self.next_tip_button = self.button_box.addButton(
+            "Next Tip", QDialogButtonBox.ButtonRole.ActionRole
+        )
 
         self.next_tip_button.clicked.connect(self.show_new_tip)
         self.button_box.accepted.connect(self.accept)
@@ -49,14 +52,16 @@ class TipOfTheDayDialog(QDialog):
     def show_new_tip(self):
         self.current_tip_index = (self.current_tip_index + 1) % len(self.tips)
         self.tip_label.setText(self.tips[self.current_tip_index])
-        self.setWindowTitle(f"Ankimon Tip #{self.current_tip_index + 1}/{len(self.tips)}")
-
+        self.setWindowTitle(
+            f"Ankimon Tip #{self.current_tip_index + 1}/{len(self.tips)}"
+        )
 
     def accept(self):
         if self.dont_show_again_checkbox.isChecked():
             self.settings.set("misc.show_tip_on_startup", False)
         self.settings.set("misc.last_tip_index", self.current_tip_index)
         super().accept()
+
 
 def show_tip_of_the_day():
     """Checks settings and shows the tip of the day dialog if enabled."""

@@ -24,27 +24,39 @@ new_values = {
     "captured_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 }
 
+
 class DataHandler:
     def __init__(self):
         self.new_values = new_values
         self.path = user_path  # Store the provided path
-        self.data = {}         # Store any potential errors or file read issues
+        self.data = {}  # Store any potential errors or file read issues
         self.read_files()
 
     def read_files(self):
         # Specify the files to read
-        files = ['mypokemon.json', 'mainpokemon.json', 'items.json', 'team.json', 'data.json', 'badges.json']
+        files = [
+            "mypokemon.json",
+            "mainpokemon.json",
+            "items.json",
+            "team.json",
+            "data.json",
+            "badges.json",
+        ]
 
         # Loop through each file and attempt to read it from the specified path
 
         for file in files:
             file_path = os.path.join(self.path, file)  # Construct full file path
-            attr_name = os.path.splitext(file)[0]      # Use the filename without extension as the attribute name
+            attr_name = os.path.splitext(file)[
+                0
+            ]  # Use the filename without extension as the attribute name
 
             # Create file with empty array if it doesn't exist
             if not os.path.exists(file_path):
-                os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure directory exists
-                with open(file_path, 'w', encoding='utf-8') as f:
+                os.makedirs(
+                    os.path.dirname(file_path), exist_ok=True
+                )  # Ensure directory exists
+                with open(file_path, "w", encoding="utf-8") as f:
                     json.dump([], f, indent=2)
 
             try:
@@ -52,7 +64,9 @@ class DataHandler:
                     content = json.load(f)
 
                     # Validate list structure
-                    if attr_name in ['mypokemon', 'mainpokemon'] and isinstance(content, list):
+                    if attr_name in ["mypokemon", "mainpokemon"] and isinstance(
+                        content, list
+                    ):
                         valid_content = []
                         for entry in content:
                             if isinstance(entry, dict):
@@ -80,12 +94,18 @@ class DataHandler:
                 print(f"Skipping invalid entry at index {idx} - not a dictionary")
                 continue
         try:
-            unique_ids = set(pokemon.get("individual_id") for pokemon in pokemon_list if "individual_id" in pokemon)
+            unique_ids = set(
+                pokemon.get("individual_id")
+                for pokemon in pokemon_list
+                if "individual_id" in pokemon
+            )
 
             for pokemon in pokemon_list:
                 # Skip Pokémon that already have an individual_id
                 if "individual_id" in pokemon and pokemon["individual_id"]:
-                    unique_ids.add(pokemon["individual_id"])  # Ensure existing IDs are tracked
+                    unique_ids.add(
+                        pokemon["individual_id"]
+                    )  # Ensure existing IDs are tracked
                     continue
 
                 # Assign a new unique ID
@@ -117,7 +137,7 @@ class DataHandler:
         if hasattr(self, attr_name):
             file_path = os.path.join(self.path, f"{attr_name}.json")
             try:
-                with open(file_path, 'w') as f:
+                with open(file_path, "w") as f:
                     json.dump(getattr(self, attr_name), f, indent=2)
             except Exception as e:
                 self.data[file_path] = f"Error saving {file_path}: {e}"

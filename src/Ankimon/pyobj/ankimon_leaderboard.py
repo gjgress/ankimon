@@ -4,10 +4,11 @@ from aqt.utils import showInfo
 from ..resources import user_path_credentials, mypokemon_path
 import json
 import requests
-from aqt import mw # import setting values direct from init file
+from aqt import mw  # import setting values direct from init file
 
-#ANKIMON_LEADERBOARD_API_URL = "https://ankimon.com/api/leaderboard"  # Replace with the actual API URL
+# ANKIMON_LEADERBOARD_API_URL = "https://ankimon.com/api/leaderboard"  # Replace with the actual API URL
 ANKIMON_LEADERBOARD_API_URL = "https://leaderboard-api.ankimon.com/update_stats"  # Replace with the actual API URL
+
 
 class ApiKeyDialog(QDialog):
     def __init__(self):
@@ -46,10 +47,7 @@ class ApiKeyDialog(QDialog):
         api_key = self.api_key_input.text()
 
         if username and api_key:
-            credentials = {
-                "username": username,
-                "api_key": api_key
-            }
+            credentials = {"username": username, "api_key": api_key}
             self.save_credentials(credentials)
             self.accept()  # Close the dialog if everything is entered
         else:
@@ -64,58 +62,56 @@ class ApiKeyDialog(QDialog):
         except Exception as e:
             showInfo(f"Error saving credentials: {e}")
 
-def sync_data_to_leaderboard(data):
 
-        # First check if leaderboard is enabled in config
-        if not mw.settings_obj.get("misc.leaderboard"):
+def sync_data_to_leaderboard(data):
+    # First check if leaderboard is enabled in config
+    if not mw.settings_obj.get("misc.leaderboard"):
+        return
+
+    try:
+        # Load credentials from the file
+        with open(user_path_credentials, "r", encoding="utf-8") as f:
+            credentials = json.load(f)
+
+        # Extract username and api_key from the list of dictionaries
+        username = credentials.get("username")
+        api_key = credentials.get("api_key")
+
+        # Validate credentials
+        if not username or not api_key:
+            showInfo(
+                "Error: Missing credentials for Ankimon leaderboard. Please set up leaderboard from Ankimon menu or turn off in Settings."
+            )
             return
 
-        try:
-            # Load credentials from the file
-            with open(user_path_credentials, "r", encoding="utf-8") as f:
-                credentials = json.load(f)
+        # Check if both username and api_key are available
+        if username and api_key:
+            request_data = {"username": username, "api_key": api_key, "stats": data}
 
-            # Extract username and api_key from the list of dictionaries
-            username = credentials.get("username")
-            api_key = credentials.get("api_key")
+            # Send a POST request to the leaderboard API
+            response = requests.post(ANKIMON_LEADERBOARD_API_URL, json=request_data)
 
-            # Validate credentials
-            if not username or not api_key:
-                showInfo("Error: Missing credentials for Ankimon leaderboard. Please set up leaderboard from Ankimon menu or turn off in Settings.")
-                return
+            # showInfo(response.text)  # Show the response text for debugging
 
+            # Check if the request was successful
+            # if response.status_code == 200:
+            #    mw.logger.log("log","Data synced successfully to leaderboard!")
+            # else:
+            #    mw.logger.log("log",f"Failed to sync data to leaderboard. Status code: {response.status_code}")
+        # else:
+        # mw.logger.log("Credentials are missing (username or api_key)")
 
-            # Check if both username and api_key are available
-            if username and api_key:
-                request_data = {
-                    "username": username,
-                    "api_key": api_key,
-                    "stats": data
-                }
+    except requests.exceptions.RequestException as e:
+        showInfo(
+            f"Error: Missing credentials for Ankimon leaderboard. Please set up leaderboard from Ankimon menu or turn off in Settings.\n\n {e}"
+        )
+    except Exception as e:
+        showInfo(
+            f"Error: Missing credentials for Ankimon leaderboard. Please set up leaderboard from Ankimon menu or turn off in Settings.\n\n {e}"
+        )
 
-                # Send a POST request to the leaderboard API
-                response = requests.post(
-                    ANKIMON_LEADERBOARD_API_URL,
-                    json=request_data
-                )
-
-                #showInfo(response.text)  # Show the response text for debugging
-
-                # Check if the request was successful
-                #if response.status_code == 200:
-                #    mw.logger.log("log","Data synced successfully to leaderboard!")
-                #else:
-                #    mw.logger.log("log",f"Failed to sync data to leaderboard. Status code: {response.status_code}")
-            #else:
-                #mw.logger.log("Credentials are missing (username or api_key)")
-
-        except requests.exceptions.RequestException as e:
-            showInfo(f"Error: Missing credentials for Ankimon leaderboard. Please set up leaderboard from Ankimon menu or turn off in Settings.\n\n {e}")
-        except Exception as e:
-            showInfo(f"Error: Missing credentials for Ankimon leaderboard. Please set up leaderboard from Ankimon menu or turn off in Settings.\n\n {e}")
 
 def get_unique_pokemon():
-
     # Check if leaderboard syncing is enabled in config
     if not mw.settings_obj.get("misc.leaderboard"):
         return
@@ -146,6 +142,7 @@ def get_unique_pokemon():
         showInfo(f"File not found: {mypokemon_path} or {e}")
         return 1
 
+
 def get_total_pokemon():
     try:
         with open(mypokemon_path, "r", encoding="utf-8") as file:
@@ -155,6 +152,7 @@ def get_total_pokemon():
     except:
         showInfo(f"File not found: {mypokemon_path}")
         return 1
+
 
 def get_shinies():
     try:
@@ -170,7 +168,7 @@ def get_shinies():
         showInfo(f"File not found: {mypokemon_path}")
         return 0
 
+
 def show_api_key_dialog():
     dialog = ApiKeyDialog()  # Create the dialog instance
     dialog.exec()  # Show the dialog
-

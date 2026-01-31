@@ -2,12 +2,14 @@ import json
 from aqt.utils import showWarning
 from ..resources import mainpokemon_path, mypokemon_path
 
+
 def get_starter_evolution_ids(starter_id: int) -> list[int]:
     """
     Returns a list containing the starter's ID and its two direct evolution IDs.
     Assumes a linear evolution path of n, n+1, n+2.
     """
     return [starter_id, starter_id + 1, starter_id + 2]
+
 
 affected_starters = [
     1,  # bulbasaur
@@ -35,6 +37,7 @@ affected_starters = [
     813,  # scorbunny
     816,  # sobble
 ]
+
 
 def migrate_starter_individual_id():
     """
@@ -86,13 +89,15 @@ def migrate_starter_individual_id():
     potential_match = None
     for pokemon in my_pokemon_data:
         # A starter in mypokemon.json affected by the bug might not have an individual_id
-        if pokemon.get("id") == main_pokemon.get("id") and \
-           pokemon.get("iv") == main_pokemon.get("iv") and \
-           pokemon.get("gender") == main_pokemon.get("gender") and \
-           pokemon.get("ability") == main_pokemon.get("ability") and \
-           pokemon.get("shiny") == main_pokemon.get("shiny"):
+        if (
+            pokemon.get("id") == main_pokemon.get("id")
+            and pokemon.get("iv") == main_pokemon.get("iv")
+            and pokemon.get("gender") == main_pokemon.get("gender")
+            and pokemon.get("ability") == main_pokemon.get("ability")
+            and pokemon.get("shiny") == main_pokemon.get("shiny")
+        ):
             potential_match = pokemon
-            break # Found a match
+            break  # Found a match
 
     if potential_match:
         # We found the starter. Now, update its individual_id.

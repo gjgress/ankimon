@@ -4,7 +4,7 @@ from aqt.qt import (
     QDialog,
     QLabel,
     QVBoxLayout,
-    )
+)
 from PyQt6.QtCore import QUrl
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
@@ -12,16 +12,20 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QVBoxLayout,
-    )
+)
 
 
 from ..resources import rate_path
-from ..texts import rate_addon_text_label, thankyou_message_text, dont_show_this_button_text
+from ..texts import (
+    rate_addon_text_label,
+    thankyou_message_text,
+    dont_show_this_button_text,
+)
 from ..utils import give_item
 from ..singletons import logger, test_window
 
-def rate_this_addon():
 
+def rate_this_addon():
     # Load rate data
     try:
         with open(rate_path, "r", encoding="utf-8") as file:
@@ -72,9 +76,9 @@ def rate_this_addon():
             rate_window.close()
             rate_data["rate_this"] = True
             # Save the updated data back to the file
-            with open(rate_path, 'w') as file:
+            with open(rate_path, "w") as file:
                 json.dump(rate_data, file, indent=4)
-            logger.log_and_showinfo("info",dont_show_this_button_text)
+            logger.log_and_showinfo("info", dont_show_this_button_text)
 
         def rate_this_button():
             rate_window.close()
@@ -83,11 +87,12 @@ def rate_this_addon():
             thankyou_message()
             rate_data["rate_this"] = True
             # Save the updated data back to the file
-            with open(rate_path, 'w') as file:
+            with open(rate_path, "w") as file:
                 json.dump(rate_data, file, indent=4)
                 test_window.rate_display_item("potion")
                 # add item to item list
                 give_item("potion")
+
         rate_button.clicked.connect(rate_this_button)
         layout.addWidget(rate_button)
 
