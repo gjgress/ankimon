@@ -19,11 +19,7 @@ from aqt.utils import showWarning
 from aqt.qt import QIcon, QColor, QPainterPath
 
 from aqt.qt import (
-    QDialog,
-    QLabel,
     QPushButton,
-    QVBoxLayout,
-    QWidget,
     QHBoxLayout,
     QLineEdit,
 )

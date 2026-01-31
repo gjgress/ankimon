@@ -2,7 +2,6 @@ import json
 from aqt.qt import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton
 from aqt.utils import showInfo
 from ..resources import user_path_credentials, mypokemon_path
-import json
 import requests
 from aqt import mw  # import setting values direct from init file
 

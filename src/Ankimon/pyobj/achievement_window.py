@@ -12,12 +12,9 @@ from aqt.qt import (
 )
 from aqt.qt import QIcon
 from aqt.qt import (
-    QLabel,
-    QVBoxLayout,
-    QWidget,
     QScrollArea,
 )
-from aqt.qt import QIcon, QColor
+from aqt.qt import QColor
 
 from ..functions.badges_functions import get_achieved_badges
 

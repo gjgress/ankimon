@@ -29,7 +29,6 @@ from aqt.qt import QDialog
 from aqt.operations import QueryOp
 from aqt.reviewer import Reviewer
 from aqt.utils import downArrow, showWarning, tr, tooltip
-from aqt.qt import QDialog
 from aqt.gui_hooks import webview_will_set_content
 from aqt.webview import WebContent
 import markdown

@@ -13,8 +13,6 @@ import re
 from ..pyobj.InfoLogger import ShowInfoLogger
 from ..pyobj.pokemon_obj import PokemonObject
 from ..pyobj.settings import Settings
-from ..pyobj.pokemon_obj import PokemonObject
-from ..pyobj.InfoLogger import ShowInfoLogger
 from ..pyobj.translator import Translator
 from ..pyobj.test_window import TestWindow
 from ..pyobj.reviewer_obj import Reviewer_Manager
@@ -26,7 +24,7 @@ from ..functions.pokedex_functions import (
 )
 from ..gui_classes.pokemon_details import PokemonCollectionDetails
 from ..gui_entities import MovieSplashLabel
-from ..resources import mypokemon_path, frontdefault, frontdefault, mainpokemon_path
+from ..resources import mypokemon_path, frontdefault, mainpokemon_path
 
 
 class PokemonCollectionDialog(QDialog):

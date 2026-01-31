@@ -5,10 +5,7 @@ import uuid
 from aqt.qt import QFont, QLabel, QPainter, QPixmap, Qt, QVBoxLayout, QWidget, qconnect
 from aqt.qt import QColor
 from aqt.qt import (
-    QLabel,
     QPushButton,
-    QVBoxLayout,
-    QWidget,
     QHBoxLayout,
 )
 

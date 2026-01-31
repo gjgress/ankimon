@@ -8,10 +8,7 @@ from aqt.qt import (
 from aqt.qt import QUrl
 from aqt.qt import QDesktopServices
 from aqt.qt import (
-    QDialog,
-    QLabel,
     QPushButton,
-    QVBoxLayout,
 )
 
 
