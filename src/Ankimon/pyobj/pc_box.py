@@ -328,7 +328,7 @@ class PokemonPC(QDialog):
         prev_idx = self.generation_combo.currentIndex() if self.generation_combo is not None else 0
         self.generation_combo = QComboBox()
         self.generation_combo.addItem("All gens")
-        self.generation_combo.addItems([f"Gen {i}" for i in range(1, 9, 1)])
+        self.generation_combo.addItems([f"Gen {i}" for i in range(1, 10, 1)])
         self.generation_combo.setCurrentIndex(prev_idx)
         self.generation_combo.currentIndexChanged.connect(lambda: self.go_to_box(0))
         # Tier filtering

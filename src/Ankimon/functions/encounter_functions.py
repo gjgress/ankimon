@@ -23,8 +23,10 @@ from ..functions.pokemon_functions import find_experience_for_level, get_levelup
 from ..functions.pokedex_functions import (
     check_evolution_for_pokemon,
     get_all_pokemon_moves,
+    get_base_experience,
+    get_effort_values,
+    get_growth_rate,
     return_name_for_id,
-    search_pokeapi_db_by_id,
     search_pokedex,
     search_pokedex_by_id
 )
@@ -43,11 +45,6 @@ from ..singletons import (
     translator,
 )
 from ..resources import (
-    pokemon_species_baby_path,
-    pokemon_species_legendary_path,
-    pokemon_species_mythical_path,
-    pokemon_species_normal_path,
-    pokemon_species_ultra_path,
     mypokemon_path,
     mainpokemon_path,
 )
@@ -108,21 +105,23 @@ def modify_percentages(total_reviews, daily_average, player_level):
     # it could be rewritten to run ONLY when the change in review ratio is detected.
     return percentages
 
-def get_pokemon_id_by_tier(tier):
-    id_species_path = None
-    if tier == "Normal":
-        id_species_path = pokemon_species_normal_path
-    elif tier == "Baby":
-        id_species_path = pokemon_species_baby_path
-    elif tier == "Ultra":
-        id_species_path = pokemon_species_ultra_path
-    elif tier == "Legendary":
-        id_species_path = pokemon_species_legendary_path
-    elif tier == "Mythical":
-        id_species_path = pokemon_species_mythical_path
 
-    with open(id_species_path, "r", encoding="utf-8") as file:
-        id_data = json.load(file)
+
+def get_random_pokemon_in_tier(tier):
+    from . import encounter_data
+
+    if tier == "Normal":
+        id_data = encounter_data.NORMAL
+    elif tier == "Baby":
+        id_data = encounter_data.BABY
+    elif tier == "Ultra":
+        id_data = encounter_data.ULTRA
+    elif tier == "Legendary":
+        id_data = encounter_data.LEGENDARY
+    elif tier == "Mythical":
+        id_data = encounter_data.MYTHICAL
+    else:
+        raise ValueError()
 
     # Select a random Pokemon ID from those in the tier
     random_pokemon_id = random.choice(id_data)
@@ -157,13 +156,13 @@ def choose_random_pkmn_from_tier():
 
     Returns:
         id (int): Pokedex ID for generated Pokemon
-        tier (string): Rarity tier for generated Pokemon (normal/ultra/legendary etc.)
+        tier (str): Rarity tier for generated Pokemon (normal/ultra/legendary etc.)
     """
     total_reviews = ankimon_tracker_obj.total_reviews
     trainer_level = trainer_card.level
     try:
         tier = get_tier(total_reviews, trainer_level)
-        id = get_pokemon_id_by_tier(tier)
+        id = get_random_pokemon_in_tier(tier)
         return id, tier
     except Exception as e:
         show_warning_with_traceback(parent=mw, exception=e, message="Error occurred")
@@ -188,9 +187,6 @@ def check_id_ok(id_num: Union[int, list[int]]):
             return False
 
     if not isinstance(id_num, int):
-        return False
-
-    if id_num >= 898:
         return False
 
     generation = 0
@@ -259,9 +255,9 @@ def generate_random_pokemon(main_pokemon_level: int, ankimon_tracker_obj: Ankimo
 
     # Now we get all necessary information about the chosen pokemon.
     pokemon_type = search_pokedex(name, "types")
-    base_experience = search_pokeapi_db_by_id(pokemon_id, "base_experience")  # Experience that the wild pokemon will give once beaten
-    growth_rate = search_pokeapi_db_by_id(pokemon_id, "growth_rate")
-    ev_yield = search_pokeapi_db_by_id(pokemon_id, "effort_values")
+    base_experience = get_base_experience(search_pokedex(name, "actual_id"))  # Experience that the wild pokemon will give once beaten
+    growth_rate = get_growth_rate(pokemon_id)
+    ev_yield = get_effort_values(search_pokedex(name, "actual_id"))
     gender = pick_random_gender(name)
     is_shiny = shiny_chance()
     battle_status = "fighting"

@@ -107,10 +107,6 @@
                     "type": "file"
                 },
                 {
-                    "name": "starters.json",
-                    "type": "file"
-                },
-                {
                     "name": "table_gen_id.html",
                     "type": "file"
                 },
@@ -4838,10 +4834,6 @@
                         },
                         {
                             "name": "move_flavor_text.csv",
-                            "type": "file"
-                        },
-                        {
-                            "name": "pokeapi_db.json",
                             "type": "file"
                         },
                         {
@@ -56975,16 +56967,6 @@
                             "type": "file"
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "name": "utils",
-            "type": "folder",
-            "children": [
-                {
-                    "name": "encounter_generator.py",
-                    "type": "file"
                 }
             ]
         },
