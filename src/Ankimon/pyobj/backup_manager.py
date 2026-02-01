@@ -26,8 +26,8 @@ class BackupManager:
         "todays_shop.json",
         "config.obf",
     ]
-    MAX_BACKUPS = 5
-    MAX_BACKUP_AGE_DAYS = 14
+    MAX_BACKUPS = 16
+    MAX_BACKUP_AGE_DAYS = 16
 
     def __init__(self, logger, settings_obj):
         self.logger = logger
