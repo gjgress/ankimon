@@ -5,11 +5,9 @@
   "ankiweb_id": "1908235722",
   "author": "Unlucky-Life",
   "conflicts": [],
-  "targets": [
-    "anki21"
-  ],
+  "targets": ["anki21"],
   "version": "1.3955",
-  "min_point_version": "2.1.66",
-  "max_tested_anki_version": "23.10.12",
+  "min_anki_version": "2.1.66",
+  "tested_anki_version": "25.09",
   "ankiweb_conflicts_with_local": false
 }
