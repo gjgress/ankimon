@@ -2,7 +2,7 @@ from pathlib import Path
 
 import orjson
 from aqt import mw
-from aqt.qt import *
+from aqt.qt import QCheckBox, QDialog, QDialogButtonBox, QLabel, QVBoxLayout
 
 from ..pyobj.settings import Settings
 from ..resources import rate_path

@@ -2,9 +2,7 @@ from pathlib import Path
 from typing import Callable, Union
 
 from aqt import mw  # The main window object
-from aqt.qt import *
-from aqt.qt import QAction, QKeySequence, QMenu
-from aqt.utils import *
+from aqt.qt import QAction, QKeySequence, QMenu, Qt
 from aqt.utils import qconnect
 
 from .gui_classes.backup_manager_dialog import BackupManagerDialog
