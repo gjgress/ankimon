@@ -872,7 +872,7 @@ class PokemonPC(QDialog):
                 is_currently_favorite = pokemon_list[i].get("is_favorite", False)
                 pokemon_list[i]["is_favorite"] = not is_currently_favorite
 
-                with open(str(mypokemon_path), "wb") as json_file:
+                with open(mypokemon_path, "wb") as json_file:
                     json_file.write(
                         orjson.dumps(pokemon_list, option=orjson.OPT_INDENT_2)
                     )
@@ -1045,7 +1045,7 @@ class PokemonPC(QDialog):
                     pokemon_list[i][key] = value
 
         if needs_update:
-            with open(str(mypokemon_path), "wb") as json_file:
+            with open(mypokemon_path, "wb") as json_file:
                 json_file.write(orjson.dumps(pokemon_list, option=orjson.OPT_INDENT_2))
 
     def on_window_close(self):

@@ -587,11 +587,11 @@ def save_main_pokemon_progress(
     mypkmndata = mainpkmndata
     mainpkmndata = [mainpkmndata]
     # Save the caught Pokémon's data to a JSON file
-    with open(str(mainpokemon_path), "wb") as json_file:
+    with open(mainpokemon_path, "wb") as json_file:
         json_file.write(orjson.dumps(mainpkmndata, option=orjson.OPT_INDENT_2))
 
     # Load data from the output JSON file
-    with open(str(mypokemon_path), "rb") as output_file:
+    with open(mypokemon_path, "rb") as output_file:
         mypokemondata = orjson.loads(output_file.read())
 
         # Find and replace the specified Pokémon's data in mypokemondata
@@ -603,7 +603,7 @@ def save_main_pokemon_progress(
                 break
 
         # Save the modified data to the output JSON file
-        with open(str(mypokemon_path), "wb") as output_file:
+        with open(mypokemon_path, "wb") as output_file:
             output_file.write(orjson.dumps(mypokemondata, option=orjson.OPT_INDENT_2))
 
     sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path)
@@ -773,7 +773,7 @@ def save_caught_pokemon(
     caught_pokemon_data.append(caught_pokemon)
 
     # Save the caught Pokémon's data to a JSON file
-    with open(str(mypokemon_path), "wb") as json_file:
+    with open(mypokemon_path, "wb") as json_file:
         json_file.write(orjson.dumps(caught_pokemon_data, option=orjson.OPT_INDENT_2))
 
 

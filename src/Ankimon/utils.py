@@ -689,7 +689,7 @@ def save_error_code(error_code, logger=None):
 
 
 def get_main_pokemon_data():
-    with open(str(mainpokemon_path), "rb") as json_file:
+    with open(mainpokemon_path, "rb") as json_file:
         main_pokemon_datalist = orjson.loads(json_file.read())
 
     main_pokemon_data = []

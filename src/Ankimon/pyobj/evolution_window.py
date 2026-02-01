@@ -332,7 +332,7 @@ class EvoWindow(QWidget):
                             pokemon["ability"] = random.choice(abilities_list)
                         else:
                             pokemon["ability"] = self.translator.translate("no_ability")
-                        with open(str(mypokemon_path), "rb") as output_file:
+                        with open(mypokemon_path, "rb") as output_file:
                             mypokemondata = orjson.loads(output_file.read())
                             # Find and replace the specified Pokémon's data in mypokemondata
                             for index, pokemon_data in enumerate(mypokemondata):
@@ -340,7 +340,7 @@ class EvoWindow(QWidget):
                                     mypokemondata[index] = pokemon
                                     break
                                     # Save the modified data to the output JSON file
-                            with open(str(mypokemon_path), "wb") as output_file:
+                            with open(mypokemon_path, "wb") as output_file:
                                 output_file.write(
                                     orjson.dumps(
                                         mypokemondata, option=orjson.OPT_INDENT_2

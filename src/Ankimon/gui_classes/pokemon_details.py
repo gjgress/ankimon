@@ -602,7 +602,7 @@ def remember_attack(
         logger.log_and_showinfo("warning", "Missing Mainpokemon Data !")
         return
 
-    with open(str(mypokemon_path), "rb") as output_file:
+    with open(mypokemon_path, "rb") as output_file:
         mypokemondata = orjson.loads(output_file.read())
     for pokemon_data in mypokemondata:
         # Use individual_id for matching
@@ -636,7 +636,7 @@ def remember_attack(
                         )
         pokemon_data["attacks"] = attacks
 
-        with open(str(mypokemon_path), "wb") as output_file:
+        with open(mypokemon_path, "wb") as output_file:
             output_file.write(orjson.dumps(mypokemondata, option=orjson.OPT_INDENT_2))
 
         # Update mainpokemon file if necessary
@@ -646,7 +646,7 @@ def remember_attack(
             if mainpkmndata["individual_id"] == individual_id:
                 mainpkmndata["attacks"] = attacks
                 break
-        with open(str(mainpokemon_path), "wb") as json_file:
+        with open(mainpokemon_path, "wb") as json_file:
             json_file.write(orjson.dumps(main_pokemon_data, option=orjson.OPT_INDENT_2))
 
         break
@@ -677,7 +677,7 @@ def forget_attack(
         logger.log_and_showinfo("warning", "Missing Mainpokemon Data !")
         return
 
-    with open(str(mypokemon_path), "rb") as output_file:
+    with open(mypokemon_path, "rb") as output_file:
         mypokemondata = orjson.loads(output_file.read())
     for pokemon_data in mypokemondata:
         # Use individual_id for matching
@@ -698,7 +698,7 @@ def forget_attack(
             logger.log_and_showinfo("info", f"{msg}")
         pokemon_data["attacks"] = attacks
 
-        with open(str(mypokemon_path), "wb") as output_file:
+        with open(mypokemon_path, "wb") as output_file:
             output_file.write(orjson.dumps(mypokemondata, option=orjson.OPT_INDENT_2))
 
         # Update mainpokemon file if necessary
@@ -708,7 +708,7 @@ def forget_attack(
             if mainpkmndata["individual_id"] == individual_id:
                 mainpkmndata["attacks"] = attacks
                 break
-        with open(str(mainpokemon_path), "wb") as json_file:
+        with open(mainpokemon_path, "wb") as json_file:
             json_file.write(orjson.dumps(main_pokemon_data, option=orjson.OPT_INDENT_2))
 
         break
@@ -838,7 +838,7 @@ def rename_pkmn(
                 # Update the nickname
                 pokemon["nickname"] = nickname
                 # Reflect the change in the output JSON file
-                with open(str(mypokemon_path), "rb") as output_file:
+                with open(mypokemon_path, "rb") as output_file:
                     mypokemondata = orjson.loads(output_file.read())
                     # Update the specified Pokémon's data
                     for idx, data in enumerate(mypokemondata):
@@ -846,7 +846,7 @@ def rename_pkmn(
                             mypokemondata[idx] = pokemon
                             break
                 # Save the modified data
-                with open(str(mypokemon_path), "wb") as output_file:
+                with open(mypokemon_path, "wb") as output_file:
                     output_file.write(
                         orjson.dumps(mypokemondata, option=orjson.OPT_INDENT_2)
                     )

@@ -462,7 +462,7 @@ class PokemonObject:
                 pokemon_list_data[i]["held_item"] = held_item
                 break
 
-        with open(str(mypokemon_path), "wb") as f:
+        with open(mypokemon_path, "wb") as f:
             f.write(orjson.dumps(pokemon_list_data, option=orjson.OPT_INDENT_2))
 
         # Secondly, we save the info in mainpokemon_path, if the pokemon happens to be our main pokemon
@@ -471,7 +471,7 @@ class PokemonObject:
 
         if main_pokemon_data[0]["individual_id"] == self.individual_id:
             main_pokemon_data[0]["held_item"] = held_item
-            with open(str(mainpokemon_path), "wb") as f:
+            with open(mainpokemon_path, "wb") as f:
                 f.write(orjson.dumps(main_pokemon_data, option=orjson.OPT_INDENT_2))
 
     def remove_held_item(self) -> None:
@@ -507,7 +507,7 @@ class PokemonObject:
                 pokemon_list_data[i]["held_item"] = None
                 break
 
-        with open(str(mypokemon_path), "wb") as f:
+        with open(mypokemon_path, "wb") as f:
             f.write(orjson.dumps(pokemon_list_data, option=orjson.OPT_INDENT_2))
 
         # Secondly, we save the info in mainpokemon_path, if the pokemon happens to be our main pokemon
@@ -516,5 +516,5 @@ class PokemonObject:
 
         if main_pokemon_data[0]["individual_id"] == self.individual_id:
             main_pokemon_data[0]["held_item"] = None
-            with open(str(mainpokemon_path), "wb") as f:
+            with open(mainpokemon_path, "wb") as f:
                 f.write(orjson.dumps(main_pokemon_data, option=orjson.OPT_INDENT_2))

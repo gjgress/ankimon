@@ -325,7 +325,7 @@ def save_fossil_pokemon(pokemon_id):
     # Append the caught Pokémon's data to the list
     caught_pokemon_data.append(caught_pokemon)
     # Save the caught Pokémon's data to a JSON file
-    with open(str(mypokemon_path), "wb") as json_file:
+    with open(mypokemon_path, "wb") as json_file:
         json_file.write(orjson.dumps(caught_pokemon_data, option=orjson.OPT_INDENT_2))
 
 
