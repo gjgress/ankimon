@@ -181,7 +181,7 @@ def PokemonCollectionDetails(
         description_txt = f"Description: \n {description_formated}"
         lvl = f" Level: {level}"
         ability_txt = f" Ability: {ability.capitalize()}"
-        type_txt = f" Type:"
+        type_txt = " Type:"
         stats_list = []
         for key, val in detail_stats.items():
             if key not in ("hp", "atk", "def", "spa", "spd", "spe"):
@@ -226,7 +226,7 @@ def PokemonCollectionDetails(
         if captured_date is not None:
             captured_date_label = QLabel(f"Captured: {captured_date.split()[0]}")
         else:
-            captured_date_label = QLabel(f"Captured: N/A")
+            captured_date_label = QLabel("Captured: N/A")
 
         level_label.setFont(custom_font)
         type_label = QLabel("Type:")

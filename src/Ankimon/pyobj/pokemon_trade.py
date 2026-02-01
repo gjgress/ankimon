@@ -797,7 +797,7 @@ class PokemonTrade:
             show_warning_with_traceback(
                 parent=self.parent_window,
                 exception=e,
-                message=f"Pokedex file not found.",
+                message="Pokedex file not found.",
             )
             return None
 

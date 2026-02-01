@@ -557,7 +557,7 @@ def get_pokemon_evolution_data(pokemon_id):
             pass
     except FileNotFoundError as e:
         show_warning_with_traceback(
-            parent=mw, exception=e, message=f"The evolution data file was not found."
+            parent=mw, exception=e, message="The evolution data file was not found."
         )
     except Exception as e:
         show_warning_with_traceback(

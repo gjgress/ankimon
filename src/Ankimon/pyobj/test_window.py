@@ -517,10 +517,10 @@ class TestWindow(QWidget):
         )
 
         if self.enemy_pokemon.shiny:
-            enemy_name += f" 🌠"  # Green sparkle
+            enemy_name += " 🌠"  # Green sparkle
 
         if self.main_pokemon.shiny:
-            main_name += f" 🌠"  # Green sparkles
+            main_name += " 🌠"  # Green sparkles
 
         painter.drawText(48, 67, enemy_name)
         painter.drawText(326, 200, main_name)

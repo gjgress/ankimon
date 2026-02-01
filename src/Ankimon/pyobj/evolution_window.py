@@ -354,7 +354,7 @@ class EvoWindow(QWidget):
                         )
         except Exception as e:
             show_warning_with_traceback(
-                parent=mw, exception=e, message=f"Error occured in evolving pokemon"
+                parent=mw, exception=e, message="Error occured in evolving pokemon"
             )
             self.logger.log(f"{e}")
 
@@ -376,7 +376,7 @@ class EvoWindow(QWidget):
             show_warning_with_traceback(
                 parent=mw,
                 exception=e,
-                message=f"Error occured in updating main_pokemon obj",
+                message="Error occured in updating main_pokemon obj",
             )
         self.display_evo_complete(prevo_id, evo_id)
         check = check_for_badge(self.achievements, 16)

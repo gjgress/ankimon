@@ -2,7 +2,7 @@ target-version = "py39"
 extend-exclude = ["poke_engine", "pypresence"]
 
 [lint]
-select = ["PLE", "F401", "F811", "I", "TID251", "RET", "TC", "UP"]
+select = ["PLE", "F401", "F811", "F541", "I", "TID251", "RET", "TC", "UP"]
 ignore = []
 
 [lint.flake8-tidy-imports.banned-api]

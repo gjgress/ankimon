@@ -565,7 +565,7 @@ def _process_battle_effects(
 
         except Exception as e:
             print(f"Error processing state change {change}: {e}")
-            effect_messages.append(f"Battle effect occurred (processing error)")
+            effect_messages.append("Battle effect occurred (processing error)")
             continue
 
     return effect_messages

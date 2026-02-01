@@ -123,69 +123,69 @@ class BackupManagerDialog(QDialog):
         self.setLayout(main_layout)
 
     def apply_stylesheet(self):
-        self.setStyleSheet(f"""
-            QDialog {{
+        self.setStyleSheet("""
+            QDialog {
                 background-color: #2a2a2a;
                 color: #f0f0f0;
-            }}
-            QListWidget {{
+            }
+            QListWidget {
                 background-color: #3c3c3c;
                 border: 2px solid #555;
                 border-radius: 5px;
-            }}
-            QListWidget::item {{
+            }
+            QListWidget::item {
                 border-bottom: 1px solid #4a4a4a;
                 color: #e0e0e0;
-            }}
-            QListWidget::item:selected {{
+            }
+            QListWidget::item:selected {
                 background-color: #e33b3b;
                 color: #ffffff;
                 border: 1px solid #ff5c5c;
-            }}
-            #DateLabel {{
+            }
+            #DateLabel {
                 font-weight: bold;
                 color: #cccccc;
-            }}
-            #TimeLabel {{
+            }
+            #TimeLabel {
                 color: #aaaaaa;
                 font-size: 0.9em;
-            }}
-            #TrainerName {{
+            }
+            #TrainerName {
                 font-weight: bold;
                 font-size: 1.1em;
                 color: #ffffff;
-            }}
-            QPushButton {{
+            }
+            QPushButton {
                 background-color: #5a5a5a;
                 border: 1px solid #777;
                 padding: 8px 12px;
                 border-radius: 5px;
                 color: #f0f0f0;
-            }}
-            QPushButton:hover {{
+            }
+            QPushButton:hover {
                 background-color: #6a6a6a;
                 border-color: #888;
-            }}
-            QPushButton:disabled {{
+            }
+            QPushButton:disabled {
                 background-color: #4a4a4a;
                 color: #888;
-            }}
-            #RestoreButton {{
+            }
+            #RestoreButton {
                 background-color: #c0392b;
-            }}
-            #RestoreButton:hover {{
+            }
+            #RestoreButton:hover {
                 background-color: #e74c3c;
-            }}
-            #DeleteButton {{
+            }
+            #DeleteButton {
                 background-color: #992d22;
-            }}
-            #DeleteButton:hover {{
+            }
+            #DeleteButton:hover {
                 background-color: #c0392b;
-            }}
-            #BackupPathLabel {{
+            }
+            #BackupPathLabel {
                 font-size: 0.8em;
                 color: #aaaaaa;
-            }}
+            }
         """)
 
     def refresh_backup_list(self):
