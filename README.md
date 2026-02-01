@@ -11,5 +11,6 @@
 + New encounter probabilities
 + Fixed Help Guide
 + Reduced lag
++ Reduced (storage) size
 
 DOWNLOAD: https://github.com/Someon1e/ankimon/releases/tag/nightly
