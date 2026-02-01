@@ -112,8 +112,7 @@ def addon_config_editor_will_display_json(text: str) -> str:
                 del config["trainer.cash"]
 
             # Convert back to JSON string
-            modified_text = orjson.dumps(config, option=orjson.OPT_INDENT_2).decode()
-            return modified_text
+            return orjson.dumps(config, option=orjson.OPT_INDENT_2).decode()
         return text
     except orjson.JSONDecodeError:
         # Handle JSON parsing error
@@ -135,10 +134,8 @@ def read_github_file(url):
 
     if response.status_code == 200:
         # File exists, parse the Markdown content
-        content = response.text
-        return content
-    else:
-        return None
+        return response.text
+    return None
 
 
 # Function to check if the content of the two files is the same
@@ -166,8 +163,7 @@ def random_battle_scene():
         if filename.endswith(".png"):
             battle_scenes[index + 1] = filename
     # Get the corresponding file name
-    battlescene_file = battle_scenes.get(random.randint(1, len(battle_scenes)))
-    return battlescene_file
+    return battle_scenes.get(random.randint(1, len(battle_scenes)))
 
 
 def random_berries():
@@ -176,8 +172,7 @@ def random_berries():
         if filename.endswith(".png"):
             berries[index + 1] = filename
     # Get the corresponding file name
-    berries_file = berries.get(random.randint(1, len(berries)))
-    return berries_file
+    return berries.get(random.randint(1, len(berries)))
 
 
 def filter_item_sprites(string):
@@ -617,12 +612,11 @@ def get_all_sprites(directory):
     :return: List of sprite names without '.png'.
     """
     try:
-        sprite_names = [
+        return [
             os.path.splitext(file)[0]  # Remove the file extension
             for file in os.listdir(directory)
             if file.endswith(".png")  # Filter for .png files
         ]
-        return sprite_names
     except FileNotFoundError:
         print(f"Error: The directory '{directory}' does not exist.")
         return []
@@ -647,10 +641,9 @@ def play_effect_sound(settings_obj, sound_type):
 
         if not audio_path.is_file():
             return
-        else:
-            audio_output.setVolume(settings_obj.get("audio.volume"))
-            media_player.setSource(QUrl.fromLocalFile(str(audio_path)))
-            media_player.play()
+        audio_output.setVolume(settings_obj.get("audio.volume"))
+        media_player.setSource(QUrl.fromLocalFile(str(audio_path)))
+        media_player.play()
     else:
         pass
 
@@ -746,6 +739,7 @@ def get_main_pokemon_data():
             _gender,
             _nickname,
         )
+    return None
 
 
 def play_sound(enemy_pokemon_id: int, settings_obj: Settings):
@@ -894,18 +888,17 @@ def get_ev_spread(mode: str = "random") -> dict[str, int]:
         cuts = sorted(random.sample(range(510 + 1), 6 - 1))
         parts = [a - b for a, b in zip(cuts + [510], [0] + cuts)]
         parts = [min(252, part) for part in parts]
-        evs = {stat: val for stat, val in zip(stat_names, parts)}
-        return evs
-    elif mode == "pair":  # Draws 2 stats at 252 EVs, and a 3rd at 4 EVs
+        return {stat: val for stat, val in zip(stat_names, parts)}
+    if mode == "pair":  # Draws 2 stats at 252 EVs, and a 3rd at 4 EVs
         ev = {"hp": 0, "atk": 0, "def": 0, "spa": 0, "spd": 0, "spe": 0}
         stats = random.sample(stat_names, 3)
         ev[stats[0]] = 252
         ev[stats[1]] = 252
         ev[stats[2]] = 4
         return ev
-    elif mode == "defense":
+    if mode == "defense":
         return {"hp": 4, "atk": 0, "def": 252, "spa": 0, "spd": 252, "spe": 0}
-    elif mode == "uniform":
+    if mode == "uniform":
         return {"hp": 84, "atk": 84, "def": 84, "spa": 84, "spd": 84, "spe": 84}
 
     raise ValueError(f"Received unknown value for 'mode': {mode}")
@@ -962,12 +955,11 @@ def safe_get_random_move(
         )
         if move_details is not None:
             return move_details
-        else:
-            if logger is not None:
-                logger.log(
-                    "warning",
-                    f"Could not parse the following move : {str(move)}",
-                )
+        if logger is not None:
+            logger.log(
+                "warning",
+                f"Could not parse the following move : {str(move)}",
+            )
 
     # If we fail to successfully parse a single move, we just return Splash
     if logger is not None:

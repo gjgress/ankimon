@@ -53,54 +53,53 @@ def _normalize_language_id(language):
 def special_pokemon_names_for_min_level(name):
     if name == "flabébé":
         return "flabebe"
-    elif name == "sirfetch'd":
+    if name == "sirfetch'd":
         return "sirfetchd"
-    elif name == "farfetch'd":
+    if name == "farfetch'd":
         return "farfetchd"
-    elif name == "porygon-z":
+    if name == "porygon-z":
         return "porygonz"
-    elif name == "kommo-o":
+    if name == "kommo-o":
         return "kommoo"
-    elif name == "hakamo-o":
+    if name == "hakamo-o":
         return "hakamoo"
-    elif name == "jangmo-o":
+    if name == "jangmo-o":
         return "jangmoo"
-    elif name == "mr. rime":
+    if name == "mr. rime":
         return "mrrime"
-    elif name == "mr. mime":
+    if name == "mr. mime":
         return "mrmime"
-    elif name == "mime jr.":
+    if name == "mime jr.":
         return "mimejr"
-    elif name == "nidoran♂":
+    if name == "nidoran♂":
         return "nidoranm"
-    elif name == "nidoran":
+    if name == "nidoran":
         return "nidoranf"
-    elif name == "keldeo[e]":
+    if name == "keldeo[e]":
         return "keldeo"
-    elif name == "mew[e]":
+    if name == "mew[e]":
         return "mew"
-    elif name == "deoxys[e]":
+    if name == "deoxys[e]":
         return "deoxys"
-    elif name == "jirachi[e]":
+    if name == "jirachi[e]":
         return "jirachi"
-    elif name == "arceus[e]":
+    if name == "arceus[e]":
         return "arceus"
-    elif name == "shaymin[e]":
+    if name == "shaymin[e]":
         return "shaymin-land"
-    elif name == "darkrai [e]":
+    if name == "darkrai [e]":
         return "darkrai"
-    elif name == "manaphy[e]":
+    if name == "manaphy[e]":
         return "manaphy"
-    elif name == "phione[e]":
+    if name == "phione[e]":
         return "phione"
-    elif name == "celebi[e]":
+    if name == "celebi[e]":
         return "celebi"
-    elif name == "magearna[e]":
+    if name == "magearna[e]":
         return "magearna"
-    elif name == "type: null":
+    if name == "type: null":
         return "typenull"
-    else:
-        return name
+    return name
 
 
 with open(pokedex_path, "rb") as json_file:
@@ -155,8 +154,7 @@ def get_mainpokemon_evo(pokemon_name):
     if pokemon_name not in pokedex_data:
         return []
     pokemon_info = pokedex_data[pokemon_name]
-    evolutions = pokemon_info.get("evos", [])
-    return evolutions
+    return pokemon_info.get("evos", [])
 
 
 def get_growth_rate(species_id: int) -> str:
@@ -218,10 +216,8 @@ def get_pokemon_descriptions(species_id, language):
     if descriptions:
         if len(descriptions) > 1:
             return random.choice(descriptions)
-        else:
-            return descriptions[0]
-    else:
-        return "Description not found."
+        return descriptions[0]
+    return "Description not found."
 
 
 def get_pokemon_diff_lang_name(pokemon_id: int, language: int):
@@ -244,9 +240,8 @@ def extract_ids_from_file():
             data = orjson.loads(file.read())
             ids = [character["id"] for character in data]
             owned_pokemon_ids = ids
-            owned_pokemon_ids = sorted(list(set(owned_pokemon_ids)))
+            return sorted(list(set(owned_pokemon_ids)))
             # showWarning(f"Owned Pokémon IDs: {owned_pokemon_ids}")
-            return owned_pokemon_ids
     except Exception as e:
         show_warning_with_traceback(
             parent=mw, exception=e, message="Error extracting IDs from file"
@@ -324,12 +319,10 @@ def find_details_move(move_name: str):
                 return move
             move_name = move_name.replace(" ", "")
             try:
-                move = moves_data.get(move_name.lower())
-                return move
+                return moves_data.get(move_name.lower())
             except:
                 # logger.log_and_showinfo("info",f"Can't find the attack {move_name} in the database.")
-                move = moves_data.get("tackle")
-                return move
+                return moves_data.get("tackle")
     except Exception as e:
         show_warning_with_traceback(
             parent=mw,
@@ -497,8 +490,7 @@ def check_if_evolution_exists(pokemon_id):
     if not possible_evos:
         showWarning("No possible evos found")
         return False
-    else:
-        return possible_evos
+    return possible_evos
 
 
 def pokemon_evolves_from_id(pokemon_id):

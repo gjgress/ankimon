@@ -95,7 +95,7 @@ def create_iframe_html(main_pokemon, enemy_pokemon, settings_obj, textmsg):
             f"""{sprites_url}back_default_gif/{main_pokemon.id}.gif"""
         )
     font_url = f"""/_addons/{ankimon_package}/web/assetts/PokemonGB.ttf"""
-    html_code = create_html_code(
+    return create_html_code(
         genderTop,
         genderBottom,
         nameTop,
@@ -116,7 +116,6 @@ def create_iframe_html(main_pokemon, enemy_pokemon, settings_obj, textmsg):
         enemypokemon_attack,
         xp_bar_width,
     )
-    return html_code
 
 
 def prepare(html, content, context):
@@ -127,7 +126,7 @@ def prepare(html, content, context):
 
 
 def create_head_code(generalurl):
-    css_code = f"""
+    return f"""
 	:root {{
         --background_music: "{generalurl}/"
 	}}
@@ -542,4 +541,3 @@ def create_head_code(generalurl):
 	clear:both ;
 }}
     """
-    return css_code

@@ -195,39 +195,38 @@ class Settings:
             reviewer_image_gif = self.config.get("gui.reviewer_image_gif", False)
             return -1 if view_main_front and reviewer_image_gif else 1
 
-        elif key == "animate_time":
+        if key == "animate_time":
             animate_time = self.config.get("gui.animate_time", False)
             return 0.8 if animate_time else 0
 
-        elif key == "xp_bar_location":
+        if key == "xp_bar_location":
             xp_bar_config = self.config.get("gui.xp_bar_config", True)
             xp_bar_location = int(self.config.get("gui.xp_bar_location", 2))
 
             if xp_bar_config:
                 if xp_bar_location == 1:
                     return "top"
-                elif xp_bar_location == 2:
+                if xp_bar_location == 2:
                     return "bottom"
             return None  # Default when XP bar is disabled
 
-        elif key == "xp_bar_spacer":
+        if key == "xp_bar_spacer":
             xp_bar_config = self.config.get("gui.xp_bar_config", False)
             xp_bar_location = self.config.get("gui.xp_bar_location", 0)
 
             if xp_bar_config:
                 if xp_bar_location == 2:  # Bottom
                     return 20
-                elif xp_bar_location == 1:  # Top
+                if xp_bar_location == 1:  # Top
                     return 0
             return 0  # Default spacer
 
-        elif key == "hp_only_spacer":
+        if key == "hp_only_spacer":
             hp_bar_config = self.config.get("gui.hp_bar_config", True)
             return 15 if not hp_bar_config else 0
 
-        elif key == "wild_hp_spacer":
+        if key == "wild_hp_spacer":
             hp_bar_config = self.config.get("gui.hp_bar_config", True)
             return 65 if not hp_bar_config else 0
 
-        else:
-            raise ValueError(f"Unknown key: {key}")
+        raise ValueError(f"Unknown key: {key}")

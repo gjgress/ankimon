@@ -323,8 +323,7 @@ class StarterWindow(QWidget):
             original_height = pixmap.height()
             new_width = max_width
             new_height = (original_height * max_width) // original_width
-            pixmap2 = pixmap.scaled(new_width, new_height)
-            return pixmap2
+            return pixmap.scaled(new_width, new_height)
 
         water_pixmap = resize_pixmap_img(water_pixmap)
         fire_pixmap = resize_pixmap_img(fire_pixmap)

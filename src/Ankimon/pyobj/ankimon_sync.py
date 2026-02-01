@@ -142,30 +142,27 @@ class ImprovedPokemonDataSync(QDialog):
             """Format a value for display."""
             if isinstance(value, str):
                 return f'"{value}"'
-            elif isinstance(value, (int, float)):
+            if isinstance(value, (int, float)):
                 return str(value)
-            elif isinstance(value, bool):
+            if isinstance(value, bool):
                 return str(value).lower()
-            elif isinstance(value, list):
+            if isinstance(value, list):
                 if len(value) <= 3:
                     return f"[{', '.join(format_value(v) for v in value)}]"
-                else:
-                    return f"[{', '.join(format_value(v) for v in value[:2])}, ... +{len(value) - 2} more]"
-            elif isinstance(value, dict):
+                return f"[{', '.join(format_value(v) for v in value[:2])}, ... +{len(value) - 2} more]"
+            if isinstance(value, dict):
                 if len(value) <= 2:
                     items = [f"{k}: {format_value(v)}" for k, v in value.items()]
                     return "{" + ", ".join(items) + "}"
-                else:
-                    items = list(value.items())[:2]
-                    formatted = [f"{k}: {format_value(v)}" for k, v in items]
-                    return (
-                        "{"
-                        + ", ".join(formatted)
-                        + f", ... +{len(value) - 2} more"
-                        + "}"
-                    )
-            else:
-                return str(value)[:50] + ("..." if len(str(value)) > 50 else "")
+                items = list(value.items())[:2]
+                formatted = [f"{k}: {format_value(v)}" for k, v in items]
+                return (
+                    "{"
+                    + ", ".join(formatted)
+                    + f", ... +{len(value) - 2} more"
+                    + "}"
+                )
+            return str(value)[:50] + ("..." if len(str(value)) > 50 else "")
 
         def compare_dicts(
             local_dict: Dict, remote_dict: Dict, path: str = ""
@@ -418,11 +415,11 @@ class ImprovedPokemonDataSync(QDialog):
             # Handle None/missing data cases
             if local_data is None and remote_data is None:
                 return ["Both files are empty"], ["Both files are empty"]
-            elif local_data is None:
+            if local_data is None:
                 return ["Local file is empty"], [
                     f"Remote has data: {type(remote_data).__name__}"
                 ]
-            elif remote_data is None:
+            if remote_data is None:
                 return [f"Local has data: {type(local_data).__name__}"], [
                     "Remote file is empty"
                 ]
@@ -434,7 +431,7 @@ class ImprovedPokemonDataSync(QDialog):
                     return compare_pokemon_lists(local_data, remote_data)
 
                 # Special handling for items
-                elif filename == "items.json":
+                if filename == "items.json":
                     if (
                         local_data
                         and isinstance(local_data[0], dict)
@@ -450,25 +447,24 @@ class ImprovedPokemonDataSync(QDialog):
                 return compare_simple_lists(local_data, remote_data)
 
             # Both are dictionaries
-            elif isinstance(local_data, dict) and isinstance(remote_data, dict):
+            if isinstance(local_data, dict) and isinstance(remote_data, dict):
                 return compare_dicts(local_data, remote_data)
 
             # Different types or simple values
+            local_lines = [f"Type: {type(local_data).__name__}"]
+            remote_lines = [f"Type: {type(remote_data).__name__}"]
+
+            if local_data is not None:
+                local_lines.append(f"- Value: {format_value(local_data)}")
             else:
-                local_lines = [f"Type: {type(local_data).__name__}"]
-                remote_lines = [f"Type: {type(remote_data).__name__}"]
+                local_lines.append("- Value: <no data>")
 
-                if local_data is not None:
-                    local_lines.append(f"- Value: {format_value(local_data)}")
-                else:
-                    local_lines.append("- Value: <no data>")
+            if remote_data is not None:
+                remote_lines.append(f"+ Value: {format_value(remote_data)}")
+            else:
+                remote_lines.append("+ Value: <no data>")
 
-                if remote_data is not None:
-                    remote_lines.append(f"+ Value: {format_value(remote_data)}")
-                else:
-                    remote_lines.append("+ Value: <no data>")
-
-                return local_lines, remote_lines
+            return local_lines, remote_lines
 
         # Main display logic
         local_content = []
@@ -750,10 +746,9 @@ class AnkimonDataSync:
         location = self.SYNC_FILES.get(filename)
         if location == "addon_root" or filename == "meta.json":
             return self.addon_path / filename
-        elif location == "user_files":
+        if location == "user_files":
             return self.user_files_path / filename
-        else:
-            raise ValueError(f"Unknown location for file: {filename}")
+        raise ValueError(f"Unknown location for file: {filename}")
 
     def _get_media_path(self, filename: str) -> Path:
         """Get the media subfolder path for a synced file."""
@@ -1133,11 +1128,10 @@ def check_and_sync_pokemon_data(settings_obj, logger):
             dialog = ImprovedPokemonDataSync(settings_obj, logger)
             dialog.show()  # Show immediately
             return dialog
-        else:
-            # No differences found - enable automatic sync
-            enable_automatic_sync()
-            logger.log("info", "No sync differences found - automatic sync enabled")
-            return None
+        # No differences found - enable automatic sync
+        enable_automatic_sync()
+        logger.log("info", "No sync differences found - automatic sync enabled")
+        return None
 
     except Exception as e:
         logger.log("error", f"Failed to check Pokemon data sync: {str(e)}")

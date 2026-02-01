@@ -34,6 +34,7 @@ def _try_gendered(back: bool, id: int, gif: bool, shiny: bool, female: bool):
         path = _path_format(back, id, gif, shiny, False)
         if os.path.exists(path):
             return path
+    return None
 
 
 def _try_back(back: bool, id: int, gif: bool, shiny: bool, female: bool):
@@ -53,6 +54,7 @@ def _try_back(back: bool, id: int, gif: bool, shiny: bool, female: bool):
         path = _try_gendered(False, id, gif, shiny, False)
         if path:
             return path
+    return None
 
 
 def get_sprite_path(side: str, sprite_type: str, id: int, shiny: bool, gender: str):

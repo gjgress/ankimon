@@ -6,8 +6,7 @@ from .resources import csv_file_descriptions, csv_file_items
 
 def get_image_as_base64(path):
     with open(path, "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
-    return encoded_string
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
 
 def split_string_by_length(input_string, max_length):
@@ -51,13 +50,11 @@ def resize_pixmap_img(pixmap, max_width):
     original_height = pixmap.height()
     new_width = max_width
     new_height = (original_height * max_width) // original_width
-    pixmap2 = pixmap.scaled(new_width, new_height)
-    return pixmap2
+    return pixmap.scaled(new_width, new_height)
 
 
 def calc_experience(base_experience, enemy_level):
-    exp = base_experience * enemy_level / 7
-    return exp
+    return base_experience * enemy_level / 7
 
 
 def get_multiplier_stats(stage):
@@ -111,6 +108,7 @@ def bP_none_moves(move):
         if damage is None:
             damage = 5
         return damage
+    return None
 
 
 def type_colors(type_str):
@@ -139,8 +137,7 @@ def type_colors(type_str):
 
 
 def calc_exp_gain(base_experience, w_pkmn_level):
-    exp = int((base_experience * w_pkmn_level) / 7)
-    return exp
+    return int((base_experience * w_pkmn_level) / 7)
 
 
 def read_csv_file(csv_file):
@@ -196,5 +193,4 @@ def get_id_and_description_by_item_name(item_name: str) -> str:
         return None, None
     descriptions = read_descriptions_csv(csv_file_descriptions)
     key = (item_id, 11, 9)  # Assuming version_group_id 11 and language_id 9
-    description = descriptions.get(key, None)
-    return description
+    return descriptions.get(key, None)

@@ -118,8 +118,7 @@ def get_random_pokemon_in_tier(tier):
         raise ValueError()
 
     # Select a random Pokemon ID from those in the tier
-    random_pokemon_id = random.choice(id_data)
-    return random_pokemon_id
+    return random.choice(id_data)
 
 
 def get_tier(total_reviews, player_level=1, event_modifier=None):
@@ -169,12 +168,9 @@ def check_min_generate_level(name):
     evoLevel = search_pokedex(name.lower(), "evoLevel")
     if evoLevel:
         return int(evoLevel)
-    elif evoType != []:
-        min_level = 100
-        return min_level
-    else:
-        min_level = 1
-        return min_level
+    if evoType != []:
+        return 100
+    return 1
 
 
 def check_id_ok(id_num: Union[int, list[int]]):
@@ -445,7 +441,7 @@ def save_main_pokemon_progress(
         show_warning_with_traceback(
             parent=mw, exception=e, message="Error loading main pokemon data."
         )
-        return
+        return None
     while int(
         find_experience_for_level(
             main_pokemon.growth_rate,

@@ -155,8 +155,7 @@ class PokemonTeamDialog(QDialog):
         """Load the player's Pokémon data from a JSON string (in this case, hardcoded)"""
         # Replace the following with the actual loading method if from a file:
         with open(mypokemon_path, "rb") as file:
-            pokemon_data = orjson.loads(file.read())
-        return pokemon_data
+            return orjson.loads(file.read())
 
     def load_pokemon_team(self):
         """Load the player's Pokémon Team from a JSON string (in this case, hardcoded)"""

@@ -134,12 +134,11 @@ def _process_battle_effects(
                 if (main_pokemon and hasattr(main_pokemon, "name"))
                 else "Your Pokemon"
             )
-        else:
-            return (
-                enemy_pokemon.name.capitalize()
-                if (enemy_pokemon and hasattr(enemy_pokemon, "name"))
-                else "Enemy Pokemon"
-            )
+        return (
+            enemy_pokemon.name.capitalize()
+            if (enemy_pokemon and hasattr(enemy_pokemon, "name"))
+            else "Enemy Pokemon"
+        )
 
     def normalize_status_name(status_name: str) -> str:
         return status_name.lower().replace("_", "").replace(" ", "").replace("-", "")
@@ -158,7 +157,7 @@ def _process_battle_effects(
                 return (
                     f"{kwargs['pokemon_name']} is affected by {kwargs['status_name']}!"
                 )
-            elif "remove" in key:
+            if "remove" in key:
                 return (
                     f"{kwargs['pokemon_name']} recovers from {kwargs['status_name']}!"
                 )
@@ -601,8 +600,7 @@ def validate_pokemon_status(pokemon):
     if current_status not in valid_statuses:
         if hasattr(pokemon, "hp") and pokemon.hp <= 0:
             return "fainted"
-        else:
-            return "fighting"
+        return "fighting"
 
     # If Pokemon is fainted but status isn't fainted, override
     if hasattr(pokemon, "hp") and pokemon.hp <= 0 and current_status != "fainted":
@@ -738,13 +736,12 @@ def _handle_special_battle_status(main_pokemon, battle_status: str, translator) 
                 status_messages[battle_status],
                 pokemon_name=main_pokemon.name.capitalize(),
             )
-        else:
-            # Generic status message for unknown conditions
-            return translator.translate(
-                "pokemon_special_condition",
-                pokemon_name=main_pokemon.name.capitalize(),
-                condition=battle_status.replace("_", " ").title(),
-            )
+        # Generic status message for unknown conditions
+        return translator.translate(
+            "pokemon_special_condition",
+            pokemon_name=main_pokemon.name.capitalize(),
+            condition=battle_status.replace("_", " ").title(),
+        )
 
     except Exception as e:
         # Non‐fatal: return generic message
@@ -762,7 +759,6 @@ def calculate_hp(base_stat_hp, level, ev, iv):
     ev_value = ev["hp"] / 4
     iv_value = iv["hp"]
     # hp = int(((iv + 2 * (base_stat_hp + ev) + 100) * level) / 100 + 10)
-    hp = int(
+    return int(
         (((((base_stat_hp + iv_value) * 2) + ev_value) * level) / 100) + level + 10
     )
-    return hp

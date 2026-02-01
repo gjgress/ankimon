@@ -114,7 +114,7 @@ def sync_data_to_leaderboard(data):
 def get_unique_pokemon():
     # Check if leaderboard syncing is enabled in config
     if not mw.settings_obj.get("misc.leaderboard"):
-        return
+        return None
 
     try:
         with open(mypokemon_path, "rb") as file:
@@ -147,8 +147,7 @@ def get_total_pokemon():
     try:
         with open(mypokemon_path, "rb") as file:
             pokemon_data = orjson.loads(file.read())
-            total_pokemon = len(pokemon_data)
-            return total_pokemon
+            return len(pokemon_data)
     except:
         showInfo(f"File not found: {mypokemon_path}")
         return 1

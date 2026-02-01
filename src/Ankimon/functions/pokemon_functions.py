@@ -32,8 +32,7 @@ def pick_random_gender(pokemon_name):
     pokemon = pokedex_data.get(pokemon_name)
     if not pokemon:
         genders = ["M", "F"]
-        gender = random.choice(genders)
-        return gender
+        return random.choice(genders)
 
     gender_ratio = pokemon.get("genderRatio")
     if gender_ratio:
@@ -46,14 +45,12 @@ def pick_random_gender(pokemon_name):
 
     genders = ["M", "F"]
     # genders = ["M", "♀"]
-    gender = random.choice(genders)
-    return gender
+    return random.choice(genders)
     # Randomly choose between "M" and "F"
 
 
 def calculate_max_hp_wildpokemon(enemy_pokemon):
-    wild_pk_max_hp = enemy_pokemon.calculate_max_hp()
-    return wild_pk_max_hp
+    return enemy_pokemon.calculate_max_hp()
 
 
 def find_experience_for_level(group_growth_rate, level, remove_levelcap=True):
@@ -141,13 +138,13 @@ def find_experience_for_level(group_growth_rate, level, remove_levelcap=True):
         elif group_growth_rate == "slow":
             experience = ((5 * ((level + 1) ** 3)) // 4) - ((5 * (level**3)) // 4)
         return experience
+    return None
 
 
 def shiny_chance():
     # Shiny Pokémon probability (1 in 4096 chance)
     SHINY_PROBABILITY = 4096
-    shiny = random.randint(1, SHINY_PROBABILITY) == 1
-    return shiny
+    return random.randint(1, SHINY_PROBABILITY) == 1
 
 
 # unused, archived
@@ -382,9 +379,9 @@ def get_levelup_move_for_pokemon(pokemon_name, level):
 
     if moves_at_level_and_lower:
         # Filter moves with the same highest level as the input level
-        eligible_moves = [
+        return [
             move
             for move, highest_level in moves_at_level_and_lower.items()
             if highest_level == level
         ]
-        return eligible_moves
+    return None

@@ -613,9 +613,8 @@ class TestWindow(QWidget):
             new_width = max_width
             new_height = (original_height * max_width) // original_width
 
-            pixmap2 = pixmap.scaled(new_width, new_height)
+            return pixmap.scaled(new_width, new_height)
 
-            return pixmap2
 
         item_pixmap = resize_pixmap_img(item_pixmap)
 
@@ -714,9 +713,8 @@ class TestWindow(QWidget):
                 new_width = max_width
                 new_height = (original_height * max_width) // original_width
 
-                pixmap2 = pixmap.scaled(new_width, new_height)
+                return pixmap.scaled(new_width, new_height)
 
-                return pixmap2
 
             item_pixmap = resize_pixmap_img(item_pixmap)
 

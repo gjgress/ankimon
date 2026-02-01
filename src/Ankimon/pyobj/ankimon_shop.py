@@ -58,8 +58,7 @@ class PokemonShopManager:
 
     def _load_early_gameboy_font(self):
         """Load the Early GameBoy font for retro styling exclusively."""
-        font = QFont("Early GameBoy", 14)
-        return font
+        return QFont("Early GameBoy", 14)
 
     def _is_night_mode(self):
         """Check if Anki is in night mode."""
@@ -84,22 +83,21 @@ class PokemonShopManager:
                 "success": "#66BB6A",
                 "warning": "#FF7043",
             }
-        else:
-            return {
-                "background": "var(--window-bg)",
-                "border": "var(--border)",
-                "text_primary": "var(--text)",
-                "text_secondary": "var(--text-fg)",
-                "accent_red": "#FD4F49",  # Red for Daily Items
-                "accent_teal": "#1A99DD",  # Blue for Daily TMs
-                "accent_yellow": "#84D437",  # Gray for Standard Items
-                "button_bg": "var(--button-bg)",
-                "button_hover": "var(--button-hover-bg)",
-                "frame_bg": "var(--frame-bg)",
-                "frame_hover": "var(--button-hover-bg)",
-                "success": "#4CAF50",
-                "warning": "#FF6B6B",
-            }
+        return {
+            "background": "var(--window-bg)",
+            "border": "var(--border)",
+            "text_primary": "var(--text)",
+            "text_secondary": "var(--text-fg)",
+            "accent_red": "#FD4F49",  # Red for Daily Items
+            "accent_teal": "#1A99DD",  # Blue for Daily TMs
+            "accent_yellow": "#84D437",  # Gray for Standard Items
+            "button_bg": "var(--button-bg)",
+            "button_hover": "var(--button-hover-bg)",
+            "frame_bg": "var(--frame-bg)",
+            "frame_hover": "var(--button-hover-bg)",
+            "success": "#4CAF50",
+            "warning": "#FF6B6B",
+        }
 
     def toggle_window(self):
         """Toggles the visibility of the Pokemon shop window."""

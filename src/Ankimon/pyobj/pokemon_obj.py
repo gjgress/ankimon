@@ -143,7 +143,7 @@ class PokemonObject:
                 10 + level + int((2 * base_stat_val + iv + int(ev / 4)) * level / 100)
             )  # Formula found on bulbapedia
             return int(hp)
-        elif stat_name in ("atk", "def", "spa", "spd", "spe"):
+        if stat_name in ("atk", "def", "spa", "spd", "spe"):
             nature_mult = PokemonObject.get_nature_stat_mult(
                 stat_name, nature
             )  # Formula found on bulbapedia
@@ -270,8 +270,7 @@ class PokemonObject:
             + self.level
             + int((2 * self.base_stats["hp"] + iv + int(ev / 4)) * self.level / 100)
         )
-        hp = int(hp)
-        return hp
+        return int(hp)
 
     def get_sprite_path(self, side, sprite_type):
         return get_sprite_path(side, sprite_type, self.id, self.shiny, self.gender)
@@ -366,7 +365,7 @@ class PokemonObject:
 
     def to_poke_engine_Pokemon(self) -> Pokemon:
         _dict = self.to_engine_format()
-        pokemon = Pokemon(
+        return Pokemon(
             identifier=_dict["identifier"],
             level=_dict["level"],
             types=_dict["types"],
@@ -393,7 +392,6 @@ class PokemonObject:
             volatile_status=_dict.get("volatile_status", set()),
             moves=_dict.get("moves", []),
         )
-        return pokemon
 
     def reset_bonuses(self):
         """

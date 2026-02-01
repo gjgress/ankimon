@@ -405,10 +405,9 @@ class PokemonCollectionDialog(QDialog):
     def get_gender_symbol(self, gender):
         if gender == "M":
             return "♂"
-        elif gender == "F":
+        if gender == "F":
             return "♀"
-        else:
-            return ""
+        return ""
 
     def filter_pokemon(self):
         filtered_pokemon = []
