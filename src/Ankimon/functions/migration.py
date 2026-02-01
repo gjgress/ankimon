@@ -1,5 +1,4 @@
-import json
-
+import orjson
 from aqt.utils import showWarning
 
 from ..resources import mainpokemon_path, mypokemon_path
@@ -54,11 +53,11 @@ def migrate_starter_individual_id():
         return
 
     try:
-        with open(mainpokemon_path, "r", encoding="utf-8") as f:
-            main_pokemon_data = json.load(f)
-        with open(mypokemon_path, "r", encoding="utf-8") as f:
-            my_pokemon_data = json.load(f)
-    except (json.JSONDecodeError, IOError):
+        with open(mainpokemon_path, "rb") as f:
+            main_pokemon_data = orjson.loads(f.read())
+        with open(mypokemon_path, "rb") as f:
+            my_pokemon_data = orjson.loads(f.read())
+    except (orjson.JSONDecodeError, IOError):
         # Files might be empty or corrupted, so we can't proceed.
         return
 
@@ -110,8 +109,8 @@ def migrate_starter_individual_id():
         potential_match["individual_id"] = main_individual_id
 
         try:
-            with open(mypokemon_path, "w", encoding="utf-8") as f:
-                json.dump(my_pokemon_data, f, indent=4)
+            with open(mypokemon_path, "wb") as f:
+                f.write(orjson.dumps(my_pokemon_data, option=orjson.OPT_INDENT_2))
         except IOError:
             showWarning(
                 "Ankimon could not save the fix for your starter Pokémon. "

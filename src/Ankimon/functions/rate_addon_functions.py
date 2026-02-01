@@ -1,5 +1,4 @@
-import json
-
+import orjson
 from aqt.qt import (
     QDesktopServices,
     QDialog,
@@ -22,16 +21,16 @@ from ..utils import give_item
 def rate_this_addon():
     # Load rate data
     try:
-        with open(rate_path, "r", encoding="utf-8") as file:
-            rate_data = json.load(file)
+        with open(rate_path, "rb") as file:
+            rate_data = orjson.loads(file.read())
             # If the file was blank or corrupted, reset to default
             if not isinstance(rate_data, dict) or "rate_this" not in rate_data:
                 rate_data = default_data
     except Exception:
         # If there was any error reading, recreate with default
         rate_data = default_data
-        with open(rate_path, "w", encoding="utf-8") as f:
-            json.dump(default_data, f, indent=4)
+        with open(rate_path, "wb") as f:
+            f.write(orjson.dumps(default_data, option=orjson.OPT_INDENT_2))
 
     rate_this = rate_data.get("rate_this", False)
 
@@ -70,8 +69,8 @@ def rate_this_addon():
             rate_window.close()
             rate_data["rate_this"] = True
             # Save the updated data back to the file
-            with open(rate_path, "w") as file:
-                json.dump(rate_data, file, indent=4)
+            with open(rate_path, "wb") as file:
+                file.write(orjson.dumps(rate_data, option=orjson.OPT_INDENT_2))
             logger.log_and_showinfo("info", dont_show_this_button_text)
 
         def rate_this_button():
@@ -81,8 +80,8 @@ def rate_this_addon():
             thankyou_message()
             rate_data["rate_this"] = True
             # Save the updated data back to the file
-            with open(rate_path, "w") as file:
-                json.dump(rate_data, file, indent=4)
+            with open(rate_path, "wb") as file:
+                file.write(orjson.dumps(rate_data, option=orjson.OPT_INDENT_2))
                 test_window.rate_display_item("potion")
                 # add item to item list
                 give_item("potion")

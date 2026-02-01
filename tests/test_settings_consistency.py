@@ -21,15 +21,15 @@ def test_settings_consistency():
     )
     assert settings_window_path.exists(), f"File not found: {settings_window_path}"
 
-    with open(setting_names_path, "r", encoding="utf-8") as f:
+    with open(setting_names_path, "r") as f:
         setting_names = json.load(f)
 
-    with open(setting_descriptions_path, "r", encoding="utf-8") as f:
+    with open(setting_descriptions_path, "r") as f:
         setting_descriptions = json.load(f)
 
     # Extract hierarchial_groups from settings_window.py
     hierarchial_groups = {}
-    with open(settings_window_path, "r", encoding="utf-8") as f:
+    with open(settings_window_path, "r") as f:
         tree = ast.parse(f.read(), filename=settings_window_path)
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef) and node.name == "setup_ui":

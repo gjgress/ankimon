@@ -1,7 +1,7 @@
 import csv
-import json
 import random
 
+import orjson
 from aqt import mw
 from aqt.utils import showWarning
 
@@ -106,8 +106,8 @@ def special_pokemon_names_for_min_level(name):
 def search_pokedex(pokemon_name, variable):
     try:
         pokemon_name = special_pokemon_names_for_min_level(pokemon_name)
-        with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
-            pokedex_data = json.load(json_file)
+        with open(str(pokedex_path), "rb") as json_file:
+            pokedex_data = orjson.loads(json_file.read())
 
         # Create a copy of the name to modify
         current_name = pokemon_name
@@ -143,8 +143,8 @@ def search_pokedex(pokemon_name, variable):
 
 
 def search_pokedex_by_id(species_id):
-    with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
-        pokedex_data = json.load(json_file)
+    with open(str(pokedex_path), "rb") as json_file:
+        pokedex_data = orjson.loads(json_file.read())
         for entry_name, attributes in pokedex_data.items():
             if attributes["species_id"] == species_id:
                 return entry_name
@@ -152,8 +152,8 @@ def search_pokedex_by_id(species_id):
 
 
 def get_mainpokemon_evo(pokemon_name):
-    with open(str(pokedex_path), "r", encoding="utf-8") as json_file:
-        pokedex_data = json.load(json_file)
+    with open(str(pokedex_path), "rb") as json_file:
+        pokedex_data = orjson.loads(json_file.read())
         if pokemon_name not in pokedex_data:
             return []
         pokemon_info = pokedex_data[pokemon_name]
@@ -242,8 +242,8 @@ def get_pokemon_diff_lang_name(pokemon_id: int, language: int):
 def extract_ids_from_file():
     try:
         filename = mypokemon_path
-        with open(filename, "r", encoding="utf-8") as file:
-            data = json.load(file)
+        with open(filename, "rb") as file:
+            data = orjson.loads(file.read())
             ids = [character["id"] for character in data]
             owned_pokemon_ids = ids
             owned_pokemon_ids = sorted(list(set(owned_pokemon_ids)))
@@ -267,8 +267,8 @@ def get_all_pokemon_moves(pk_name, level):
         list: A list of up to 4 random moves and their highest levels.
     """
     # Load the JSON file
-    with open(learnset_path, "r", encoding="utf-8") as file:
-        learnsets = json.load(file)
+    with open(learnset_path, "rb") as file:
+        learnsets = orjson.loads(file.read())
 
     # Retrieve the learnset for the specified Pokémon
     pokemon_learnset = learnsets.get(pk_name.lower(), {})
@@ -317,8 +317,8 @@ def get_all_pokemon_moves(pk_name, level):
 
 def find_details_move(move_name: str):
     try:
-        with open(moves_file_path, "r", encoding="utf-8") as json_file:
-            moves_data = json.load(json_file)
+        with open(moves_file_path, "rb") as json_file:
+            moves_data = orjson.loads(json_file.read())
             move = moves_data.get(
                 move_name.lower()
             )  # Use get() to access the move by name

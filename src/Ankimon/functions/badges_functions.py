@@ -1,11 +1,11 @@
-import json
+import orjson
 
 from ..resources import badgebag_path
 
 
 def get_achieved_badges():
-    with open(badgebag_path, "r", encoding="utf-8") as json_file:
-        return json.load(json_file)
+    with open(badgebag_path, "rb") as json_file:
+        return orjson.loads(json_file.read())
 
 
 def populate_achievements_from_badges(achievements):
@@ -13,7 +13,7 @@ def populate_achievements_from_badges(achievements):
     try:
         for badge_num in get_achieved_badges():
             achievements[str(badge_num)] = True
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (FileNotFoundError, orjson.JSONDecodeError):
         # If file doesn't exist or is empty, just return the initial achievements
         pass
     return achievements
@@ -24,8 +24,8 @@ def check_for_badge(achievements, rec_badge_num):
 
 
 def save_badges(badges_collection):
-    with open(badgebag_path, "w") as json_file:
-        json.dump(badges_collection, json_file)
+    with open(badgebag_path, "wb") as json_file:
+        json_file.write(orjson.dumps(badges_collection, option=orjson.OPT_INDENT_2))
 
 
 def receive_badge(badge_num, achievements):

@@ -1,5 +1,6 @@
-import json
 from typing import Optional
+
+import orjson
 
 from ..functions.pokedex_functions import search_pokedex, search_pokedex_by_id
 from ..pyobj.pokemon_obj import PokemonObject
@@ -54,9 +55,9 @@ def update_main_pokemon(main_pokemon: Optional[PokemonObject] = None):
 
     mainpokemon_empty = True
     if mainpokemon_path.is_file():
-        with open(mainpokemon_path, "r", encoding="utf-8") as mainpokemon_json:
+        with open(mainpokemon_path, "rb") as mainpokemon_json:
             try:
-                main_pokemon_data = json.load(mainpokemon_json)
+                main_pokemon_data = orjson.loads(mainpokemon_json.read())
                 # if main pokemon is successfully loaded make empty false
                 if main_pokemon_data:
                     mainpokemon_empty = False
@@ -103,5 +104,5 @@ def save_main_pokemon(main_pokemon: PokemonObject):
     else:
         data = main_pokemon.__dict__
     # Write as a single-element list for compatibility
-    with open(mainpokemon_path, "w", encoding="utf-8") as f:
-        json.dump([data], f, indent=4)
+    with open(mainpokemon_path, "wb") as f:
+        f.write(orjson.dumps([data], option=orjson.OPT_INDENT_2))

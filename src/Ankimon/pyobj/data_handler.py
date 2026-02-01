@@ -1,7 +1,8 @@
 import datetime
-import json
 import os
 import uuid
+
+import orjson
 
 from ..resources import user_path
 
@@ -57,12 +58,12 @@ class DataHandler:
                 os.makedirs(
                     os.path.dirname(file_path), exist_ok=True
                 )  # Ensure directory exists
-                with open(file_path, "w", encoding="utf-8") as f:
-                    json.dump([], f, indent=2)
+                with open(file_path, "wb") as f:
+                    f.write(orjson.dumps([], option=orjson.OPT_INDENT_2))
 
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = json.load(f)
+                with open(file_path, "rb") as f:
+                    content = orjson.loads(f.read())
 
                     # Validate list structure
                     if attr_name in ["mypokemon", "mainpokemon"] and isinstance(
@@ -138,7 +139,8 @@ class DataHandler:
         if hasattr(self, attr_name):
             file_path = os.path.join(self.path, f"{attr_name}.json")
             try:
-                with open(file_path, "w") as f:
-                    json.dump(getattr(self, attr_name), f, indent=2)
+                data = getattr(self, attr_name)
+                with open(file_path, "wb") as f:
+                    f.write(orjson.dumps(data, option=orjson.OPT_INDENT_2))
             except Exception as e:
                 self.data[file_path] = f"Error saving {file_path}: {e}"

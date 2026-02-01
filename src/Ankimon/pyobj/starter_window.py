@@ -1,7 +1,7 @@
-import json
 import random
 import uuid
 
+import orjson
 from aqt.qt import (
     QColor,
     QFont,
@@ -140,8 +140,8 @@ class StarterWindow(QWidget):
 
         # Load existing Pokémon data if it exists
         if mypokemon_path.is_file():
-            with open(mypokemon_path, "r", encoding="utf-8") as json_file:
-                caught_pokemon_data = json.load(json_file)
+            with open(mypokemon_path, "rb") as json_file:
+                caught_pokemon_data = orjson.loads(json_file.read())
         else:
             caught_pokemon_data = []
 
@@ -149,12 +149,16 @@ class StarterWindow(QWidget):
         caught_pokemon_data.append(main_pokemon.to_dict())
 
         # Save to mainpokemon
-        with open(mainpokemon_path, "w") as json_file:
-            json.dump(caught_pokemon_data, json_file, indent=2)
+        with open(mainpokemon_path, "wb") as json_file:
+            json_file.write(
+                orjson.dumps(caught_pokemon_data, option=orjson.OPT_INDENT_2)
+            )
 
         # Save to mypokemon
-        with open(mypokemon_path, "w") as json_file:
-            json.dump(caught_pokemon_data, json_file, indent=2)
+        with open(mypokemon_path, "wb") as json_file:
+            json_file.write(
+                orjson.dumps(caught_pokemon_data, option=orjson.OPT_INDENT_2)
+            )
 
         self.logger.log_and_showinfo(
             "info", f"{name.capitalize()} has been chosen as Starter Pokemon !"

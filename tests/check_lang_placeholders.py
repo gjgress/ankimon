@@ -19,7 +19,7 @@ def check_language_files():
         print(f"Error: Reference file not found at {en_file}")
         return
 
-    with open(en_file, "r", encoding="utf-8") as f:
+    with open(en_file, "r") as f:
         en_data = json.load(f)
 
     en_placeholders = {key: find_placeholders(value) for key, value in en_data.items()}
@@ -30,7 +30,7 @@ def check_language_files():
             continue
 
         try:
-            with open(lang_file, "r", encoding="utf-8") as f:
+            with open(lang_file, "r") as f:
                 lang_data = json.load(f)
         except json.JSONDecodeError:
             print(f"Error: Could not decode JSON from {lang_file}")

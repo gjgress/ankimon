@@ -12,7 +12,7 @@ class ShowInfoLogger:
 
         # Check if log file exists, and create it if it doesn't
         if not os.path.exists(self.log_file):
-            with open(self.log_file, "w") as f:
+            with open(self.log_file, "w", encoding="utf-8") as f:
                 f.write("")  # Create an empty file
 
         # Set up logging
@@ -123,7 +123,7 @@ class ShowInfoLogger:
 
     def clear_log_file(self):
         # Clear the log file
-        with open(self.log_file, "w") as f:
+        with open(self.log_file, "w", encoding="utf-8") as f:
             f.write("")  # Empty the log file
 
         # Update the log viewer with the cleared content

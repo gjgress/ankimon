@@ -3,3 +3,6 @@ target-version = "py39"
 [lint]
 extend-select = ["PLE", "I"]
 ignore = ["E501"]
+
+[lint.flake8-tidy-imports.banned-api]
+json.msg = "Use orjson instead"

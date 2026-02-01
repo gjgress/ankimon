@@ -1,6 +1,5 @@
-import json
-
 import markdown
+import orjson
 from aqt import mw
 from aqt.qt import (
     QCheckBox,
@@ -365,8 +364,8 @@ class Pokedex_Widget(QWidget):
         self.initUI()
 
     def read_poke_coll(self):
-        with open(mypokemon_path, "r", encoding="utf-8") as json_file:
-            self.captured_pokemon_data = json.load(json_file)
+        with open(mypokemon_path, "rb") as json_file:
+            self.captured_pokemon_data = orjson.loads(json_file.read())
 
     def initUI(self):
         self.setWindowTitle("Pokédex")

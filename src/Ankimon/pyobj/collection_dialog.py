@@ -1,8 +1,8 @@
-import json
 import re
 import uuid
 from collections import defaultdict
 
+import orjson
 from aqt import mw
 from aqt.utils import showInfo, showWarning
 from PyQt6.QtCore import *
@@ -171,12 +171,12 @@ class PokemonCollectionDialog(QDialog):
     def load_pokemon_data(self):
         """Reads the mypokemon.json file and loads Pokémon data into self.pokemon_list."""
         try:
-            with open(self.mypokemon_path, "r", encoding="utf-8") as file:
-                self.pokemon_list = json.load(file)
+            with open(self.mypokemon_path, "rb") as file:
+                self.pokemon_list = orjson.loads(file.read())
                 return self.pokemon_list
         except FileNotFoundError:
             self.logger.log("error", "mypokemon.json file not found.")
-        except json.JSONDecodeError:
+        except orjson.JSONDecodeError:
             self.logger.log("error", "mypokemon.json file not found.")
 
     def refresh_pokemon_collection(self):
@@ -554,8 +554,8 @@ class PokemonCollectionDialog(QDialog):
 
 def PokemonTrade(name, id, level, ability, iv, ev, gender, attacks, position):
     # Load the data from the file
-    with open(mainpokemon_path, "r", encoding="utf-8") as file:
-        pokemon_data = json.load(file)
+    with open(mainpokemon_path, "rb") as file:
+        pokemon_data = orjson.loads(file.read())
     # check if player tries to trade mainpokemon
     found = False
     for pokemons in pokemon_data:
@@ -707,12 +707,12 @@ def PokemonTradeIn(number_code, old_pokemon_name, position):
 def trade_pokemon(old_pokemon_name, pokemon_trade, position):
     try:
         # Load the current list of Pokemon
-        with open(mypokemon_path, "r", encoding="utf-8") as file:
-            pokemon_list = json.load(file)
+        with open(mypokemon_path, "rb") as file:
+            pokemon_list = orjson.loads(file.read())
     except FileNotFoundError:
         print("The Pokemon file was not found. Please check the file path.")
         return
-    except json.JSONDecodeError as e:
+    except orjson.JSONDecodeError as e:
         print(f"Error decoding JSON: {e}")
         return
 
@@ -726,8 +726,8 @@ def trade_pokemon(old_pokemon_name, pokemon_trade, position):
 
     # Write the updated data back to the file
     try:
-        with open(mypokemon_path, "w") as file:
-            json.dump(pokemon_list, file, indent=2)
+        with open(mypokemon_path, "wb") as file:
+            file.write(orjson.dumps(pokemon_list, option=orjson.OPT_INDENT_2))
         showWarning(f"{old_pokemon_name} has been traded successfully!")
     except Exception as e:
         show_warning_with_traceback(
@@ -751,13 +751,13 @@ def MainPokemon(
     # --- Save the existing mainpokemon to mypokemon before replacing ---
     try:
         # Load the current mainpokemon
-        with open(mainpokemon_path, "r", encoding="utf-8") as f:
-            current_main_list = json.load(f)
+        with open(mainpokemon_path, "rb") as f:
+            current_main_list = orjson.loads(f.read())
         if current_main_list:
             current_main = current_main_list[0]
             # Load mypokemon
-            with open(mypokemon_path, "r", encoding="utf-8") as f:
-                mypokemondata = json.load(f)
+            with open(mypokemon_path, "rb") as f:
+                mypokemondata = orjson.loads(f.read())
             # Update or append the current mainpokemon in mypokemon
             found = False
             for idx, pkmn in enumerate(mypokemondata):
@@ -767,8 +767,8 @@ def MainPokemon(
                     break
             if not found:
                 mypokemondata.append(current_main)
-            with open(mypokemon_path, "w", encoding="utf-8") as f:
-                json.dump(mypokemondata, f, indent=2)
+            with open(mypokemon_path, "wb") as f:
+                f.write(orjson.dumps(mypokemondata, option=orjson.OPT_INDENT_2))
     except Exception:
         pass  # If files don't exist, just continue
 
@@ -837,8 +837,8 @@ def MainPokemon(
 
     # Save to JSON using the object's native serialization
     main_pokemon_data = [main_pokemon.to_dict()]
-    with open(mainpokemon_path, "w") as f:
-        json.dump(main_pokemon_data, f, indent=2)
+    with open(mainpokemon_path, "wb") as f:
+        f.write(orjson.dumps(main_pokemon_data, option=orjson.OPT_INDENT_2))
 
     logger.log_and_showinfo(
         "info",

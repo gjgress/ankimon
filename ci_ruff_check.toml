@@ -2,5 +2,8 @@ target-version = "py39"
 extend-exclude = ["poke_engine", "pypresence"]
 
 [lint]
-select = ["PLE", "F401", "F811", "I"]
+select = ["PLE", "F401", "F811", "I", "TID251"]
 ignore = []
+
+[lint.flake8-tidy-imports.banned-api]
+json.msg = "Use orjson instead"

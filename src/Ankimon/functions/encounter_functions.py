@@ -1,10 +1,10 @@
-import json
 import math
 import random
 import uuid
 from datetime import datetime
 from typing import Union
 
+import orjson
 from aqt import mw
 from aqt.qt import QDialog
 from aqt.utils import showWarning
@@ -437,8 +437,8 @@ def save_main_pokemon_progress(
         level_cap = 100
     try:
         if mainpokemon_path.is_file():
-            with open(mainpokemon_path, "r", encoding="utf-8") as json_file:
-                main_pokemon_data = json.load(json_file)
+            with open(mainpokemon_path, "rb") as json_file:
+                main_pokemon_data = orjson.loads(json_file.read())
         else:
             showWarning(translator.translate("missing_mainpokemon_data"))
     except Exception as e:
@@ -587,12 +587,12 @@ def save_main_pokemon_progress(
     mypkmndata = mainpkmndata
     mainpkmndata = [mainpkmndata]
     # Save the caught Pokémon's data to a JSON file
-    with open(str(mainpokemon_path), "w") as json_file:
-        json.dump(mainpkmndata, json_file, indent=2)
+    with open(str(mainpokemon_path), "wb") as json_file:
+        json_file.write(orjson.dumps(mainpkmndata, option=orjson.OPT_INDENT_2))
 
     # Load data from the output JSON file
-    with open(str(mypokemon_path), "r", encoding="utf-8") as output_file:
-        mypokemondata = json.load(output_file)
+    with open(str(mypokemon_path), "rb") as output_file:
+        mypokemondata = orjson.loads(output_file.read())
 
         # Find and replace the specified Pokémon's data in mypokemondata
         for index, pokemon_data in enumerate(mypokemondata):
@@ -603,8 +603,8 @@ def save_main_pokemon_progress(
                 break
 
         # Save the modified data to the output JSON file
-        with open(str(mypokemon_path), "w") as output_file:
-            json.dump(mypokemondata, output_file, indent=2)
+        with open(str(mypokemon_path), "wb") as output_file:
+            output_file.write(orjson.dumps(mypokemondata, option=orjson.OPT_INDENT_2))
 
     sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path)
 
@@ -620,13 +620,13 @@ def sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path
         mainpokemon_path: Path to mainpokemon.json.
         mypokemon_path: Path to mypokemon.json.
     """
-    import json
+    import orjson
 
     # Load mainpokemon data
     if not mainpokemon_path.is_file():
         return
-    with open(mainpokemon_path, "r", encoding="utf-8") as f:
-        main_data = json.load(f)
+    with open(mainpokemon_path, "rb") as f:
+        main_data = orjson.loads(f.read())
     if not main_data:
         return
     # Use the first (and only) mainpokemon entry
@@ -639,8 +639,8 @@ def sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path
     # Load mypokemon data
     if not mypokemon_path.is_file():
         return
-    with open(mypokemon_path, "r", encoding="utf-8") as f:
-        my_data = json.load(f)
+    with open(mypokemon_path, "rb") as f:
+        my_data = orjson.loads(f.read())
     # Find and update the entry with matching individual_id
     updated = False
     for idx, entry in enumerate(my_data):
@@ -652,8 +652,8 @@ def sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path
             updated = True
             break
     if updated:
-        with open(mypokemon_path, "w", encoding="utf-8") as f:
-            json.dump(my_data, f, indent=2)
+        with open(mypokemon_path, "wb") as f:
+            f.write(orjson.dumps(my_data, option=orjson.OPT_INDENT_2))
     return
 
 
@@ -766,15 +766,15 @@ def save_caught_pokemon(
     # Load existing Pokémon data if it exists
     caught_pokemon_data = []
     if mypokemon_path.is_file():
-        with open(mypokemon_path, "r", encoding="utf-8") as json_file:
-            caught_pokemon_data = json.load(json_file)
+        with open(mypokemon_path, "rb") as json_file:
+            caught_pokemon_data = orjson.loads(json_file.read())
 
     # Append the caught Pokémon's data to the list
     caught_pokemon_data.append(caught_pokemon)
 
     # Save the caught Pokémon's data to a JSON file
-    with open(str(mypokemon_path), "w") as json_file:
-        json.dump(caught_pokemon_data, json_file, indent=2)
+    with open(str(mypokemon_path), "wb") as json_file:
+        json_file.write(orjson.dumps(caught_pokemon_data, option=orjson.OPT_INDENT_2))
 
 
 def catch_pokemon(

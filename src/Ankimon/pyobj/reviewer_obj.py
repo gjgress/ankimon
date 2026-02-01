@@ -1,6 +1,6 @@
-import json
 import os
 
+import orjson
 from aqt import gui_hooks, mw
 
 from ..business import get_image_as_base64
@@ -89,8 +89,8 @@ class Reviewer_Manager:
                 "mypokemon.json",
             )
             if os.path.exists(collection_path):
-                with open(collection_path, "r", encoding="utf-8") as f:
-                    my_pokemon_list = json.load(f)
+                with open(collection_path, "rb") as f:
+                    my_pokemon_list = orjson.loads(f.read())
                 for p in my_pokemon_list:
                     if p.get("name", "").lower() == enemy_name_lower:
                         is_pokemon_owned = True
@@ -305,7 +305,7 @@ class Reviewer_Manager:
             if(window.__ankimonHud && window.__ankimonHud.update){{
                 window.__ankimonHud.update(h,c);
             }}
-        }})({json.dumps(hud_html)}, {json.dumps(hud_css)});
+        }})({orjson.dumps(hud_html, option=orjson.OPT_INDENT_2).decode()}, {orjson.dumps(hud_css, option=orjson.OPT_INDENT_2).decode()});
         """
         reviewer.web.eval(js_code)
 

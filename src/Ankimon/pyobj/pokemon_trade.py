@@ -1,8 +1,8 @@
 import hashlib
-import json
 import uuid
 from datetime import datetime
 
+import orjson
 import requests
 from aqt import mw, utils
 from aqt.qt import (
@@ -75,11 +75,11 @@ def create_monthly_challenge_pokemon(pokemon_data, make_shiny=False):
 def add_pokemon_to_collection(new_pokemon, refresh_callback=None, parent_window=None):
     """Adds a Pokémon to the user's collection file."""
     try:
-        with open(mypokemon_path, "r", encoding="utf-8") as file:
-            pokemon_list = json.load(file)
+        with open(mypokemon_path, "rb") as file:
+            pokemon_list = orjson.loads(file.read())
         pokemon_list.append(new_pokemon)
-        with open(mypokemon_path, "w", encoding="utf-8") as file:
-            json.dump(pokemon_list, file, indent=2)
+        with open(mypokemon_path, "wb") as file:
+            file.write(orjson.dumps(pokemon_list, option=orjson.OPT_INDENT_2))
         if refresh_callback:
             refresh_callback()
     except Exception as e:
@@ -95,8 +95,8 @@ def check_and_award_monthly_pokemon(logger):
     try:
         should_check = False
         if rate_path.is_file():
-            with open(rate_path, "r", encoding="utf-8") as f:
-                if json.load(f).get("rate_this") is True:
+            with open(rate_path, "rb") as f:
+                if orjson.loads(f.read()).get("rate_this") is True:
                     should_check = True
 
         if not should_check:
@@ -160,9 +160,9 @@ def check_and_award_monthly_pokemon(logger):
             return
 
         try:
-            with open(mypokemon_path, "r", encoding="utf-8") as f:
-                my_pokemon = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError) as e:
+            with open(mypokemon_path, "rb") as f:
+                my_pokemon = orjson.loads(f.read())
+        except (FileNotFoundError, orjson.JSONDecodeError) as e:
             logger.log("error", f"Failed to load or parse mypokemon.json: {e}")
             return
 
@@ -262,8 +262,8 @@ class PokemonTrade:
 
     def load_pokemon_data(self):
         try:
-            with open(self.mainpokemon_path, "r", encoding="utf-8") as file:
-                return json.load(file)
+            with open(self.mainpokemon_path, "rb") as file:
+                return orjson.loads(file.read())
         except FileNotFoundError as e:
             show_warning_with_traceback(
                 parent=self.parent_window,
@@ -625,8 +625,8 @@ class PokemonTrade:
 
     def get_pokemon_name_by_id(self, pokemon_id):
         try:
-            with open(self.pokedex_path, "r", encoding="utf-8") as file:
-                pokedex = json.load(file)
+            with open(self.pokedex_path, "rb") as file:
+                pokedex = orjson.loads(file.read())
                 for details in pokedex.values():
                     if details.get("species_id") == pokemon_id:
                         return details.get("name", str(pokemon_id))
@@ -760,16 +760,16 @@ class PokemonTrade:
         return int((((2 * base_hp + iv_value + ev_value) * level) / 100) + level + 10)
 
     def find_move_by_num(self, move_num):
-        with open(self.moves_file_path, "r", encoding="utf-8") as file:
-            moves_data = json.load(file)
+        with open(self.moves_file_path, "rb") as file:
+            moves_data = orjson.loads(file.read())
             return next(
                 (move for move in moves_data.values() if move.get("num") == move_num),
                 {"name": "Unknown Move"},
             )
 
     def find_move_by_name(self, move_name):
-        with open(self.moves_file_path, "r", encoding="utf-8") as file:
-            moves_data = json.load(file)
+        with open(self.moves_file_path, "rb") as file:
+            moves_data = orjson.loads(file.read())
             move = next(
                 (
                     move
@@ -785,8 +785,8 @@ class PokemonTrade:
 
     def find_pokemon_by_id(self, pokemon_id):
         try:
-            with open(self.pokedex_path, "r", encoding="utf-8") as file:
-                pokedex = json.load(file)
+            with open(self.pokedex_path, "rb") as file:
+                pokedex = orjson.loads(file.read())
                 for details in pokedex.values():
                     if details.get("species_id") == pokemon_id:
                         return details
@@ -807,30 +807,29 @@ class PokemonTrade:
 
     def replace_pokemon(self, new_pokemon):
         try:
-            with open(self.mypokemon_path, "r+") as file:
-                pokemon_list = json.load(file)
+            with open(self.mypokemon_path, "rb") as file:
+                pokemon_list = orjson.loads(file.read())
 
-                for idx, pokemon in enumerate(pokemon_list):
-                    if pokemon.get("individual_id") == self.individual_id:
-                        pokemon_list[idx] = new_pokemon
-                        break
-                else:
-                    self.logger.log_and_showinfo(
-                        "warning",
-                        "Could not find the Pokémon with the specified Individual ID.",
-                    )
-                    return
+            for idx, pokemon in enumerate(pokemon_list):
+                if pokemon.get("individual_id") == self.individual_id:
+                    pokemon_list[idx] = new_pokemon
+                    break
+            else:
+                self.logger.log_and_showinfo(
+                    "warning",
+                    "Could not find the Pokémon with the specified Individual ID.",
+                )
+                return
 
-                file.seek(0)
-                file.truncate()
-                json.dump(pokemon_list, file, indent=2)
+            with open(self.mypokemon_path, "wb") as file:
+                file.write(orjson.dumps(pokemon_list, option=orjson.OPT_INDENT_2))
 
             self.logger.log_and_showinfo(
                 "warning", f"Successfully traded for {new_pokemon['name']}!"
             )
             self.refresh_callback()
 
-        except (FileNotFoundError, json.JSONDecodeError) as e:
+        except (FileNotFoundError, orjson.JSONDecodeError) as e:
             show_warning_with_traceback(
                 parent=self.parent_window,
                 exception=e,

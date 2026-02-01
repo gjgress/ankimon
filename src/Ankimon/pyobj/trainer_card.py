@@ -1,6 +1,6 @@
-import json
 import math
 
+import orjson
 from aqt.utils import showInfo
 
 from ..functions.badges_functions import get_achieved_badges
@@ -96,8 +96,8 @@ class TrainerCard:
         """Method to find the name of the highest-level Pokémon from the mypokemon_path."""
         try:
             # Read the Pokémon data from the file
-            with open(mypokemon_path, "r", encoding="utf-8") as file:
-                pokemon_data = json.load(file)
+            with open(mypokemon_path, "rb") as file:
+                pokemon_data = orjson.loads(file.read())
 
             if not pokemon_data:
                 return None  # Return None if the data is empty
@@ -108,7 +108,7 @@ class TrainerCard:
         except FileNotFoundError:
             showInfo(f"File not found: {mypokemon_path}")
             return "None"
-        except json.JSONDecodeError:
+        except orjson.JSONDecodeError:
             showInfo(f"Error decoding JSON from file: {mypokemon_path}")
             return "None"
 
@@ -116,8 +116,8 @@ class TrainerCard:
         """Method to find the name of the highest-level Pokémon from the mypokemon_path."""
         try:
             # Read the Pokémon data from the file
-            with open(mypokemon_path, "r", encoding="utf-8") as file:
-                pokemon_data = json.load(file)
+            with open(mypokemon_path, "rb") as file:
+                pokemon_data = orjson.loads(file.read())
 
             if not pokemon_data:
                 return int(0)  # Return None if the data is empty
@@ -128,7 +128,7 @@ class TrainerCard:
         except FileNotFoundError:
             showInfo(f"File not found: {mypokemon_path}")
             return int(0)
-        except json.JSONDecodeError:
+        except orjson.JSONDecodeError:
             showInfo(f"Error decoding JSON from file: {mypokemon_path}")
             return int(0)
 
@@ -139,15 +139,15 @@ class TrainerCard:
     def get_team(self):
         """Method to get the trainer's active team (team as a string)"""
         try:
-            with open(team_pokemon_path, "r", encoding="utf-8") as f:
-                team_data = json.load(f)
+            with open(team_pokemon_path, "rb") as f:
+                team_data = orjson.loads(f.read())
             if not team_data:
                 return "No Team Set"
 
             # Optimization: Load mypokemon data once
             try:
-                with open(mypokemon_path, "r", encoding="utf-8") as f:
-                    my_pokemon_data = json.load(f)
+                with open(mypokemon_path, "rb") as f:
+                    my_pokemon_data = orjson.loads(f.read())
             except Exception:
                 my_pokemon_data = []
 

@@ -1,6 +1,6 @@
-import json
 from functools import lru_cache
 
+import orjson
 from aqt import mw
 
 from .pyobj.translator import LANG_NUMBERS
@@ -21,14 +21,14 @@ def _load_move_name_lookups(lang_code: str):
     Load English move names and, if available, a localized set.
     Falls back to English when the localized file is missing or invalid.
     """
-    with open(move_names_file_path, "r", encoding="utf-8") as f:
-        base_lookup = json.load(f)
+    with open(move_names_file_path, "rb") as f:
+        base_lookup = orjson.loads(f.read())
 
     localized_path = move_names_file_path.with_name(f"move_names_{lang_code}.json")
     try:
-        with open(localized_path, "r", encoding="utf-8") as f:
-            localized_lookup = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
+        with open(localized_path, "rb") as f:
+            localized_lookup = orjson.loads(f.read())
+    except (FileNotFoundError, orjson.JSONDecodeError):
         localized_lookup = {}
 
     return base_lookup, localized_lookup

@@ -1,4 +1,3 @@
-
 name: Auto Assign Reviewer
 
 on:
@@ -12,4 +11,4 @@ jobs:
       - name: Assign a specific reviewer
         uses: hkusu/review-assign-action@v1
         with:
-          reviewers: thepeacemonk   # for peace to be main reviewer
+          reviewers: thepeacemonk # for peace to be main reviewer

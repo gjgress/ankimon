@@ -1,6 +1,6 @@
-import json
 import os
 
+import orjson
 from aqt.qt import QDialog, QLabel, QPushButton, QTextEdit, QVBoxLayout
 
 from ..resources import addon_dir, json_file_structure
@@ -32,8 +32,8 @@ def check_files_in_json(json_file=json_file_structure, root_directory=addon_dir)
                     missing_files.append(folder_path)
 
     # Load the JSON file
-    with open(json_file, "r", encoding="utf-8") as f:
-        folder_structure = json.load(f)
+    with open(json_file, "rb") as f:
+        folder_structure = orjson.loads(f.read())
 
     missing_files = []
     verify_files(folder_structure, root_directory, missing_files)

@@ -1,6 +1,6 @@
-import json
 import os
 
+import orjson
 from aqt import QDialog, QVBoxLayout, QWebEngineView
 from aqt.qt import QFrame, Qt, QUrl, QUrlQuery
 
@@ -69,11 +69,11 @@ class Pokedex(QDialog):
 
         if os.path.exists(mypokemon_path):
             try:
-                with open(mypokemon_path, "r", encoding="utf-8") as file:
-                    pokemon_list = json.load(file)
+                with open(mypokemon_path, "rb") as file:
+                    pokemon_list = orjson.loads(file.read())
                     print("POKEDEX_DEBUG: Loaded pokemon_list!")
 
-            except json.JSONDecodeError:
+            except orjson.JSONDecodeError:
                 print(
                     "POKEDEX_DEBUG: Invalid JSON in mypokemon.json at", mypokemon_path
                 )
@@ -117,8 +117,8 @@ class Pokedex(QDialog):
         released_count = 0  # Count released Pokémon (they were obtained before release)
         if os.path.exists(pokemon_history_path):
             try:
-                with open(pokemon_history_path, "r", encoding="utf-8") as file:
-                    history_list = json.load(file)
+                with open(pokemon_history_path, "rb") as file:
+                    history_list = orjson.loads(file.read())
                     released_count = len(
                         history_list
                     )  # Each released Pokémon counts as +1 to "Seen"
@@ -132,7 +132,7 @@ class Pokedex(QDialog):
                             print(
                                 f"POKEDEX_DEBUG: Invalid pokemon_defeated for released ID {released_pokemon.get('id', 'unknown')}: {defeated}"
                             )
-            except (json.JSONDecodeError, Exception) as e:
+            except (orjson.JSONDecodeError, Exception) as e:
                 print(f"POKEDEX_DEBUG: Error reading pokemon_history.json: {e}")
 
         # print("POKEDEX_DEBUG: Total defeated_count =", defeated_count)

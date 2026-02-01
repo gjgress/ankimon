@@ -18,12 +18,12 @@ except ModuleNotFoundError:
     pass
 
 import copy
-import json
 import random
 from typing import Union
 
 import aqt
 import markdown
+import orjson
 from anki.hooks import addHook, wrap
 from aqt import gui_hooks, mw, utils
 from aqt.gui_hooks import webview_will_set_content
@@ -186,8 +186,8 @@ if not _collection_loaded:  # If the collection hasn't already been loaded
     _collection_loaded = True
 
 
-with open(sound_list_path, "r", encoding="utf-8") as json_file:
-    sound_list = json.load(json_file)
+with open(sound_list_path, "rb") as json_file:
+    sound_list = orjson.loads(json_file.read())
 
 ankimon_tracker_obj.pokemon_encouter = 0
 
@@ -763,8 +763,8 @@ if database_complete:
     if mypokemon_path.is_file() is False:
         starter_window.display_starter_pokemon()
     else:
-        with open(mypokemon_path, "r", encoding="utf-8") as file:
-            pokemon_list = json.load(file)
+        with open(mypokemon_path, "rb") as file:
+            pokemon_list = orjson.loads(file.read())
             if not pokemon_list:
                 starter_window.display_starter_pokemon()
 

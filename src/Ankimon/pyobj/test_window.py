@@ -1,5 +1,4 @@
-import json
-
+import orjson
 from aqt import mw
 from aqt.qt import (
     QColor,
@@ -744,8 +743,8 @@ class TestWindow(QWidget):
 
             message_box_text = self.translator.translate("received_a_badge")
 
-            with open(badges_list_path, "r", encoding="utf-8") as json_file:
-                badges = json.load(json_file)
+            with open(badges_list_path, "rb") as json_file:
+                badges = orjson.loads(json_file.read())
 
             message_box_text2 = f"{badges[str(badge_number)]}!"
 

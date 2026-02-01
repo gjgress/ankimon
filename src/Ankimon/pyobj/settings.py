@@ -1,4 +1,4 @@
-import json
+import orjson
 
 from ..resources import user_path
 
@@ -74,7 +74,7 @@ class Settings:
 
         if obfuscated_config_path.is_file():
             try:
-                with open(obfuscated_config_path, "r", encoding="utf-8") as f:
+                with open(obfuscated_config_path, "r") as f:
                     obfuscated_str = f.read()
                 config = sync_handler._deobfuscate_data(obfuscated_str)
                 # Migration logic for old keys (items, trainer.team, trainer.xp_share)
@@ -83,8 +83,12 @@ class Settings:
                 if "items" in config and isinstance(config["items"], list):
                     items_path = user_path / "items.json"
                     try:
-                        with open(items_path, "w", encoding="utf-8") as f:
-                            json.dump(config["items"], f, indent=4)
+                        with open(items_path, "wb") as f:
+                            f.write(
+                                orjson.dumps(
+                                    config["items"], option=orjson.OPT_INDENT_2
+                                )
+                            )
                     except Exception as e:
                         print(
                             f"Ankimon: Error migrating 'items' data during load_config: {e}"

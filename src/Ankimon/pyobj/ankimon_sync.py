@@ -1,12 +1,12 @@
 # ankimon_sync.py - Improved Ankimon data sync system with subfolder approach
 import base64
 import filecmp
-import json
 import os
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List
 
+import orjson
 from aqt import gui_hooks, mw
 from aqt.qt import (
     QDialog,
@@ -798,7 +798,7 @@ class AnkimonDataSync:
 
     def _obfuscate_data(self, data: dict) -> str:
         """Obfuscates dictionary data into a string."""
-        json_str = json.dumps(data)
+        json_str = orjson.dumps(data, option=orjson.OPT_INDENT_2).decode()
         obfuscated_bytes = bytearray()
         key_bytes = self._OBFUSCATION_KEY.encode("utf-8")
         for i, byte in enumerate(json_str.encode("utf-8")):
@@ -824,7 +824,7 @@ class AnkimonDataSync:
         key_bytes = self._OBFUSCATION_KEY.encode("utf-8")
         for i, byte in enumerate(obfuscated_bytes):
             deobfuscated_bytes.append(byte ^ key_bytes[i % len(key_bytes)])
-        return json.loads(deobfuscated_bytes.decode("utf-8"))
+        return orjson.loads(deobfuscated_bytes.decode("utf-8"))
 
     def save_configs(self) -> List[str]:
         """
@@ -949,14 +949,14 @@ class AnkimonDataSync:
                 if filename.endswith(".obf"):
                     try:
                         if file_diff["local_exists"]:
-                            with open(source_file, "r", encoding="utf-8") as f:
+                            with open(source_file, "r") as f:
                                 obfuscated_local_data = f.read()
                             file_diff["local_data"] = self._deobfuscate_data(
                                 obfuscated_local_data
                             )
 
                         if file_diff["media_exists"]:
-                            with open(media_file, "r", encoding="utf-8") as f:
+                            with open(media_file, "r") as f:
                                 obfuscated_media_data = f.read()
                             file_diff["media_data"] = self._deobfuscate_data(
                                 obfuscated_media_data
@@ -971,10 +971,10 @@ class AnkimonDataSync:
                 # Load and compare JSON data if both exist
                 elif file_diff["local_exists"] and file_diff["media_exists"]:
                     try:
-                        with open(source_file, "r", encoding="utf-8") as f:
-                            file_diff["local_data"] = json.load(f)
-                        with open(media_file, "r", encoding="utf-8") as f:
-                            file_diff["media_data"] = json.load(f)
+                        with open(source_file, "rb") as f:
+                            file_diff["local_data"] = orjson.loads(f.read())
+                        with open(media_file, "rb") as f:
+                            file_diff["media_data"] = orjson.loads(f.read())
 
                         # First, compare the loaded data. This is the most reliable check.
                         if file_diff["local_data"] != file_diff["media_data"]:
@@ -983,7 +983,7 @@ class AnkimonDataSync:
                             # If data is semantically the same, we don't need to check further.
                             file_diff["files_differ"] = False
 
-                    except (json.JSONDecodeError, Exception) as e:
+                    except (orjson.JSONDecodeError, Exception) as e:
                         # If we can't parse the JSON, we can't compare data.
                         # Fall back to the binary file comparison.
                         file_diff["error"] = (
@@ -995,15 +995,15 @@ class AnkimonDataSync:
 
                 elif file_diff["local_exists"]:
                     try:
-                        with open(source_file, "r", encoding="utf-8") as f:
-                            file_diff["local_data"] = json.load(f)
+                        with open(source_file, "rb") as f:
+                            file_diff["local_data"] = orjson.loads(f.read())
                         file_diff["files_differ"] = True
                     except:
                         pass
                 elif file_diff["media_exists"]:
                     try:
-                        with open(media_file, "r", encoding="utf-8") as f:
-                            file_diff["media_data"] = json.load(f)
+                        with open(media_file, "rb") as f:
+                            file_diff["media_data"] = orjson.loads(f.read())
                         file_diff["files_differ"] = True
                     except:
                         pass

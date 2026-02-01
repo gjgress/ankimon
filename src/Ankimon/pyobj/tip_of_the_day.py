@@ -1,6 +1,6 @@
-import json
 from pathlib import Path
 
+import orjson
 from aqt import mw
 from aqt.qt import *
 
@@ -43,10 +43,10 @@ class TipOfTheDayDialog(QDialog):
         if not tips_path.exists():
             return []
         try:
-            with open(tips_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            with open(tips_path, "rb") as f:
+                data = orjson.loads(f.read())
                 return data.get("tips", [])
-        except (json.JSONDecodeError, Exception):
+        except (orjson.JSONDecodeError, Exception):
             return []
 
     def show_new_tip(self):
@@ -71,20 +71,20 @@ def show_tip_of_the_day():
 
     # Check if the addon has been rated
     try:
-        with open(rate_path, "r", encoding="utf-8") as f:
-            rate_data = json.load(f)
+        with open(rate_path, "rb") as f:
+            rate_data = orjson.loads(f.read())
             if not rate_data.get("rate_this", False):
                 return
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (FileNotFoundError, orjson.JSONDecodeError):
         return
 
     tips_path = Path(__file__).parent.parent / "addon_files" / "tips.json"
     if not tips_path.exists():
         return
     try:
-        with open(tips_path, "r", encoding="utf-8") as f:
-            tips = json.load(f).get("tips", [])
-    except (json.JSONDecodeError, Exception):
+        with open(tips_path, "rb") as f:
+            tips = orjson.loads(f.read()).get("tips", [])
+    except (orjson.JSONDecodeError, Exception):
         return
 
     if not tips:

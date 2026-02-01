@@ -1,9 +1,9 @@
 import csv
-import json
 import random
 from pathlib import Path
 from typing import Any, Optional
 
+import orjson
 from aqt import mw
 from aqt.qt import (
     QComboBox,
@@ -297,8 +297,8 @@ class ItemWindow(QWidget):
     def give_held_item(self, comboBox, item_name):
         individual_id = comboBox.itemData(comboBox.currentIndex(), role=UserRole)
         try:
-            with open(mypokemon_path, "r", encoding="utf-8") as json_file:
-                pokemon_list_data = json.load(json_file)
+            with open(mypokemon_path, "rb") as json_file:
+                pokemon_list_data = orjson.loads(json_file.read())
                 target_pokemon_data = None
                 for pokemon in pokemon_list_data:
                     if pokemon.get("individual_id") == individual_id:
@@ -430,8 +430,8 @@ class ItemWindow(QWidget):
 
     def PokemonList(self, comboBox):
         try:
-            with open(mypokemon_path, "r", encoding="utf-8") as json_file:
-                captured_pokemon_data = json.load(json_file)
+            with open(mypokemon_path, "rb") as json_file:
+                captured_pokemon_data = orjson.loads(json_file.read())
                 if captured_pokemon_data:
                     for pokemon in captured_pokemon_data:
                         pokemon_name = pokemon["name"]
@@ -571,8 +571,8 @@ class ItemWindow(QWidget):
             self.logger.log_and_showinfo("error", f"Error loading evolution items: {e}")
 
     def write_items_file(self, itembag_list: list[Any]):
-        with open(itembag_path, "w") as json_file:
-            json.dump(itembag_list, json_file)
+        with open(itembag_path, "wb") as json_file:
+            json_file.write(orjson.dumps(itembag_list, option=orjson.OPT_INDENT_2))
 
     def read_items_file(self):
         """
@@ -580,9 +580,9 @@ class ItemWindow(QWidget):
         it tries to fix them by converting strings to the correct structure.
         """
         try:
-            with open(self.itembag_path, "r", encoding="utf-8") as json_file:
-                return json.load(json_file)
-        except json.JSONDecodeError:
+            with open(self.itembag_path, "rb") as json_file:
+                return orjson.loads(json_file.read())
+        except orjson.JSONDecodeError:
             self.logger.log("error", "Malformed JSON detected. Attempting to fix.")
             itembag_list = self._fix_and_load_items()
             self.write_items_file(itembag_list)
@@ -594,8 +594,8 @@ class ItemWindow(QWidget):
         Reads the JSON file as a string and corrects malformed items.
         """
         try:
-            with open(self.itembag_path, "r", encoding="utf-8") as json_file:
-                raw_data = json_file.read()
+            with open(self.itembag_path, "rb") as json_file:
+                raw_data = json_file.read().decode("utf-8")
 
             # Parse raw data as JSON (handling malformed structures)
             corrected_items = []
@@ -606,9 +606,9 @@ class ItemWindow(QWidget):
                     entry += "}"
 
                 try:
-                    item = json.loads(entry)
+                    item = orjson.loads(entry)
                     corrected_items.append(item)
-                except json.JSONDecodeError:
+                except orjson.JSONDecodeError:
                     # Fix malformed item (assume it's missing proper structure)
                     if entry.startswith('{"') and entry.endswith('"}'):
                         item_name = entry[2:-2]  # Extract item name

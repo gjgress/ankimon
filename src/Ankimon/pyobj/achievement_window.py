@@ -1,5 +1,4 @@
-import json
-
+import orjson
 from aqt import mw
 from aqt.qt import (
     QColor,
@@ -69,8 +68,8 @@ class AchievementWindow(QWidget):
     def BadgesLabel(self, badge_num):
         badge_path = badges_path / f"{str(badge_num)}.png"
         frame = QVBoxLayout()  # itemframe
-        with open(badges_list_path, "r", encoding="utf-8") as json_file:
-            badges = json.load(json_file)
+        with open(badges_list_path, "rb") as json_file:
+            badges = orjson.loads(json_file.read())
         achievement_description = f"{(badges[str(badge_num)])}"
         badges_name_label = QLabel(f"{achievement_description}")
         badges_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)

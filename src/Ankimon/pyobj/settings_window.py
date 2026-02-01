@@ -1,6 +1,6 @@
-import json
 import os
 
+import orjson
 from aqt import mw
 from aqt.qt import (
     QButtonGroup,
@@ -185,9 +185,9 @@ class SettingsWindow(QMainWindow):
         )
         if os.path.exists(descriptions_file):
             try:
-                with open(descriptions_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                with open(descriptions_file, "rb") as f:
+                    return orjson.loads(f.read())
+            except (orjson.JSONDecodeError, UnicodeDecodeError) as e:
                 showWarning(f"Error reading descriptions file: {e}")
         return {}
 
@@ -197,9 +197,9 @@ class SettingsWindow(QMainWindow):
         )
         if os.path.exists(names_file):
             try:
-                with open(names_file, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                with open(names_file, "rb") as f:
+                    return orjson.loads(f.read())
+            except (orjson.JSONDecodeError, UnicodeDecodeError) as e:
                 showWarning(f"Error reading friendly names file: {e}")
         return {}
 
