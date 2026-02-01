@@ -31,6 +31,7 @@ from aqt.reviewer import Reviewer
 from aqt.utils import downArrow, showWarning, tooltip, tr
 from aqt.webview import WebContent
 
+from .functions.migration import migrate_starter_individual_id
 from .resources import addon_dir, addon_ver, generate_startup_files, user_path
 
 generate_startup_files(addon_dir, user_path)
@@ -1034,3 +1035,5 @@ if settings_obj.get("misc.discord_rich_presence") == True:
     gui_hooks.reviewer_did_answer_card.append(on_reviewer_initialized)
     gui_hooks.reviewer_will_end.append(mw.ankimon_presence.stop_presence)
     gui_hooks.sync_did_finish.append(mw.ankimon_presence.stop)
+
+migrate_starter_individual_id()

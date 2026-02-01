@@ -744,9 +744,6 @@ def MainPokemon(
     reviewer_obj: Reviewer_Manager,
     test_window: TestWindow,
 ):
-    from ..functions.migration import migrate_starter_individual_id
-
-    migrate_starter_individual_id()
     # --- Save the existing mainpokemon to mypokemon before replacing ---
     try:
         # Load the current mainpokemon
