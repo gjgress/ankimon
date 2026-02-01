@@ -1,7 +1,7 @@
 target-version = "py39"
 
 [lint]
-extend-select = ["PLE", "I", "TID251", "RET"]
+extend-select = ["PLE", "I", "TID251", "RET", "TC"]
 ignore = ["E501"]
 
 [lint.flake8-tidy-imports.banned-api]
