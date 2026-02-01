@@ -408,8 +408,7 @@ class DownloadDialog(QDialog):
         self.setGeometry(300, 300, 400, 200)
 
         self.urls = [
-            "https://huggingface.co/datasets/h0tp/ankimon/resolve/main/sprites.zip",
-            "https://github.com/Unlucky-Life/ankimon/releases/download/sprites-v1.43/sprites.zip",
+            "https://github.com/Someon1e/ankimon/releases/download/nightly-release/sprites.zip"
         ]
         self.dest_dir_path = Path(user_path)
         self._flag_file_path = self.dest_dir_path / "download_complete.flag"
