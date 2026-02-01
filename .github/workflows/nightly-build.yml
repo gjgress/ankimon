@@ -29,13 +29,13 @@ jobs:
           python -m pip install git+https://github.com/glutanimate/anki-addon-builder.git@4039b5bb743773a18cb2911e6dd38fa1e3f65982
           python -m pip install pyqt5
 
-      - name: Create .ankiaddon package
-        run: aab build -d ankiweb
-
       - name: Recreate Nightly Tag
         run: |
           git tag -f nightly-release
           git push origin refs/tags/nightly-release --force
+
+      - name: Create .ankiaddon package
+        run: aab build -d ankiweb
 
       - name: Update Rolling Release
         uses: softprops/action-gh-release@v2
