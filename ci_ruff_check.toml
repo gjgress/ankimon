@@ -7,3 +7,6 @@ ignore = []
 
 [lint.flake8-tidy-imports.banned-api]
 json.msg = "Use orjson instead"
+
+[lint.per-file-ignores]
+"tests/*" = ["TID251"]
