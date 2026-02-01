@@ -103,11 +103,13 @@ def special_pokemon_names_for_min_level(name):
         return name
 
 
+with open(pokedex_path, "rb") as json_file:
+    pokedex_data = orjson.loads(json_file.read())
+
+
 def search_pokedex(pokemon_name, variable):
     try:
         pokemon_name = special_pokemon_names_for_min_level(pokemon_name)
-        with open(str(pokedex_path), "rb") as json_file:
-            pokedex_data = orjson.loads(json_file.read())
 
         # Create a copy of the name to modify
         current_name = pokemon_name
@@ -143,22 +145,18 @@ def search_pokedex(pokemon_name, variable):
 
 
 def search_pokedex_by_id(species_id):
-    with open(str(pokedex_path), "rb") as json_file:
-        pokedex_data = orjson.loads(json_file.read())
-        for entry_name, attributes in pokedex_data.items():
-            if attributes["species_id"] == species_id:
-                return entry_name
+    for entry_name, attributes in pokedex_data.items():
+        if attributes["species_id"] == species_id:
+            return entry_name
     return "Pokémon not found"
 
 
 def get_mainpokemon_evo(pokemon_name):
-    with open(str(pokedex_path), "rb") as json_file:
-        pokedex_data = orjson.loads(json_file.read())
-        if pokemon_name not in pokedex_data:
-            return []
-        pokemon_info = pokedex_data[pokemon_name]
-        evolutions = pokemon_info.get("evos", [])
-        return evolutions
+    if pokemon_name not in pokedex_data:
+        return []
+    pokemon_info = pokedex_data[pokemon_name]
+    evolutions = pokemon_info.get("evos", [])
+    return evolutions
 
 
 def get_growth_rate(species_id: int) -> str:
