@@ -36,6 +36,10 @@ jobs:
       - name: Create .ankiaddon package
         run: aab build -d ankiweb
 
+      - name: Create ZIP file from sprites directory
+        run: |
+          zip -9 -r sprites.zip src/Ankimon/user_files/sprites
+
       - name: Update Rolling Release
         uses: softprops/action-gh-release@v2
         with:
@@ -45,4 +49,6 @@ jobs:
             **Automated Nightly Build**
             _Last updated: ${{ github.event.head_commit.timestamp || 'Scheduled Run' }} (Commit: ${{ github.sha }})_
           prerelease: true
-          files: build/*.ankiaddon
+          files: |
+            build/*.ankiaddon
+            sprites.zip
