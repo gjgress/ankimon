@@ -4,7 +4,7 @@ import filecmp
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import orjson
 from aqt import gui_hooks, mw
@@ -134,9 +134,9 @@ class ImprovedPokemonDataSync(QDialog):
                 parent=self, exception=e, message="Error checking for differences"
             )
 
-    def _display_differences(self, differences: Dict[str, Dict]):
+    def _display_differences(self, differences: dict[str, dict]):
         """Display improved JSON differences, showing only what changed per file with specific key differences."""
-        from typing import Any, Dict, List, Tuple
+        from typing import Any
 
         def format_value(value: Any) -> str:
             """Format a value for display."""
@@ -157,16 +157,13 @@ class ImprovedPokemonDataSync(QDialog):
                 items = list(value.items())[:2]
                 formatted = [f"{k}: {format_value(v)}" for k, v in items]
                 return (
-                    "{"
-                    + ", ".join(formatted)
-                    + f", ... +{len(value) - 2} more"
-                    + "}"
+                    "{" + ", ".join(formatted) + f", ... +{len(value) - 2} more" + "}"
                 )
             return str(value)[:50] + ("..." if len(str(value)) > 50 else "")
 
         def compare_dicts(
-            local_dict: Dict, remote_dict: Dict, path: str = ""
-        ) -> Tuple[List[str], List[str]]:
+            local_dict: dict, remote_dict: dict, path: str = ""
+        ) -> tuple[list[str], list[str]]:
             """Compare two dictionaries and return differences with specific key details."""
             local_lines = []
             remote_lines = []
@@ -204,7 +201,7 @@ class ImprovedPokemonDataSync(QDialog):
 
             return local_lines, remote_lines
 
-        def get_pokemon_identifier(pokemon: Dict) -> str:
+        def get_pokemon_identifier(pokemon: dict) -> str:
             """Get a unique identifier for a Pokemon."""
             # Try individual_id first (most unique)
             if "individual_id" in pokemon and pokemon["individual_id"]:
@@ -218,8 +215,8 @@ class ImprovedPokemonDataSync(QDialog):
             return f"{name}_L{level}_{captured}"
 
         def compare_pokemon_lists(
-            local_list: List[Dict], remote_list: List[Dict]
-        ) -> Tuple[List[str], List[str]]:
+            local_list: list[dict], remote_list: list[dict]
+        ) -> tuple[list[str], list[str]]:
             """Compare two lists of Pokemon with detailed differences."""
             local_lines = []
             remote_lines = []
@@ -310,8 +307,8 @@ class ImprovedPokemonDataSync(QDialog):
             return local_lines, remote_lines
 
         def compare_item_lists(
-            local_list: List[Dict], remote_list: List[Dict]
-        ) -> Tuple[List[str], List[str]]:
+            local_list: list[dict], remote_list: list[dict]
+        ) -> tuple[list[str], list[str]]:
             """Compare two lists of items with detailed differences."""
             local_lines = []
             remote_lines = []
@@ -376,8 +373,8 @@ class ImprovedPokemonDataSync(QDialog):
             return local_lines, remote_lines
 
         def compare_simple_lists(
-            local_list: List, remote_list: List
-        ) -> Tuple[List[str], List[str]]:
+            local_list: list, remote_list: list
+        ) -> tuple[list[str], list[str]]:
             """Compare two simple lists with specific differences."""
             local_set = set(str(item) for item in local_list)
             remote_set = set(str(item) for item in remote_list)
@@ -409,7 +406,7 @@ class ImprovedPokemonDataSync(QDialog):
 
         def detect_structure_and_compare(
             local_data: Any, remote_data: Any, filename: str
-        ) -> Tuple[List[str], List[str]]:
+        ) -> tuple[list[str], list[str]]:
             """Detect the data structure and apply appropriate comparison."""
 
             # Handle None/missing data cases
@@ -524,7 +521,7 @@ class ImprovedPokemonDataSync(QDialog):
         self.local_text_area.setPlainText("\n".join(local_content))
         self.web_text_area.setPlainText("\n".join(web_content))
 
-    def _format_json_data(self, data: Any, filename: str) -> List[str]:
+    def _format_json_data(self, data: Any, filename: str) -> list[str]:
         """Format JSON data for display, showing key differences."""
         lines = []
 
@@ -562,7 +559,7 @@ class ImprovedPokemonDataSync(QDialog):
 
         return lines
 
-    def _format_pokemon_data(self, pokemon: Dict, index: int) -> List[str]:
+    def _format_pokemon_data(self, pokemon: dict, index: int) -> list[str]:
         """Format Pokemon data for display showing all relevant fields."""
         lines = [f"Pokemon {index + 1}:"]
 
@@ -769,7 +766,7 @@ class AnkimonDataSync:
             )
             return False
 
-    def _migrate_legacy_files(self) -> List[str]:
+    def _migrate_legacy_files(self) -> list[str]:
         """Migrate files from old flat structure to subfolder structure."""
         migrated_files = []
 
@@ -821,7 +818,7 @@ class AnkimonDataSync:
             deobfuscated_bytes.append(byte ^ key_bytes[i % len(key_bytes)])
         return orjson.loads(deobfuscated_bytes.decode("utf-8"))
 
-    def save_configs(self) -> List[str]:
+    def save_configs(self) -> list[str]:
         """
         Save configs from addon folder to media subfolder to trigger AnkiWeb sync.
         Returns list of files that were synced.
@@ -870,7 +867,7 @@ class AnkimonDataSync:
             # Profile not loaded yet
             return []
 
-    def read_configs(self, media_sync_status: bool = False) -> List[str]:
+    def read_configs(self, media_sync_status: bool = False) -> list[str]:
         """
         Read configs from media subfolder and copy to addon folder.
         Returns list of files that were updated.
@@ -914,7 +911,7 @@ class AnkimonDataSync:
             # Profile not loaded yet
             return []
 
-    def get_file_differences(self) -> Dict[str, Dict]:
+    def get_file_differences(self) -> dict[str, dict]:
         """
         Compare local files with media files and return differences.
         Returns dict with file differences for UI display.
@@ -944,14 +941,14 @@ class AnkimonDataSync:
                 if filename.endswith(".obf"):
                     try:
                         if file_diff["local_exists"]:
-                            with open(source_file, "r") as f:
+                            with open(source_file) as f:
                                 obfuscated_local_data = f.read()
                             file_diff["local_data"] = self._deobfuscate_data(
                                 obfuscated_local_data
                             )
 
                         if file_diff["media_exists"]:
-                            with open(media_file, "r") as f:
+                            with open(media_file) as f:
                                 obfuscated_media_data = f.read()
                             file_diff["media_data"] = self._deobfuscate_data(
                                 obfuscated_media_data
@@ -1067,7 +1064,7 @@ class AnkimonDataSync:
             )
             return False
 
-    def get_sync_folder_info(self) -> Dict[str, str]:
+    def get_sync_folder_info(self) -> dict[str, str]:
         """Get information about the sync folder for debugging."""
         try:
             return {

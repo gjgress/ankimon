@@ -3,7 +3,7 @@ import datetime
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import orjson
 from aqt.utils import askUser, showInfo, showWarning
@@ -37,7 +37,7 @@ class BackupManager:
         self.backups_path = self.addon_path.parent / "ankimon_backups"
         self.backups_path.mkdir(exist_ok=True)
 
-    def _deobfuscate_data(self, obfuscated_str: str) -> Optional[Dict[str, Any]]:
+    def _deobfuscate_data(self, obfuscated_str: str) -> Optional[dict[str, Any]]:
         """De-obfuscates string back into a dictionary."""
         try:
             new_separator = "---DATA_START---"
@@ -62,7 +62,7 @@ class BackupManager:
             self.logger.log("error", f"Failed to deobfuscate data: {e}")
             return None
 
-    def get_backups(self) -> List[Dict[str, Any]]:
+    def get_backups(self) -> list[dict[str, Any]]:
         """Returns a list of available backups with their summary stats."""
         backups = []
         for backup_dir in sorted(self.backups_path.iterdir(), reverse=True):
@@ -110,7 +110,7 @@ class BackupManager:
 
         self.cleanup_backups()
 
-    def _generate_summary(self, backup_dir: Path) -> Dict[str, Any]:
+    def _generate_summary(self, backup_dir: Path) -> dict[str, Any]:
         """Generates a summary for a backup."""
         summary = {
             "date": backup_dir.name.replace("backup_", "").replace("_", " "),
@@ -164,7 +164,7 @@ class BackupManager:
         # Read config.obf for trainer info
         config_path = backup_dir / "config.obf"
         if config_path.exists():
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 obfuscated_data = f.read()
             config_data = self._deobfuscate_data(obfuscated_data)
             if config_data:

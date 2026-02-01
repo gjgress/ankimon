@@ -192,7 +192,7 @@ class License(QWidget):
 
     def read_html_file(self, file_path):
         """Reads an HTML file and returns its content as a string."""
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             return file.read()
 
     def show_window(self):
@@ -243,7 +243,7 @@ class Credits(QWidget):
 
     def read_html_file(self, file_path):
         """Reads an HTML file and returns its content as a string."""
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             return file.read()
 
     def show_window(self):

@@ -77,7 +77,7 @@ def test_import_integrity(monkeypatch):
     unresolved_imports = []
 
     for module_name, f_path in module_map.items():
-        with open(f_path, "r") as f:
+        with open(f_path) as f:
             tree = ast.parse(f.read(), filename=f_path)
             analyzer = ImportAnalyzer(f_path)
             analyzer.visit(tree)

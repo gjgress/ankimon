@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 import orjson
 from aqt import mw
@@ -15,7 +15,7 @@ def _current_lang_code() -> str:
     return LANG_NUMBERS.get(lang_id, "en")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_move_name_lookups(lang_code: str):
     """
     Load English move names and, if available, a localized set.

@@ -115,9 +115,7 @@ class EvoWindow(QWidget):
         painter.drawPixmap(125, 10, image_pixmap)
 
         # custom font
-        custom_font = load_custom_font(
-            int(20), int(self.settings_obj.get("misc.language"))
-        )
+        custom_font = load_custom_font(20, int(self.settings_obj.get("misc.language")))
         message_box_text = (
             f"{(prevo_name).capitalize()} has evolved to {(evo_name).capitalize()} !"
         )
@@ -366,7 +364,7 @@ class EvoWindow(QWidget):
                 main_pokemon, _ = update_main_pokemon(main_pokemon)
 
                 # Update UI as before
-                class Container(object):
+                class Container:
                     pass
 
                 reviewer = Container()

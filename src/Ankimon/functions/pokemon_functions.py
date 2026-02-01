@@ -73,7 +73,7 @@ def find_experience_for_level(group_growth_rate, level, remove_levelcap=True):
         csv_file_path = str(
             next_lvl_file_path
         )  # Replace 'your_file_path.csv' with the actual path to your CSV file
-        with open(csv_file_path, "r", encoding="utf-8") as file:
+        with open(csv_file_path, encoding="utf-8") as file:
             # Create a CSV reader
             csv_reader = csv.DictReader(file, delimiter=";")
 

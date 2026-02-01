@@ -719,9 +719,7 @@ class PokemonPC(QDialog):
                 return (name.lower(), nickname.lower())
             val = p.get(sort_key_str)
             if val is None:
-                return (
-                    0 if sort_key_str in ["id", "level", "original_index"] else ""
-                )
+                return 0 if sort_key_str in ["id", "level", "original_index"] else ""
             return val
 
         return sorted(pokemon_list, reverse=reverse, key=sort_key)

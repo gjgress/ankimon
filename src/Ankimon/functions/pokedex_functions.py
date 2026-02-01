@@ -158,7 +158,7 @@ def get_mainpokemon_evo(pokemon_name):
 
 
 def get_growth_rate(species_id: int) -> str:
-    with open(poke_species_path, mode="r", encoding="utf-8") as file:
+    with open(poke_species_path, encoding="utf-8") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
@@ -169,7 +169,7 @@ def get_growth_rate(species_id: int) -> str:
 
 
 def get_base_experience(actual_id: int) -> int:
-    with open(pokemon_csv, mode="r", encoding="utf-8") as file:
+    with open(pokemon_csv, encoding="utf-8") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
@@ -181,7 +181,7 @@ def get_base_experience(actual_id: int) -> int:
 
 def get_effort_values(actual_id: int) -> dict[str, int]:
     evs = {}
-    with open(stats_csv, mode="r", encoding="utf-8") as file:
+    with open(stats_csv, encoding="utf-8") as file:
         reader = csv.DictReader(file)
 
         for row in reader:
@@ -201,7 +201,7 @@ def get_effort_values(actual_id: int) -> dict[str, int]:
 def get_pokemon_descriptions(species_id, language):
     descriptions = []  # Initialize an empty list to store matching descriptions
     language = _normalize_language_id(language)
-    with open(pokedesc_lang_path, mode="r", encoding="utf-8") as csv_file:
+    with open(pokedesc_lang_path, encoding="utf-8") as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             if (
@@ -222,7 +222,7 @@ def get_pokemon_descriptions(species_id, language):
 
 def get_pokemon_diff_lang_name(pokemon_id: int, language: int):
     language = _normalize_language_id(language)
-    with open(pokenames_lang_path, mode="r", encoding="utf-8") as file:
+    with open(pokenames_lang_path, encoding="utf-8") as file:
         reader = csv.reader(file)
         next(reader)  # Skip the header row if there is one
         for row in reader:
@@ -334,7 +334,7 @@ def find_details_move(move_name: str):
 
 def get_pokemon_evolution_data_all(pokemon_id, file_path=poke_evo_path):
     # Open the CSV file
-    with open(file_path, mode="r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file, delimiter="\t")  # Assuming tab-separated values
         for row in reader:
             # Check if the current row's Pokémon ID matches the requested ID
@@ -500,7 +500,7 @@ def pokemon_evolves_from_id(pokemon_id):
     evolves_from_ids = []  # List to hold the ids of Pokémon that evolve into the given ID
     try:
         # Open the CSV file
-        with open(poke_species_path, mode="r", encoding="utf-8") as file:
+        with open(poke_species_path, encoding="utf-8") as file:
             reader = csv.DictReader(file)
             for row in reader:
                 # Safely check if 'evolves_from_species_id' exists and is a valid number
@@ -536,7 +536,7 @@ def get_pokemon_evolution_data(pokemon_id):
 
     try:
         # Open the CSV file
-        with open(poke_evo_path, mode="r", encoding="utf-8") as file:
+        with open(poke_evo_path, encoding="utf-8") as file:
             reader = csv.DictReader(file)
 
             # Search for the given Pokémon ID in the evolved_species_id column
@@ -574,7 +574,7 @@ def check_key_in_table(column_name, value, file_path):
 
     try:
         # Open the CSV file
-        with open(file_path, mode="r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             reader = csv.DictReader(file)
 
             # Search for the value in the specified column
@@ -608,7 +608,7 @@ def return_name_for_id(pokemon_id):
     """
     try:
         # Open the CSV file
-        with open(pokemon_csv, mode="r", encoding="utf-8") as file:
+        with open(pokemon_csv, encoding="utf-8") as file:
             reader = csv.DictReader(file)  # Read the file as a dictionary
 
             # Search for the value in the "id" column
@@ -644,7 +644,7 @@ def return_id_for_item_name(item_name):
     """
     try:
         # Open the CSV file
-        with open(csv_file_items_cost, mode="r", encoding="utf-8") as file:
+        with open(csv_file_items_cost, encoding="utf-8") as file:
             reader = csv.DictReader(file)  # Read the file as a dictionary
 
             # Search for the value in the "identifier" column

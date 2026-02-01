@@ -122,7 +122,7 @@ def addon_config_editor_will_display_json(text: str) -> str:
 # Function to read the content of the local file
 def read_local_file(file_path):
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             return file.read()
     except FileNotFoundError:
         return None
@@ -151,7 +151,7 @@ def write_local_file(file_path, content):
 
 def read_html_file(file_path):
     """Reads an HTML file and returns its content as a string."""
-    with open(file_path, "r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         return file.read()
 
 
@@ -417,7 +417,7 @@ def get_item_price(item_name, file_path=csv_file_items_cost):
         int: The cost of the item, or None if the item is not found or has no id.
     """
     try:
-        with open(file_path, mode="r", newline="", encoding="utf-8") as csvfile:
+        with open(file_path, newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if row["identifier"] == item_name:
@@ -425,13 +425,13 @@ def get_item_price(item_name, file_path=csv_file_items_cost):
                     return int(cost)
     except FileNotFoundError:
         showWarning(f"Error: File {file_path} not found.")
-        return int(1000)
+        return 1000
     except KeyError:
         showWarning("Error: CSV file does not contain the expected headers.")
-        return int(1000)
+        return 1000
     except Exception as e:
         showWarning(f"Unexpected error: {e}")
-        return int(1000)
+        return 1000
 
     return None
 
@@ -449,7 +449,7 @@ def get_item_id(item_name, file_path=csv_file_items_cost):
         int: The id of the item, or None if the item is not found or has no id.
     """
     try:
-        with open(file_path, mode="r", newline="", encoding="utf-8") as csvfile:
+        with open(file_path, newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 if row["identifier"] == item_name:
@@ -459,19 +459,19 @@ def get_item_id(item_name, file_path=csv_file_items_cost):
         show_warning_with_traceback(
             parent=mw, exception=e, message=f"Error: File {file_path} not found."
         )
-        return int(4)
+        return 4
     except KeyError as e:
         show_warning_with_traceback(
             parent=mw,
             exception=e,
             message="Error: CSV file does not contain the expected headers.",
         )
-        return int(4)
+        return 4
     except Exception as e:
         show_warning_with_traceback(
             parent=mw, exception=e, message=f"Unexpected error: {e}"
         )
-        return int(4)
+        return 4
 
 
 # Function to return a random fossil
@@ -557,7 +557,7 @@ def get_item_description(item_name, language_id):
             normalized_lang = 7
 
         # Open the CSV file and read the contents
-        with open(file_path, mode="r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             reader = csv.DictReader(file)
 
             # Iterate through each row in the CSV

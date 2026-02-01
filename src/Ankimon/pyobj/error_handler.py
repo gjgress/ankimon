@@ -5,7 +5,7 @@ import re
 import sys
 import traceback
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 import orjson
 import requests
@@ -78,7 +78,7 @@ def scrub_traceback(tb_text: str) -> str:
     return tb_text
 
 
-def load_error_images(json_path: Path) -> Dict[str, str]:
+def load_error_images(json_path: Path) -> dict[str, str]:
     """Load and select random error image metadata."""
     default_image = {"path": "", "credit": "", "url": ""}
     try:
@@ -105,7 +105,7 @@ def create_error_label(message: str, exception: Exception) -> QLabel:
     return label
 
 
-def create_credit_label(chosen_image: Dict[str, str]) -> Optional[QLabel]:
+def create_credit_label(chosen_image: dict[str, str]) -> Optional[QLabel]:
     """Create image credit label with optional link."""
     if not chosen_image.get("credit") or not chosen_image.get("url"):
         return None
@@ -124,7 +124,7 @@ def create_credit_label(chosen_image: Dict[str, str]) -> Optional[QLabel]:
 
 
 def build_dialog_ui(
-    dialog: QDialog, message: str, exception: Exception, chosen_image: Dict[str, str]
+    dialog: QDialog, message: str, exception: Exception, chosen_image: dict[str, str]
 ) -> None:
     """Construct dialog UI layout without environment info display."""
     main_layout = QHBoxLayout(dialog)

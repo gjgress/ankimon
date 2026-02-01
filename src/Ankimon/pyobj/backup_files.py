@@ -55,7 +55,7 @@ def is_backup_needed():
     if not os.path.exists(backup_folders[0]):
         return True  # No backups exist, so we need one
 
-    with open(os.path.join(backup_folders[0], "backup_info.txt"), "r") as f:
+    with open(os.path.join(backup_folders[0], "backup_info.txt")) as f:
         date_str = f.readline().replace("Backup created on: ", "").strip()
         last_backup_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
 

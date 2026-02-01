@@ -549,9 +549,7 @@ class ItemWindow(QWidget):
     def load_evolution_items(self):
         try:
             evolution_item_ids = set()
-            with open(
-                poke_evo_path, mode="r", newline="", encoding="utf-8"
-            ) as evo_file:
+            with open(poke_evo_path, newline="", encoding="utf-8") as evo_file:
                 reader = csv.DictReader(evo_file)
                 for row in reader:
                     if row["evolution_trigger_id"] == "3":
@@ -559,9 +557,7 @@ class ItemWindow(QWidget):
                         if item_id:
                             evolution_item_ids.add(item_id)
 
-            with open(
-                csv_file_items_cost, mode="r", newline="", encoding="utf-8"
-            ) as items_file:
+            with open(csv_file_items_cost, newline="", encoding="utf-8") as items_file:
                 reader = csv.DictReader(items_file)
                 for row in reader:
                     if row["id"] in evolution_item_ids:

@@ -400,7 +400,7 @@ def new_pokemon(
     if test_window is not None:
         test_window.display_first_encounter()
 
-    class Container(object):
+    class Container:
         pass
 
     reviewer = Container()

@@ -156,8 +156,8 @@ def PokemonCollectionDetails(
                 )
 
         # Custom font
-        custom_font = load_custom_font(int(20), language)
-        namefont = load_custom_font(int(30), language)
+        custom_font = load_custom_font(20, language)
+        namefont = load_custom_font(30, language)
         namefont.setUnderline(True)
 
         if nickname is None:
@@ -389,7 +389,7 @@ def PokemonDetailsStats(detail_stats, growth_rate, level, remove_levelcap, langu
     }
 
     # custom font
-    custom_font = load_custom_font(int(20), language)
+    custom_font = load_custom_font(20, language)
 
     # Populate the table and create the stat bars
     for row, (stat, value) in enumerate(detail_stats.items()):

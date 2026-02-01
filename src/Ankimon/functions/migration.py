@@ -57,7 +57,7 @@ def migrate_starter_individual_id():
             main_pokemon_data = orjson.loads(f.read())
         with open(mypokemon_path, "rb") as f:
             my_pokemon_data = orjson.loads(f.read())
-    except (orjson.JSONDecodeError, IOError):
+    except (OSError, orjson.JSONDecodeError):
         # Files might be empty or corrupted, so we can't proceed.
         return
 
@@ -111,7 +111,7 @@ def migrate_starter_individual_id():
         try:
             with open(mypokemon_path, "wb") as f:
                 f.write(orjson.dumps(my_pokemon_data, option=orjson.OPT_INDENT_2))
-        except IOError:
+        except OSError:
             showWarning(
                 "Ankimon could not save the fix for your starter Pokémon. "
                 "Please check file permissions for the Ankimon addon folder."

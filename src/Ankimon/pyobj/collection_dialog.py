@@ -847,7 +847,7 @@ def MainPokemon(
     )
 
     # Update UI components
-    class Container(object):
+    class Container:
         pass
 
     reviewer = Container()

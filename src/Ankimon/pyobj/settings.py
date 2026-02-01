@@ -74,7 +74,7 @@ class Settings:
 
         if obfuscated_config_path.is_file():
             try:
-                with open(obfuscated_config_path, "r") as f:
+                with open(obfuscated_config_path) as f:
                     obfuscated_str = f.read()
                 config = sync_handler._deobfuscate_data(obfuscated_str)
                 # Migration logic for old keys (items, trainer.team, trainer.xp_share)

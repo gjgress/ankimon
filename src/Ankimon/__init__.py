@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Ankimon
 # Copyright (C) 2024 Unlucky-Life
 
@@ -736,7 +734,7 @@ def on_review_card(*args):
             )
             mutator_full_reset = 1  # fully reset battle state
 
-        class Container(object):
+        class Container:
             pass
 
         reviewer = Container()

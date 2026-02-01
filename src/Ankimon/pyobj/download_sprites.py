@@ -126,7 +126,7 @@ class DownloadThread(QThread):
             return (
                 hasher.hexdigest().lower()
             )  # Return in lowercase for case-insensitive comparison
-        except IOError as e:
+        except OSError as e:
             self.status_signal.emit(f"Error calculating hash for {file_path.name}: {e}")
             return ""
 
@@ -246,7 +246,7 @@ class DownloadThread(QThread):
                     self.status_signal.emit(
                         f"Network error (attempt {attempt + 1}): {e}. Retrying..."
                     )
-                except IOError as e:
+                except OSError as e:
                     self.status_signal.emit(
                         f"File system error during download (attempt {attempt + 1}): {e}. Retrying..."
                     )
@@ -319,7 +319,7 @@ class DownloadThread(QThread):
             self.status_signal.emit(
                 f"Renamed {self._temp_zip_path.name} to {self._final_zip_path.name}."
             )
-        except (zipfile.BadZipFile, IOError) as e:
+        except (OSError, zipfile.BadZipFile) as e:
             self.status_signal.emit(f"ZIP file verification failed: {e}")
             self._cleanup_temp_files()
             self.download_finished_signal.emit(
@@ -368,7 +368,7 @@ class DownloadThread(QThread):
                         # Continue with other files, but mark as failure later? Or stop?
                         # For now, continue and report overall success/failure.
                 self.progress_signal.emit(100)  # Final extraction progress
-        except (zipfile.BadZipFile, IOError) as e:
+        except (OSError, zipfile.BadZipFile) as e:
             self.status_signal.emit(f"Error during extraction: {e}")
             self._cleanup_temp_files()
             self.download_finished_signal.emit(False, "Error during file extraction.")
