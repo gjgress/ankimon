@@ -1,5 +1,6 @@
 from importlib.util import find_spec
 
+import markdown
 from aqt.qt import (
     QDesktopServices,
     QDialog,
@@ -155,7 +156,8 @@ class HelpWindow(QDialog):
                 local_content = read_local_file(help_local_file_path)
 
                 # Read content from GitHub
-                github_content, github_html_content = read_github_file(help_github_url)
+                github_content = read_github_file(help_github_url)
+                github_html_content = markdown.markdown(github_content)
 
                 if local_content is not None and compare_files(
                     local_content, github_content
