@@ -13,7 +13,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install git+https://github.com/glutanimate/anki-addon-builder.git@4039b5bb743773a18cb2911e6dd38fa1e3f65982
@@ -32,10 +32,15 @@ jobs:
       - name: Create .ankiaddon package
         run: aab build -d ankiweb
 
+      - name: Recreate Nightly Tag
+        run: |
+          git tag -f nightly-release
+          git push origin refs/tags/nightly-release --force
+
       - name: Update Rolling Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
+          tag_name: nightly-release
           name: "Nightly Build"
           body: |
             **Automated Nightly Build**
