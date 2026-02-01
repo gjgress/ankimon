@@ -1,6 +1,5 @@
 import markdown
 import orjson
-from aqt import mw
 from aqt.qt import (
     QCheckBox,
     QDialog,
@@ -13,12 +12,10 @@ from aqt.qt import (
     QScrollArea,
     Qt,
     QTextBrowser,
-    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
-from .pyobj.error_handler import show_warning_with_traceback
 from .resources import (
     addon_dir,
     eff_chart_html_path,
@@ -28,11 +25,8 @@ from .resources import (
 )
 from .texts import pokedex_html_template, terms_text
 from .utils import (
-    compare_files,
-    read_github_file,
     read_html_file,
     read_local_file,
-    write_local_file,
 )
 
 
