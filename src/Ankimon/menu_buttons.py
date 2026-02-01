@@ -260,6 +260,7 @@ def create_menu_actions(
     config_action.triggered.connect(settings_window.show_window)
     # Show the Settings window
     mw.pokemenu.addAction(config_action)
+    mw.addonManager.setConfigAction(__name__, settings_window.show_window)
 
     if debug is True:
         data_window_action = QAction(mw.translator.translate("ankimon_data_button"), mw)
