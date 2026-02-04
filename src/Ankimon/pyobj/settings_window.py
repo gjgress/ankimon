@@ -1,10 +1,16 @@
 import os
+from dataclasses import dataclass
+from typing import Any
 
 import orjson
-from aqt import mw
+from aqt import (
+    QCheckBox,
+    QComboBox,
+    QDoubleValidator,
+    QIntValidator,
+    mw,
+)
 from aqt.qt import (
-    QButtonGroup,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -13,7 +19,6 @@ from aqt.qt import (
     QPainterPath,
     QPixmap,
     QPushButton,
-    QRadioButton,
     QRectF,
     QScrollArea,
     Qt,
@@ -41,6 +46,166 @@ def create_rounded_pixmap(source_pixmap, radius):
     return rounded
 
 
+@dataclass
+class Toggle:
+    setting: str
+
+
+@dataclass
+class DropDown:
+    setting: str
+    options: dict[str, Any]
+
+
+@dataclass
+class Text:
+    setting: str
+
+
+@dataclass
+class Integer:
+    setting: str
+    min: int | None
+    max: int | None
+
+
+@dataclass
+class Float:
+    setting: str
+    min: float | None
+    max: float | None
+
+
+setting_ui_structure = {
+    "General": {
+        "settings": [
+            Text("trainer.name"),
+            DropDown(
+                "misc.language",
+                {
+                    "Japanese (Hir & Kata)": 1,
+                    "Japanese (Roomaji)": 2,
+                    "Korean": 3,
+                    "Chinese (Traditional)": 4,
+                    "French": 5,
+                    "German": 6,
+                    "Spanish": 7,
+                    "Italian": 8,
+                    "English": 9,
+                    "Czech": 10,
+                    "Japanese": 11,
+                    "Chinese (Simplified)": 12,
+                    "Portuguese (Brazil)": 13,
+                    "Spanish (Latin America)": 14,
+                },
+            ),
+            Toggle("misc.show_tip_on_startup"),
+        ],
+        "subgroups": {
+            "Technical Settings": {
+                "settings": [
+                    Toggle("misc.ssh"),
+                    Toggle("misc.YouShallNotPass_Ankimon_News"),
+                    Toggle("misc.ankiweb_sync"),
+                    Toggle("misc.leaderboard"),
+                    Toggle("misc.developer_mode"),
+                ]
+            },
+            "Discord Integration": {
+                "settings": [
+                    Toggle("misc.discord_rich_presence"),
+                    DropDown(
+                        "misc.discord_rich_presence_text",
+                        {
+                            "Ankimon Quotes": 1,
+                            "Pokémon in the battle": 2,
+                        },
+                    ),
+                ]
+            },
+        },
+    },
+    "Battle": {
+        "settings": [
+            DropDown(
+                "battle.automatic_battle",
+                {
+                    "Disabled": 0,
+                    "Auto-catch": 1,
+                    "Auto-defeat (to gain XP)": 2,
+                    "Catch if NEW Pokémon (not in collection), otherwise defeat": 3,
+                },
+            ),
+            Integer("battle.cards_per_round", min=1, max=None),
+            DropDown(
+                "gui.show_mainpkmn_in_reviewer",
+                {"Hide": 0, "Same level view": 1, "Battle view": 2},
+            ),
+            Toggle("controls.pokemon_buttons"),
+            Toggle("gui.pop_up_dialog_message_on_defeat"),
+            Toggle("gui.reviewer_text_message_box"),
+            Integer("gui.reviewer_text_message_box_time", min=1, max=5),
+            Toggle("battle.review_based_damage"),
+        ],
+        "subgroups": {
+            "Fight Hotkeys": {
+                "settings": [
+                    Text("controls.defeat_key"),
+                    Text("controls.catch_key"),
+                    Text("controls.key_for_opening_closing_ankimon"),
+                    Toggle("controls.allow_to_choose_moves"),
+                ]
+            },
+            "HP, XP and Level Settings": {
+                "settings": [
+                    Toggle("gui.hp_bar_config"),
+                    Toggle("gui.xp_bar_config"),
+                    DropDown("gui.xp_bar_location", {"Top": 1, "Bottom": 2}),
+                    Toggle("misc.remove_level_cap"),
+                ]
+            },
+        },
+    },
+    "Styling": {
+        "settings": [
+            Toggle("gui.styling_in_reviewer"),
+            Toggle("gui.animate_time"),
+            Integer("gui.review_hp_bar_thickness", None, None),
+            Toggle("gui.reviewer_image_gif"),
+            Toggle("gui.view_main_front"),
+            Toggle("gui.gif_in_collection"),
+        ]
+    },
+    "Sound": {
+        "settings": [
+            Toggle("audio.sound_effects"),
+            Toggle("audio.sounds"),
+            Toggle("audio.battle_sounds"),
+            Float("audio.volume", min=0.0, max=1.0),
+        ]
+    },
+    "Study": {
+        "settings": [
+            Integer("battle.daily_average", min=0, max=None),
+            Integer("battle.card_max_time", min=0, max=None),
+        ]
+    },
+    "Generations": {
+        "settings": [
+            Toggle("misc.gen1"),
+            Toggle("misc.gen2"),
+            Toggle("misc.gen3"),
+            Toggle("misc.gen4"),
+            Toggle("misc.gen5"),
+            Toggle("misc.gen6"),
+            Toggle("misc.gen7"),
+            Toggle("misc.gen8"),
+            Toggle("misc.gen9"),
+        ]
+    },
+}
+
+
 class SettingsWindow(QMainWindow):
     def __init__(
         self, config, set_config_callback, save_config_callback, load_config_callback
@@ -57,13 +222,12 @@ class SettingsWindow(QMainWindow):
 
         self.descriptions = self.load_descriptions()
         self.friendly_names = self.load_friendly_names()
-        self.key_map = {v: k for k, v in self.friendly_names.items()}
 
         self.group_widgets = {}
         self.group_states = {}
         self.searchable_settings = []
         self.title_buttons = {}  # To store references to title buttons
-        self.input_widgets = {}  # To store references to input widgets
+        self.input_values = {}
 
         self.setup_ui()
 
@@ -93,6 +257,12 @@ class SettingsWindow(QMainWindow):
                     color: #f0f0f0;
                 }
                 QLineEdit {
+                    background-color: #3c3c3c;
+                    color: #f0f0f0;
+                    border: 1px solid #555555;
+                    padding: 4px;
+                }
+                QComboBox {
                     background-color: #3c3c3c;
                     color: #f0f0f0;
                     border: 1px solid #555555;
@@ -203,15 +373,16 @@ class SettingsWindow(QMainWindow):
                 showWarning(f"Error reading friendly names file: {e}")
         return {}
 
-    def _create_setting(self, key, layout):
+    def _create_setting(self, setting_type, layout):
+        key = setting_type.setting
         value = self.config[key]
         friendly_name = self.friendly_names[key]
         description = self.descriptions.get(key, "No description available.")
 
         created_widgets = []
-        label = QLabel(friendly_name)
+        label = QLabel(friendly_name, self)
         label.setProperty("class", "setting-label")
-        description_label = QLabel(description)
+        description_label = QLabel(description, self)
         description_label.setWordWrap(True)
         description_label.setProperty("class", "description-label")
         description_label.setMaximumWidth(self.width() - 50)
@@ -219,27 +390,92 @@ class SettingsWindow(QMainWindow):
         layout.addWidget(description_label)
         created_widgets.extend([label, description_label])
 
-        if isinstance(value, bool):
-            radio_container = QWidget()
-            h_layout = QHBoxLayout(radio_container)
-            h_layout.setContentsMargins(0, 0, 0, 0)
-            true_radio = QRadioButton("Enabled")
-            false_radio = QRadioButton("Disabled")
-            true_radio.setChecked(value)
-            false_radio.setChecked(not value)
-            button_group = QButtonGroup(self)
-            button_group.addButton(true_radio)
-            button_group.addButton(false_radio)
-            h_layout.addWidget(true_radio)
-            h_layout.addWidget(false_radio)
-            layout.addWidget(radio_container)
-            created_widgets.append(radio_container)
-            self.input_widgets[key] = button_group
-        elif isinstance(value, (int, str, float)):
-            line_edit = QLineEdit(str(value))
+        if isinstance(setting_type, Toggle):
+            checkbox = QCheckBox(self)
+            checkbox.setText("Enabled")
+            checkbox.setChecked(value)
+            checkbox.setStyleSheet("padding-left: 10px;")
+
+            layout.addWidget(checkbox)
+            created_widgets.append(checkbox)
+
+            def get_input():
+                return checkbox.isChecked()
+
+            self.input_values[key] = get_input
+        elif isinstance(setting_type, Text):
+            line_edit = QLineEdit(str(value), self)
             layout.addWidget(line_edit)
             created_widgets.append(line_edit)
-            self.input_widgets[key] = line_edit
+
+            def get_input():
+                return line_edit.text()
+
+            self.input_values[key] = get_input
+        elif isinstance(setting_type, Integer):
+            line_edit = QLineEdit(str(value), self)
+
+            line_edit.setValidator(
+                QIntValidator(
+                    setting_type.minimum
+                    if hasattr(setting_type, "minimum")
+                    else -99967,
+                    setting_type.maximum if hasattr(setting_type, "maximum") else 99967,
+                    self,
+                )
+            )
+
+            layout.addWidget(line_edit)
+            created_widgets.append(line_edit)
+
+            def get_input():
+                return int(line_edit.text())
+
+            self.input_values[key] = get_input
+
+        elif isinstance(setting_type, Float):
+            line_edit = QLineEdit(str(value), self)
+
+            line_edit.setValidator(
+                QDoubleValidator(
+                    setting_type.minimum
+                    if hasattr(setting_type, "minimum") is None
+                    else -float("inf"),
+                    setting_type.maximum
+                    if hasattr(setting_type, "maximum") is None
+                    else float("inf"),
+                    -1,
+                    self,
+                )
+            )
+
+            layout.addWidget(line_edit)
+            created_widgets.append(line_edit)
+
+            def get_input():
+                return float(line_edit.text())
+
+            self.input_values[key] = get_input
+        elif isinstance(setting_type, DropDown):
+            names = setting_type.options.keys()
+
+            combo_box = QComboBox(self)
+            combo_box.addItems(names)
+
+            index_to_name = {v: k for k, v in setting_type.options.items()}
+
+            selected_name = index_to_name.get(value)
+            if selected_name:
+                index = combo_box.findText(str(selected_name))
+                combo_box.setCurrentIndex(index)
+
+            layout.addWidget(combo_box)
+            created_widgets.append(combo_box)
+
+            def get_input():
+                return setting_type.options[combo_box.currentText()]
+
+            self.input_values[key] = get_input
 
         return created_widgets, friendly_name, description
 
@@ -287,103 +523,17 @@ class SettingsWindow(QMainWindow):
         scroll_area_content = QWidget()
         scroll_area_layout = QVBoxLayout(scroll_area_content)
         scroll_area.setWidget(scroll_area_content)
-        hierarchical_groups = {
-            "General": {
-                "settings": [
-                    "Trainer Name",
-                    "Language",
-                    "Show Tip of the Day On Startup",
-                ],
-                "subgroups": {
-                    "Technical Settings": {
-                        "settings": [
-                            "SSH Access",
-                            "Prevent Ankimon News on Startup",
-                            "AnkiWeb Sync",
-                            "Ankimon Leaderboard",
-                            "Developer Mode",
-                        ]
-                    },
-                    "Discord Integration": {
-                        "settings": [
-                            "Discord Rich Presence - Ankimon",
-                            "Discord Rich Presence - Quote Type",
-                        ]
-                    },
-                },
-            },
-            "Battle": {
-                "settings": [
-                    "Automatic Battle",
-                    "Cards per Round",
-                    "Show Main Pokémon in Reviewer",
-                    "Show Pokémon Buttons",
-                    "Pop-Up on Defeat",
-                    "Show Text Message Box in Reviewer",
-                    "Message Box Display Time",
-                    "Review Based Damage",
-                ],
-                "subgroups": {
-                    "Fight Hotkeys": {
-                        "settings": [
-                            "Key for Defeat",
-                            "Key for Catching",
-                            "Key for Opening/Closing Ankimon",
-                            "Allow Choosing Moves",
-                        ]
-                    },
-                    "HP, XP and Level Settings": {
-                        "settings": [
-                            "HP Bar Configuration",
-                            "XP Bar Configuration",
-                            "XP Bar Location",
-                            "Remove Level Cap",
-                        ]
-                    },
-                },
-            },
-            "Styling": {
-                "settings": [
-                    "Styling in Reviewer",
-                    "Animate Time",
-                    "HP Bar Thickness",
-                    "Reviewer Image as GIF",
-                    "View Main Pokémon Front",
-                    "Show GIFs in Collection",
-                ]
-            },
-            "Sound": {
-                "settings": [
-                    "Enable Sound Effects",
-                    "Enable Sounds",
-                    "Enable Battle Sounds",
-                    "Volume",
-                ]
-            },
-            "Study": {"settings": ["Goal of Daily Average Cards", "Card Max Time"]},
-            "Generations": {
-                "settings": [
-                    "Generation 1",
-                    "Generation 2",
-                    "Generation 3",
-                    "Generation 4",
-                    "Generation 5",
-                    "Generation 6",
-                    "Generation 7",
-                    "Generation 8",
-                    "Generation 9",
-                ]
-            },
-        }
-        for l1_title, l1_data in hierarchical_groups.items():
+
+        for l1_title, l1_data in setting_ui_structure.items():
             self.group_states[l1_title] = True
             l1_widgets = []
             l1_button = self._create_title(l1_title, level=1)
             scroll_area_layout.addWidget(l1_button)
             self.title_buttons[l1_title] = l1_button
-            for friendly_name in l1_data.get("settings", []):
-                key = self.key_map.get(friendly_name)
-                widgets, name, desc = self._create_setting(key, scroll_area_layout)
+            for setting_type in l1_data.get("settings", []):
+                widgets, name, desc = self._create_setting(
+                    setting_type, scroll_area_layout
+                )
                 if widgets:
                     l1_widgets.extend(widgets)
                     self.searchable_settings.append(
@@ -403,10 +553,9 @@ class SettingsWindow(QMainWindow):
                     scroll_area_layout.addWidget(l2_button)
                     self.title_buttons[l2_title] = l2_button
                     l1_widgets.append(l2_button)
-                    for friendly_name in l2_data.get("settings", []):
-                        key = self.key_map.get(friendly_name)
+                    for setting_type in l2_data.get("settings", []):
                         widgets, name, desc = self._create_setting(
-                            key, scroll_area_layout
+                            setting_type, scroll_area_layout
                         )
                         if widgets:
                             l1_widgets.extend(widgets)
@@ -486,26 +635,8 @@ class SettingsWindow(QMainWindow):
 
     def on_save(self):
         # Update self.config from the current state of all UI widgets
-        for key, widget in self.input_widgets.items():
-            original_value = self.original_config.get(key)
-
-            if isinstance(widget, QLineEdit):
-                new_text = widget.text()
-                # Attempt to cast back to original type (int or str)
-                if isinstance(original_value, int):
-                    try:
-                        self.config[key] = int(new_text)
-                    except ValueError:
-                        self.config[key] = original_value
-                elif isinstance(original_value, float):
-                    try:
-                        self.config[key] = float(new_text)
-                    except ValueError:
-                        self.config[key] = original_value
-                else:
-                    self.config[key] = new_text
-            elif isinstance(widget, QButtonGroup):
-                self.config[key] = widget.checkedButton().text() == "Enabled"
+        for key, get_value in self.input_values.items():
+            self.config[key] = get_value()
 
         # Now that self.config is up-to-date, call the save callback
         self.save_config_callback(self.config)
@@ -519,19 +650,19 @@ class SettingsWindow(QMainWindow):
             "misc.last_tip_index",
             "trainer.xp_share",
         }
-        changed_settings = {
-            key: self.config[key]
+        changed_settings = [
+            key
             for key in self.config
             if not any(pattern in key for pattern in excluded_patterns)
             and self.config[key] != self.original_config.get(key)
-        }
+        ]
 
         if changed_settings:
-            friendly_changed = {
-                self.friendly_names.get(k, k): v for k, v in changed_settings.items()
-            }
             changed_message = "\n".join(
-                [f"{key}: {value}" for key, value in friendly_changed.items()]
+                [
+                    f"{self.friendly_names.get(k, k)}: {self.original_config.get(k)} -> {self.config[k]}"
+                    for k in changed_settings
+                ]
             )
             QMessageBox.information(
                 self, "Settings Saved", "Your settings have been saved successfully."
