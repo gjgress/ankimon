@@ -12,6 +12,7 @@ from aqt.qt import (
     QVBoxLayout,
     QWidget,
 )
+from aqt.theme import theme_manager
 
 
 class AnkimonTrackerWindow:
@@ -26,7 +27,7 @@ class AnkimonTrackerWindow:
 
     def get_text_color(self):
         """Returns the appropriate text color based on Anki's theme."""
-        return "white" if self.mw.pm.night_mode() else "black"
+        return "white" if theme_manager.night_mode else "black"
 
     def create_gui(self):
         """Creates and sets up the GUI layout for the tracker stats."""
