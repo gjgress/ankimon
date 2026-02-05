@@ -80,22 +80,37 @@ class AnkimonDB:
         conn = self._get_connection()
         cursor = conn.cursor()
 
-        # Table for captured pokemon (replaces mypokemon.json)
+        # Table for captured pokemon (replaces mypokemon.json AND mainpokemon.json)
+        # is_main flag: 0 = not main, 1 = main pokemon
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS captured_pokemon (
                 individual_id TEXT PRIMARY KEY,
+                is_main INTEGER DEFAULT 0,
                 data TEXT NOT NULL
             )
         """)
 
-        # Table for main pokemon (replaces mainpokemon.json)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS main_pokemon (
-                id INTEGER PRIMARY KEY DEFAULT 1,
-                individual_id TEXT,
-                data TEXT NOT NULL
-            )
-        """)
+        # Check if is_main column exists (for migration from old schema)
+        cursor.execute("PRAGMA table_info(captured_pokemon)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if "is_main" not in columns:
+            self._log("info", "Migrating schema: adding is_main column...")
+            cursor.execute("ALTER TABLE captured_pokemon ADD COLUMN is_main INTEGER DEFAULT 0")
+            # Migrate data from old main_pokemon table if it exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='main_pokemon'")
+            if cursor.fetchone():
+                cursor.execute("SELECT individual_id, data FROM main_pokemon WHERE id = 1")
+                row = cursor.fetchone()
+                if row:
+                    main_id = row[0]
+                    main_data = row[1]
+                    # Update the existing pokemon to be main, or insert if not exists
+                    cursor.execute(
+                        "INSERT OR REPLACE INTO captured_pokemon (individual_id, is_main, data) VALUES (?, 1, ?)",
+                        (main_id, main_data)
+                    )
+                cursor.execute("DROP TABLE main_pokemon")
+                self._log("info", "Migrated main_pokemon table to is_main flag")
 
         # Table for items (replaces items.json)
         cursor.execute("""
@@ -128,7 +143,7 @@ class AnkimonDB:
     # --- Captured Pokemon Operations ---
 
     def save_pokemon(self, pokemon_data: Dict[str, Any]):
-        """Saves or updates a captured pokemon."""
+        """Saves or updates a captured pokemon. Preserves is_main flag if pokemon already exists."""
         individual_id = pokemon_data.get("individual_id")
         if not individual_id:
             self._log("error", "Cannot save pokemon without individual_id")
@@ -137,10 +152,23 @@ class AnkimonDB:
         obfuscated_data = self._obfuscate(pokemon_data)
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT OR REPLACE INTO captured_pokemon (individual_id, data) VALUES (?, ?)",
-            (individual_id, obfuscated_data)
-        )
+        
+        # Check if pokemon already exists to preserve is_main flag
+        cursor.execute("SELECT is_main FROM captured_pokemon WHERE individual_id = ?", (individual_id,))
+        row = cursor.fetchone()
+        
+        if row:
+            # Update existing - preserve is_main
+            cursor.execute(
+                "UPDATE captured_pokemon SET data = ? WHERE individual_id = ?",
+                (obfuscated_data, individual_id)
+            )
+        else:
+            # Insert new with is_main = 0
+            cursor.execute(
+                "INSERT INTO captured_pokemon (individual_id, is_main, data) VALUES (?, 0, ?)",
+                (individual_id, obfuscated_data)
+            )
         conn.commit()
         return True
 
@@ -195,27 +223,53 @@ class AnkimonDB:
     # --- Main Pokemon Operations ---
 
     def save_main_pokemon(self, pokemon_data: Dict[str, Any]):
-        """Saves the main pokemon (always uses id=1)."""
-        individual_id = pokemon_data.get("individual_id", "")
+        """Saves/updates the main pokemon. Sets is_main=1 on this pokemon, is_main=0 on all others."""
+        individual_id = pokemon_data.get("individual_id")
+        if not individual_id:
+            self._log("error", "Cannot save main pokemon without individual_id")
+            return False
+
         obfuscated_data = self._obfuscate(pokemon_data)
         conn = self._get_connection()
         cursor = conn.cursor()
+        
+        # Clear the main flag from all pokemon first
+        cursor.execute("UPDATE captured_pokemon SET is_main = 0 WHERE is_main = 1")
+        
+        # Save/update this pokemon and set as main
         cursor.execute(
-            "INSERT OR REPLACE INTO main_pokemon (id, individual_id, data) VALUES (1, ?, ?)",
+            "INSERT OR REPLACE INTO captured_pokemon (individual_id, is_main, data) VALUES (?, 1, ?)",
             (individual_id, obfuscated_data)
         )
         conn.commit()
         return True
 
     def get_main_pokemon(self) -> Optional[Dict[str, Any]]:
-        """Retrieves the main pokemon."""
+        """Retrieves the main pokemon (the one with is_main=1)."""
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT data FROM main_pokemon WHERE id = 1")
+        cursor.execute("SELECT data FROM captured_pokemon WHERE is_main = 1")
         row = cursor.fetchone()
         if row:
             return self._deobfuscate(row["data"])
         return None
+
+    def set_main_pokemon(self, individual_id: str) -> bool:
+        """Sets a pokemon as the main pokemon by individual_id. Returns False if pokemon not found."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        # Check if pokemon exists
+        cursor.execute("SELECT individual_id FROM captured_pokemon WHERE individual_id = ?", (individual_id,))
+        if not cursor.fetchone():
+            return False
+        
+        # Clear old main
+        cursor.execute("UPDATE captured_pokemon SET is_main = 0 WHERE is_main = 1")
+        # Set new main
+        cursor.execute("UPDATE captured_pokemon SET is_main = 1 WHERE individual_id = ?", (individual_id,))
+        conn.commit()
+        return True
 
     # --- Item Operations ---
 
