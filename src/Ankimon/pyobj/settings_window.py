@@ -571,9 +571,9 @@ class SettingsWindow(QMainWindow):
                             )
                     self.group_widgets[l2_title] = l2_widgets
                     l2_button.clicked.connect(
-                        lambda _,
-                        t=l2_title,
-                        b=l2_button: self._toggle_group_visibility(t, b)
+                        lambda _, t=l2_title, b=l2_button: (
+                            self._toggle_group_visibility(t, b)
+                        )
                     )
             self.group_widgets[l1_title] = l1_widgets
             l1_button.clicked.connect(

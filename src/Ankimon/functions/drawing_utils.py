@@ -103,8 +103,8 @@ def draw_gender_symbols(
     get_gender_symbol = lambda gender: {"M": "♂", "F": "♀"}.get(
         gender, ""
     )  # Gets gender symbol. Returns "" by default
-    get_pen_color = (
-        lambda gender: QColor(20, 100, 210) if gender == "M" else QColor(210, 20, 20)
+    get_pen_color = lambda gender: (
+        QColor(20, 100, 210) if gender == "M" else QColor(210, 20, 20)
     )  # Blue if "M", else Red
 
     enemy_pokemon_gender_symbol = get_gender_symbol(enemy_pokemon.gender)

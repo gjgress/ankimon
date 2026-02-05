@@ -72,9 +72,11 @@ class PokemonCollectionDialog(QDialog):
         # add Widget to sort by ID
         self.sort_checkbox = QCheckBox("Sort by ID")
         self.sort_checkbox.stateChanged.connect(
-            lambda: self.sort_pokemon()
-            if self.sort_checkbox.isChecked()
-            else self.filter_pokemon()
+            lambda: (
+                self.sort_pokemon()
+                if self.sort_checkbox.isChecked()
+                else self.filter_pokemon()
+            )
         )
 
         # Search Filter
@@ -83,9 +85,11 @@ class PokemonCollectionDialog(QDialog):
         # self.search_edit.textChanged.connect(self.filter_pokemon)
         self.search_button = QPushButton("Search")
         self.search_button.clicked.connect(
-            lambda: self.sort_pokemon()
-            if self.sort_checkbox.isChecked()
-            else self.filter_pokemon()
+            lambda: (
+                self.sort_pokemon()
+                if self.sort_checkbox.isChecked()
+                else self.filter_pokemon()
+            )
         )
 
         # Add dropdown menu for generation filtering
@@ -104,9 +108,11 @@ class PokemonCollectionDialog(QDialog):
             ]
         )
         self.generation_combo.currentIndexChanged.connect(
-            lambda: self.sort_pokemon()
-            if self.sort_checkbox.isChecked()
-            else self.filter_pokemon()
+            lambda: (
+                self.sort_pokemon()
+                if self.sort_checkbox.isChecked()
+                else self.filter_pokemon()
+            )
         )
 
         # Add dropdown menu for generation filtering
@@ -135,9 +141,11 @@ class PokemonCollectionDialog(QDialog):
             ]
         )
         self.type_combo.currentIndexChanged.connect(
-            lambda: self.sort_pokemon()
-            if self.sort_checkbox.isChecked()
-            else self.filter_pokemon()
+            lambda: (
+                self.sort_pokemon()
+                if self.sort_checkbox.isChecked()
+                else self.filter_pokemon()
+            )
         )
 
         # Add widgets to layout

@@ -335,9 +335,9 @@ class PokemonPC(QDialog):
                 pokemon_button.setStyleSheet(style_sheet_str)
 
                 pokemon_button.clicked.connect(
-                    lambda checked,
-                    pb=pokemon_button,
-                    pkmn=pokemon: self.show_actions_submenu(pb, pkmn)
+                    lambda checked, pb=pokemon_button, pkmn=pokemon: (
+                        self.show_actions_submenu(pb, pkmn)
+                    )
                 )
 
                 if self.gif_in_collection:

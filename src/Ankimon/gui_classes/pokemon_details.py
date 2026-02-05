@@ -792,9 +792,10 @@ def tm_attack_details_window(
         move = find_details_move(attack)
         learn_attack_button = QPushButton(f"Learn {attack}")  # add Details to Moves
         learn_attack_button.clicked.connect(
-            lambda checked,
-            a=attack: remember_attack(  # We can use "remember_attack()" because the process is the same
-                individual_id, current_pokemon_moveset, a, logger
+            lambda checked, a=attack: (
+                remember_attack(  # We can use "remember_attack()" because the process is the same
+                    individual_id, current_pokemon_moveset, a, logger
+                )
             )
         )
         attack_layout.addWidget(learn_attack_button)
