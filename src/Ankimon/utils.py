@@ -711,18 +711,10 @@ def play_sound(enemy_pokemon_id: int, settings_obj: Settings):
             media_player.play()
 
 def load_collected_pokemon_ids() -> set:
-    if not mypokemon_path.is_file():
-        return set()
-
-    collected_pokemon_ids = set()
-    try:
-        with open(mypokemon_path, "r", encoding="utf-8") as f:
-            collection = json.load(f)
-            collected_pokemon_ids = {pkmn["id"] for pkmn in collection}
-    except Exception as e:
-        show_warning_with_traceback(exception=e, message="Error loading collection cache")
-
-    return collected_pokemon_ids
+    """Loads all captured pokemon IDs from the database."""
+    from .pyobj.database_manager import get_db
+    db = get_db()
+    return db.get_all_pokemon_ids()
 
 def limit_ev_yield(current_pokemon_ev: dict[str, int], ev_yield: dict[str, int]) -> dict[str, int]:
     """
