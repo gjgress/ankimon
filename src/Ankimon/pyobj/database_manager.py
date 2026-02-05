@@ -222,6 +222,22 @@ class AnkimonDB:
                 results.append(pokemon)
         return results
 
+    def has_pokemon_by_name(self, name: str) -> bool:
+        """
+        Efficiently checks if a pokemon with the given name exists in the collection.
+        Uses a direct SQL query instead of loading all pokemon data.
+        """
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        # We need to check deobfuscated data, so we iterate but stop at first match
+        cursor.execute("SELECT data FROM captured_pokemon")
+        name_lower = name.lower()
+        for row in cursor.fetchall():
+            pokemon = self._deobfuscate(row["data"])
+            if pokemon and pokemon.get('name', '').lower() == name_lower:
+                return True
+        return False
+
     def delete_pokemon(self, individual_id: str) -> bool:
         """Deletes a pokemon from the captured collection."""
         conn = self._get_connection()
