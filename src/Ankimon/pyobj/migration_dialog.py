@@ -24,7 +24,7 @@ class MigrationDialog(QDialog):
     """Blocking dialog for database migration."""
     
     def __init__(self, db, mypokemon_path, mainpokemon_path, items_path, badges_path, 
-                 parent=None, team_path=None, history_path=None, data_path=None):
+                 parent=None, team_path=None, history_path=None, data_path=None, rate_path=None):
         super().__init__(parent)
         self.db = db
         self.mypokemon_path = Path(mypokemon_path)
@@ -34,6 +34,7 @@ class MigrationDialog(QDialog):
         self.team_path = Path(team_path) if team_path else None
         self.history_path = Path(history_path) if history_path else None
         self.data_path = Path(data_path) if data_path else None
+        self.rate_path = Path(rate_path) if rate_path else None
         
         self.migration_successful = False
         self.migration_running = False
@@ -258,6 +259,18 @@ class MigrationDialog(QDialog):
                     stats["userdata"] = count
                 self._update_progress(95, f"✓ Migrated {stats['userdata']} settings")
 
+            # Step 8: Migrate rate_this
+            if self.rate_path and self.rate_path.is_file():
+                try:
+                    with open(self.rate_path, 'r', encoding='utf-8') as f:
+                        rate_data = json.load(f)
+                    
+                    if isinstance(rate_data, dict) and rate_data.get("rate_this"):
+                        self.db.set_user_data("rate_this", "true")
+                        self._log_area.append("  Migrated rate_this.json")
+                except:
+                    pass
+
             # Mark Phase 2 done
             conn = self.db._get_connection()
             conn.cursor().execute("INSERT OR REPLACE INTO metadata (key, value) VALUES ('migrated_phase2', 'true')")
@@ -318,7 +331,8 @@ class MigrationDialog(QDialog):
         files_to_backup = [
             self.mypokemon_path, self.mainpokemon_path, 
             self.items_path, self.badges_path,
-            self.team_path, self.history_path, self.data_path
+            self.team_path, self.history_path, self.data_path,
+            self.rate_path
         ]
         
         for file_path in files_to_backup:
@@ -344,7 +358,7 @@ class MigrationDialog(QDialog):
 
 def show_migration_dialog_if_needed(db, mypokemon_path, mainpokemon_path, 
                                      items_path, badges_path, parent=None,
-                                     team_path=None, history_path=None, data_path=None) -> bool:
+                                     team_path=None, history_path=None, data_path=None, rate_path=None) -> bool:
     """
     Shows the migration dialog if migration is needed.
     Blocks until migration is complete.
@@ -354,7 +368,7 @@ def show_migration_dialog_if_needed(db, mypokemon_path, mainpokemon_path,
     
     dialog = MigrationDialog(
         db, mypokemon_path, mainpokemon_path, items_path, badges_path, parent,
-        team_path, history_path, data_path
+        team_path, history_path, data_path, rate_path
     )
     dialog.exec()
     

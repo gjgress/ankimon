@@ -514,7 +514,7 @@ class AnkimonDB:
     def migrate_from_json(self, mypokemon_path: Path, mainpokemon_path: Path,
                           items_path: Path, badges_path: Path,
                           team_path: Path = None, history_path: Path = None,
-                          data_path: Path = None) -> Dict[str, int]:
+                          data_path: Path = None, rate_path: Path = None) -> Dict[str, int]:
         """
         Migrates data from JSON files to the database.
         Returns a dict with counts of migrated items.
@@ -640,6 +640,18 @@ class AnkimonDB:
                 self._log("info", f"Migrated {stats['userdata']} keys from data.json")
             except Exception as e:
                 self._log("error", f"Failed to migrate data.json: {e}")
+
+        # Step 8: Migrate rate_this.json
+        if rate_path and rate_path.is_file():
+            try:
+                with open(rate_path, 'r', encoding='utf-8') as f:
+                    rate_data = json.load(f)
+                
+                if isinstance(rate_data, dict) and rate_data.get("rate_this"):
+                    self.set_user_data("rate_this", "true")
+                    self._log("info", "Migrated rate_this.json")
+            except Exception as e:
+                self._log("error", f"Failed to migrate rate_this.json: {e}")
 
         # Mark Phase 2 as done
         cursor.execute("INSERT OR REPLACE INTO metadata (key, value) VALUES ('migrated_phase2', 'true')")

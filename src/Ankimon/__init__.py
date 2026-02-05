@@ -153,11 +153,12 @@ if not ankimon_db.is_migrated():
     from .pyobj.migration_dialog import show_migration_dialog_if_needed
     from .resources import (
         mypokemon_path, mainpokemon_path, itembag_path, badgebag_path,
-        team_pokemon_path, pokemon_history_path, user_path_credentials
+        team_pokemon_path, pokemon_history_path, user_path_credentials,
+        rate_path
     )
     show_migration_dialog_if_needed(
         ankimon_db, mypokemon_path, mainpokemon_path, itembag_path, badgebag_path, mw,
-        team_pokemon_path, pokemon_history_path, user_path_credentials
+        team_pokemon_path, pokemon_history_path, user_path_credentials, rate_path
     )
 
 if settings_obj.get("misc.developer_mode"):
