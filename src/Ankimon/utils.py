@@ -915,7 +915,7 @@ def substract_item_from_itembag(item: str, quantity: int=1) -> None:
             - Item not found in the item bag.
             - Item does not have a 'quantity' field.
             - Insufficient quantity to subtract.
-    """Removes a specified quantity of an item from the item bag using the database."""
+    """
     from .pyobj.database_manager import get_db
     db = get_db()
     
