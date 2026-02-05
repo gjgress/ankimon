@@ -42,7 +42,14 @@ class Pokedex(QDialog):
         self.frame.layout().addWidget(self.webview)
 
         # Remove the online/offline buttons since we’re focusing on the local Pokédex
-        self.load_html()
+        self._data_loaded = False
+
+    def showEvent(self, event):
+        """Load data only when the window is actually shown (lazy loading)."""
+        if not self._data_loaded:
+            self.load_html()
+            self._data_loaded = True
+        super().showEvent(event)
 
     def load_html(self):
         self.ankimon_tracker.get_ids_in_collection()
@@ -134,7 +141,3 @@ class Pokedex(QDialog):
         #print("POKEDEX_DEBUG: Final URL:", url.toString())
 
         self.webview.setUrl(url)
-
-    def showEvent(self, event):
-        self.load_html()
-        self.webview.reload()
