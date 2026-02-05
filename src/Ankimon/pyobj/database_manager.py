@@ -137,6 +137,31 @@ class AnkimonDB:
             )
         """)
 
+        # Table for team composition (replaces team.json)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS team (
+                slot_position INTEGER PRIMARY KEY,
+                individual_id TEXT NOT NULL
+            )
+        """)
+
+        # Table for released pokemon history (replaces pokemon_history.json)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS pokemon_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                individual_id TEXT UNIQUE,
+                data TEXT NOT NULL
+            )
+        """)
+
+        # Table for user data/credentials (replaces data.json)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS user_data (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        """)
+
         conn.commit()
         self._log("info", "AnkimonDB: Database schema initialized.")
 
@@ -375,91 +400,249 @@ class AnkimonDB:
                 results.append(badge)
         return results
 
+    # --- Team Operations ---
+
+    def save_team(self, team_list: List[Dict[str, Any]]):
+        """Saves the team composition. Replaces existing team."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        # clear existing team
+        cursor.execute("DELETE FROM team")
+        
+        for i, member in enumerate(team_list):
+            individual_id = member.get("individual_id")
+            if individual_id:
+                cursor.execute(
+                    "INSERT INTO team (slot_position, individual_id) VALUES (?, ?)",
+                    (i + 1, individual_id)
+                )
+        conn.commit()
+        return True
+
+    def get_team(self) -> List[Dict[str, Any]]:
+        """Retrieves the current team as a list of dicts with individual_id."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT individual_id FROM team ORDER BY slot_position ASC")
+        results = []
+        for row in cursor.fetchall():
+            results.append({"individual_id": row["individual_id"]})
+        return results
+
+    # --- Pokemon History Operations ---
+
+    def add_to_history(self, pokemon_data: Dict[str, Any]):
+        """Adds a released pokemon to history."""
+        # Ensure individual_id exists to avoid duplicates if possible, or just generate one
+        individual_id = pokemon_data.get("individual_id") or str(uuid.uuid4())
+        
+        obfuscated_data = self._obfuscate(pokemon_data)
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO pokemon_history (individual_id, data) VALUES (?, ?)",
+                (individual_id, obfuscated_data)
+            )
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            self._log("warning", f"Pokemon {individual_id} already in history.")
+            return False
+
+    def get_history(self) -> List[Dict[str, Any]]:
+        """Retrieves all released pokemon history."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT data FROM pokemon_history")
+        results = []
+        for row in cursor.fetchall():
+            data = self._deobfuscate(row["data"])
+            if data:
+                results.append(data)
+        return results
+
+    # --- User Data Operations ---
+
+    def set_user_data(self, key: str, value: Any):
+        """Sets a user data key-value pair."""
+        # Store as simple string if possible, or JSON string for complex objects
+        str_value = json.dumps(value) if isinstance(value, (dict, list, bool)) else str(value)
+        
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO user_data (key, value) VALUES (?, ?)",
+            (key, str_value)
+        )
+        conn.commit()
+        return True
+
+    def get_user_data(self, key: str, default: Any = None) -> Any:
+        """Retrieves user data by key."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM user_data WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        if row:
+            val = row["value"]
+            # Try to parse as JSON, fallback to string
+            try:
+                return json.loads(val)
+            except:
+                return val
+        return default
+
+    def get_all_user_data(self) -> Dict[str, Any]:
+        """Retrieves all user data as a dictionary."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT key, value FROM user_data")
+        result = {}
+        for row in cursor.fetchall():
+            key = row["key"]
+            val = row["value"]
+            try:
+                result[key] = json.loads(val)
+            except:
+                result[key] = val
+        return result
+
     # --- Migration from JSON Files ---
 
     def migrate_from_json(self, mypokemon_path: Path, mainpokemon_path: Path,
-                          items_path: Path, badges_path: Path) -> Dict[str, int]:
+                          items_path: Path, badges_path: Path,
+                          team_path: Path = None, history_path: Path = None,
+                          data_path: Path = None) -> Dict[str, int]:
         """
         Migrates data from JSON files to the database.
         Returns a dict with counts of migrated items.
         """
-        stats = {"pokemon": 0, "main": 0, "items": 0, "badges": 0}
+        stats = {"pokemon": 0, "main": 0, "items": 0, "badges": 0, 
+                 "team": 0, "history": 0, "userdata": 0}
 
         # Check if already migrated
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT value FROM metadata WHERE key = 'migrated'")
+        cursor.execute("SELECT value FROM metadata WHERE key = 'migrated_phase2'")
         if cursor.fetchone():
-            self._log("info", "Database already migrated. Skipping.")
+            self._log("info", "Database Phase 2 (full) already migrated. Checking Phase 1...")
+            # If Phase 2 is done, Phase 1 is definitely done.
             return stats
+        
+        # Check Phase 1 migration (captured, items, badges)
+        cursor.execute("SELECT value FROM metadata WHERE key = 'migrated'")
+        phase1_done = cursor.fetchone() is not None
 
-        # Migrate mypokemon.json
-        if mypokemon_path.is_file():
+        if not phase1_done:
+            # Migrate mypokemon.json
+            if mypokemon_path.is_file():
+                try:
+                    with open(mypokemon_path, 'r', encoding='utf-8') as f:
+                        pokemon_list = json.load(f)
+                    for pokemon in pokemon_list:
+                        if self.save_pokemon(pokemon):
+                            stats["pokemon"] += 1
+                    self._log("info", f"Migrated {stats['pokemon']} pokemon from mypokemon.json")
+                except Exception as e:
+                    self._log("error", f"Failed to migrate mypokemon.json: {e}")
+
+            # Migrate mainpokemon.json
+            if mainpokemon_path.is_file():
+                try:
+                    with open(mainpokemon_path, 'r', encoding='utf-8') as f:
+                        main_data = json.load(f)
+                    if main_data:
+                        # mainpokemon.json is a list with one item
+                        main_pokemon = main_data[0] if isinstance(main_data, list) else main_data
+                        if self.save_main_pokemon(main_pokemon):
+                            stats["main"] = 1
+                    self._log("info", "Migrated main pokemon from mainpokemon.json")
+                except Exception as e:
+                    self._log("error", f"Failed to migrate mainpokemon.json: {e}")
+
+            # Migrate items.json
+            if items_path.is_file():
+                try:
+                    with open(items_path, 'r', encoding='utf-8') as f:
+                        items_list = json.load(f)
+                    for item in items_list:
+                        # items.json uses 'item' key, but also support 'name' and 'item_name'
+                        item_name = item.get("item") or item.get("name") or item.get("item_name")
+                        quantity = item.get("quantity", item.get("amount", 1))
+                        if item_name:
+                            extra_data = {"type": item.get("type")} if item.get("type") else None
+                            self.save_item(item_name, quantity, extra_data)
+                            stats["items"] += 1
+                    self._log("info", f"Migrated {stats['items']} items from items.json")
+                except Exception as e:
+                    self._log("error", f"Failed to migrate items.json: {e}")
+
+            # Migrate badges.json - handles both [1, 2, 3] and [{"id": 1}, ...] formats
+            if badges_path.is_file():
+                try:
+                    with open(badges_path, 'r', encoding='utf-8') as f:
+                        badges_list = json.load(f)
+                    for badge in badges_list:
+                        # Handle both integer and dict formats
+                        if isinstance(badge, int):
+                            badge_id = str(badge)
+                            badge_data = {"id": badge}
+                        else:
+                            badge_id = str(badge.get("id", badge.get("badge_id", "")))
+                            badge_data = badge
+                        if badge_id:
+                            self.save_badge(badge_id, badge_data)
+                            stats["badges"] += 1
+                    self._log("info", f"Migrated {stats['badges']} badges from badges.json")
+                except Exception as e:
+                    self._log("error", f"Failed to migrate badges.json: {e}")
+            
+            # Mark Phase 1 as done
+            cursor.execute("INSERT OR REPLACE INTO metadata (key, value) VALUES ('migrated', 'true')")
+
+        # --- Phase 2 Migration (Team, History, UserData) ---
+        
+        # Migrate team.json
+        if team_path and team_path.is_file():
             try:
-                with open(mypokemon_path, 'r', encoding='utf-8') as f:
-                    pokemon_list = json.load(f)
-                for pokemon in pokemon_list:
-                    if self.save_pokemon(pokemon):
-                        stats["pokemon"] += 1
-                self._log("info", f"Migrated {stats['pokemon']} pokemon from mypokemon.json")
+                with open(team_path, 'r', encoding='utf-8') as f:
+                    team_list = json.load(f)
+                if self.save_team(team_list):
+                    stats["team"] = len(team_list)
+                self._log("info", f"Migrated {stats['team']} team members from team.json")
             except Exception as e:
-                self._log("error", f"Failed to migrate mypokemon.json: {e}")
+                self._log("error", f"Failed to migrate team.json: {e}")
 
-        # Migrate mainpokemon.json
-        if mainpokemon_path.is_file():
+        # Migrate pokemon_history.json
+        if history_path and history_path.is_file():
             try:
-                with open(mainpokemon_path, 'r', encoding='utf-8') as f:
-                    main_data = json.load(f)
-                if main_data:
-                    # mainpokemon.json is a list with one item
-                    main_pokemon = main_data[0] if isinstance(main_data, list) else main_data
-                    if self.save_main_pokemon(main_pokemon):
-                        stats["main"] = 1
-                self._log("info", "Migrated main pokemon from mainpokemon.json")
+                with open(history_path, 'r', encoding='utf-8') as f:
+                    history_list = json.load(f)
+                for pokemon in history_list:
+                    if self.add_to_history(pokemon):
+                        stats["history"] += 1
+                self._log("info", f"Migrated {stats['history']} history entries from pokemon_history.json")
             except Exception as e:
-                self._log("error", f"Failed to migrate mainpokemon.json: {e}")
+                self._log("error", f"Failed to migrate pokemon_history.json: {e}")
 
-        # Migrate items.json
-        if items_path.is_file():
+        # Migrate data.json (User Credentials)
+        if data_path and data_path.is_file():
             try:
-                with open(items_path, 'r', encoding='utf-8') as f:
-                    items_list = json.load(f)
-                for item in items_list:
-                    # items.json uses 'item' key, but also support 'name' and 'item_name'
-                    item_name = item.get("item") or item.get("name") or item.get("item_name")
-                    quantity = item.get("quantity", item.get("amount", 1))
-                    if item_name:
-                        extra_data = {"type": item.get("type")} if item.get("type") else None
-                        self.save_item(item_name, quantity, extra_data)
-                        stats["items"] += 1
-                self._log("info", f"Migrated {stats['items']} items from items.json")
+                with open(data_path, 'r', encoding='utf-8') as f:
+                    user_data = json.load(f)
+                count = 0
+                for key, value in user_data.items():
+                    self.set_user_data(key, value)
+                    count += 1
+                stats["userdata"] = count
+                self._log("info", f"Migrated {stats['userdata']} keys from data.json")
             except Exception as e:
-                self._log("error", f"Failed to migrate items.json: {e}")
+                self._log("error", f"Failed to migrate data.json: {e}")
 
-        # Migrate badges.json - handles both [1, 2, 3] and [{"id": 1}, ...] formats
-        if badges_path.is_file():
-            try:
-                with open(badges_path, 'r', encoding='utf-8') as f:
-                    badges_list = json.load(f)
-                for badge in badges_list:
-                    # Handle both integer and dict formats
-                    if isinstance(badge, int):
-                        badge_id = str(badge)
-                        badge_data = {"id": badge}
-                    else:
-                        badge_id = str(badge.get("id", badge.get("badge_id", "")))
-                        badge_data = badge
-                    if badge_id:
-                        self.save_badge(badge_id, badge_data)
-                        stats["badges"] += 1
-                self._log("info", f"Migrated {stats['badges']} badges from badges.json")
-            except Exception as e:
-                self._log("error", f"Failed to migrate badges.json: {e}")
-
-        # Mark as migrated
-        cursor.execute(
-            "INSERT OR REPLACE INTO metadata (key, value) VALUES ('migrated', 'true')"
-        )
+        # Mark Phase 2 as done
+        cursor.execute("INSERT OR REPLACE INTO metadata (key, value) VALUES ('migrated_phase2', 'true')")
         conn.commit()
 
         # --- Integrity Check ---
@@ -509,7 +692,15 @@ class AnkimonDB:
     # --- Utility ---
 
     def is_migrated(self) -> bool:
-        """Checks if JSON data has been migrated to the database."""
+        """Checks if ALL JSON data (Phase 1 & 2) has been migrated to the database."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM metadata WHERE key = 'migrated_phase2'")
+        row = cursor.fetchone()
+        return row is not None and row["value"] == "true"
+
+    def is_migrated_phase1(self) -> bool:
+        """Checks if Phase 1 data (pokemon, items, badges) has been migrated."""
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT value FROM metadata WHERE key = 'migrated'")

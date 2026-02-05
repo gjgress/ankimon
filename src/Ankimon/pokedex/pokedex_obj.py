@@ -93,22 +93,18 @@ class Pokedex(QDialog):
             total_caught_count = 0
 
         # Also count defeated Pokémon from released Pokémon history
+        # Also count defeated Pokémon from released Pokémon history
         released_count = 0  # Count released Pokémon (they were obtained before release)
-        if os.path.exists(pokemon_history_path):
+        history_list = mw.ankimon_db.get_history()
+        released_count = len(history_list)  # Each released Pokémon counts as +1 to "Seen"
+        for released_pokemon in history_list:
+            defeated = released_pokemon.get("pokemon_defeated", 0)
             try:
-                with open(pokemon_history_path, "r", encoding="utf-8") as file:
-                    history_list = json.load(file)
-                    released_count = len(history_list)  # Each released Pokémon counts as +1 to "Seen"
-                    for released_pokemon in history_list:
-                        defeated = released_pokemon.get("pokemon_defeated", 0)
-                        try:
-                            defeated_num = int(float(str(defeated)))
-                            defeated_count += defeated_num
-                            #print(f"POKEDEX_DEBUG: Released Pokemon ID {released_pokemon.get('id', 'unknown')}: pokemon_defeated = {defeated_num}")
-                        except (TypeError, ValueError):
-                            print(f"POKEDEX_DEBUG: Invalid pokemon_defeated for released ID {released_pokemon.get('id', 'unknown')}: {defeated}")
-            except (json.JSONDecodeError, Exception) as e:
-                print(f"POKEDEX_DEBUG: Error reading pokemon_history.json: {e}")
+                defeated_num = int(float(str(defeated)))
+                defeated_count += defeated_num
+                #print(f"POKEDEX_DEBUG: Released Pokemon ID {released_pokemon.get('id', 'unknown')}: pokemon_defeated = {defeated_num}")
+            except (TypeError, ValueError):
+                print(f"POKEDEX_DEBUG: Invalid pokemon_defeated for released ID {released_pokemon.get('id', 'unknown')}: {defeated}")
 
         #print("POKEDEX_DEBUG: Total defeated_count =", defeated_count)
         #print("POKEDEX_DEBUG: Shiny Pokémon IDs:", shiny_pokemon_ids)

@@ -58,9 +58,9 @@ class ApiKeyDialog(QDialog):
 
     def save_credentials(self, credentials):
         try:
-            # Save the new credentials as a single object
-            with open(user_path_credentials, "w", encoding="utf-8") as f:
-                json.dump(credentials, f, indent=4)
+            # Save the new credentials to the database
+            for key, value in credentials.items():
+                mw.ankimon_db.set_user_data(key, value)
             showInfo("Credentials saved successfully!")
         except Exception as e:
             showInfo(f"Error saving credentials: {e}")
@@ -72,13 +72,9 @@ def sync_data_to_leaderboard(data):
             return
 
         try:
-            # Load credentials from the file
-            with open(user_path_credentials, "r", encoding="utf-8") as f:
-                credentials = json.load(f)
-
-            # Extract username and api_key from the list of dictionaries
-            username = credentials.get("username")
-            api_key = credentials.get("api_key")
+            # Load credentials from the database
+            username = mw.ankimon_db.get_user_data("username")
+            api_key = mw.ankimon_db.get_user_data("api_key")
 
             # Validate credentials
             if not username or not api_key:
@@ -122,8 +118,7 @@ def get_unique_pokemon():
         return
 
     try:
-        db = mw.ankimon_db
-        pokemon_data = db.get_all_pokemon()
+        pokemon_data = mw.ankimon_db.get_all_pokemon()
         pokemon_info = {}  # Define as a dictionary
         id_list = []  # Initialize id_list as an empty list
 
@@ -149,8 +144,7 @@ def get_unique_pokemon():
 
 def get_total_pokemon():
     try:
-        db = mw.ankimon_db
-        pokemon_data = db.get_all_pokemon()
+        pokemon_data = mw.ankimon_db.get_all_pokemon()
         total_pokemon = len(pokemon_data)
         return total_pokemon
     except:
@@ -159,8 +153,7 @@ def get_total_pokemon():
 
 def get_shinies():
     try:
-        db = mw.ankimon_db
-        pokemon_data = db.get_all_pokemon()
+        pokemon_data = mw.ankimon_db.get_all_pokemon()
         shinies = 0
         for pokemon in pokemon_data:
             if pokemon.get("shiny") is True:

@@ -808,7 +808,6 @@ def PokemonFree(
     individual_id: str, name: str, logger: ShowInfoLogger, refresh_callback
 ):
     """Release a pokemon using database."""
-    db = mw.ankimon_db
     
     # Confirmation dialog
     reply = QMessageBox.question(
@@ -824,13 +823,13 @@ def PokemonFree(
         return
 
     # Check if the Pokémon is the main pokemon
-    main_pokemon = db.get_main_pokemon()
+    main_pokemon = mw.ankimon_db.get_main_pokemon()
     if main_pokemon and main_pokemon.get("individual_id") == individual_id:
         logger.log_and_showinfo("info", "You can't free your Main Pokémon!")
         return
 
     # Get the pokemon from database
-    pokemon_to_release = db.get_pokemon(individual_id)
+    pokemon_to_release = mw.ankimon_db.get_pokemon(individual_id)
     if not pokemon_to_release:
         logger.log_and_showinfo("info", "No Pokémon found with the specified ID.")
         refresh_callback()
@@ -847,22 +846,14 @@ def PokemonFree(
         "released_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    # Load existing history or create new (keep history in JSON for now as it's not migrated)
-    history_list = []
-    if pokemon_history_path.is_file():
-        try:
-            with open(pokemon_history_path, "r", encoding="utf-8") as file:
-                history_list = json.load(file)
-        except (json.JSONDecodeError, Exception):
-            history_list = []
-    
-    history_list.append(history_data)
-    
-    with open(pokemon_history_path, "w", encoding="utf-8") as file:
-        json.dump(history_list, file, indent=2)
+    # Add to history via database
+    if mw.ankimon_db.add_to_history(history_data):
+        pass  # Success
+    else:
+        logger.log_and_showinfo("error", f"Failed to add {name} to history.")
     
     # Delete from database
-    db.delete_pokemon(individual_id)
+    mw.ankimon_db.delete_pokemon(individual_id)
     logger.log_and_showinfo("info", f"{name.capitalize()} has been let free.")
 
     refresh_callback()
