@@ -132,14 +132,13 @@ class TrainerCard:
     def get_team(self):
         """Method to get the trainer's active team (team as a string)"""
         try:
-            with open(team_pokemon_path, "r", encoding="utf-8") as f:
-                team_data = json.load(f)
+            team_data = mw.ankimon_db.get_team()
+            
             if not team_data:
                 return "No Team Set"
 
-            # Load pokemon data from database
-            db = mw.ankimon_db
-            my_pokemon_data = db.get_all_pokemon()
+            # Load user pokemon data from database
+            my_pokemon_data = mw.ankimon_db.get_all_pokemon()
 
             # Create lookup dict
             pokemon_map = {str(p.get("individual_id")): p for p in my_pokemon_data}

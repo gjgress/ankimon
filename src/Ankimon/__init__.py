@@ -151,9 +151,13 @@ backup_manager = BackupManager(logger, settings_obj)
 # Migrate existing JSON data to SQLite database (one-time operation with dialog)
 if not ankimon_db.is_migrated():
     from .pyobj.migration_dialog import show_migration_dialog_if_needed
-    from .resources import mypokemon_path, mainpokemon_path, itembag_path, badgebag_path
+    from .resources import (
+        mypokemon_path, mainpokemon_path, itembag_path, badgebag_path,
+        team_pokemon_path, pokemon_history_path, user_path_credentials
+    )
     show_migration_dialog_if_needed(
-        ankimon_db, mypokemon_path, mainpokemon_path, itembag_path, badgebag_path, mw
+        ankimon_db, mypokemon_path, mainpokemon_path, itembag_path, badgebag_path, mw,
+        team_pokemon_path, pokemon_history_path, user_path_credentials
     )
 
 if settings_obj.get("misc.developer_mode"):
