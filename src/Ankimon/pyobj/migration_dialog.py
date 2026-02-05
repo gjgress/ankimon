@@ -268,9 +268,9 @@ class MigrationDialog(QDialog):
         self.start_button.setText("🔄 Retry")
     
     def _cleanup_json_files(self):
-        \"\"\"Move old JSON files to json/ subfolder after successful migration.\"\"\"
+        """Move old JSON files to json/ subfolder after successful migration."""
         # Move to user_files/json/ - ensures path change breaks any remaining JSON usage
-        backup_dir = self.mypokemon_path.parent / \"json\"
+        backup_dir = self.mypokemon_path.parent / "json"
         backup_dir.mkdir(exist_ok=True)
         
         files_to_backup = [
