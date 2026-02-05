@@ -148,16 +148,13 @@ except Exception as e:
 
 backup_manager = BackupManager(logger, settings_obj)
 
-# Migrate existing JSON data to SQLite database (one-time operation)
+# Migrate existing JSON data to SQLite database (one-time operation with dialog)
 if not ankimon_db.is_migrated():
-    try:
-        from .resources import mypokemon_path, mainpokemon_path, itembag_path, badgebag_path
-        migration_stats = ankimon_db.migrate_from_json(
-            mypokemon_path, mainpokemon_path, itembag_path, badgebag_path
-        )
-        logger.log("info", f"Database migration complete: {migration_stats}")
-    except Exception as e:
-        show_warning_with_traceback(parent=mw, exception=e, message="Database migration error:")
+    from .pyobj.migration_dialog import show_migration_dialog_if_needed
+    from .resources import mypokemon_path, mainpokemon_path, itembag_path, badgebag_path
+    show_migration_dialog_if_needed(
+        ankimon_db, mypokemon_path, mainpokemon_path, itembag_path, badgebag_path, mw
+    )
 
 if settings_obj.get("misc.developer_mode"):
     backup_manager.create_backup(manual=False)
