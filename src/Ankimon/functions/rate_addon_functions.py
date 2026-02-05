@@ -1,10 +1,3 @@
-import json
-
-from aqt.qt import (
-    QDialog,
-    QLabel,
-    QVBoxLayout,
-    )
 from PyQt6.QtCore import QUrl
 from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
@@ -13,9 +6,7 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     )
-
-import os
-
+    
 from ..resources import rate_path
 from ..texts import rate_addon_text_label, thankyou_message_text, dont_show_this_button_text
 from ..utils import give_item
@@ -24,28 +15,9 @@ from ..singletons import logger, test_window
 from aqt import mw
 
 def rate_this_addon():
-    # Lazy migration: Check if we have legacy file but no DB entry
+    # Only check database
     db_rate_this = mw.ankimon_db.get_user_data("rate_this")
     
-    if db_rate_this is None:
-        # Check for legacy file
-        if os.path.exists(rate_path):
-            try:
-                with open(rate_path, "r", encoding="utf-8") as file:
-                    rate_data = json.load(file)
-                    if isinstance(rate_data, dict) and rate_data.get("rate_this"):
-                        # Migrate to DB
-                        mw.ankimon_db.set_user_data("rate_this", "true")
-                        db_rate_this = "true"
-                
-                # Clean up legacy file
-                try:
-                    os.remove(rate_path)
-                except:
-                    pass
-            except:
-                pass
-
     # Check if already rated (using string comparison as DB stores text)
     if db_rate_this == "true":
         return
