@@ -135,6 +135,8 @@ mw.logger = logger
 mw.translator = translator
 mw.settings_obj = settings_obj
 
+from .gui_classes.overview_team import *
+
 # Log an startup message
 logger.log_and_showinfo('game', translator.translate("startup"))
 logger.log_and_showinfo('game', translator.translate("backing_up_files"))
