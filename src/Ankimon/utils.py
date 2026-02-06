@@ -4,6 +4,7 @@ import requests
 import json
 import random
 import csv
+import base64
 from typing import Optional
 
 from aqt import mw
@@ -961,6 +962,21 @@ def substract_item_from_itembag(item: str, quantity: int=1) -> None:
         with open(str(itembag_path), "w") as f:
             json.dump(items_list, f, indent=2)
         return
+
+def png_to_base64(path):
+    """Convert a PNG file to a base64 data URI for embedding into HTML.
+
+    Args:
+        path (str): absolute or relative filesystem path to a PNG file.
+
+    Returns:
+        str: a data URI string like ``data:image/png;base64,...`` or empty
+             string if the file does not exist.
+    """
+    if not os.path.exists(path):
+        return ""
+    with open(path, "rb") as f:
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode("utf-8")
 
 def close_anki():
     mw.close()
