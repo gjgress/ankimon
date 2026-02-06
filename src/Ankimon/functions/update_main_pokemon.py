@@ -39,7 +39,7 @@ MAIN_POKEMON_DEFAULT = {
         "spd": 0,
         "spe": 0
     },
-    "attacks": ["Transform"],
+    "attacks": ["Transform", "Tackle"],
     "base_experience": 101,
     "hp": 100,
     "growth_rate": "medium-fast",
