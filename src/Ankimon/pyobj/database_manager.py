@@ -162,6 +162,14 @@ class AnkimonDB:
             )
         """)
 
+        # Table for config settings (replaces config.obf)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS config (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        """)
+
         conn.commit()
         self._log("info", "AnkimonDB: Database schema initialized.")
 
@@ -524,6 +532,72 @@ class AnkimonDB:
             except:
                 result[key] = val
         return result
+
+    # --- Config Operations (replaces config.obf) ---
+
+    def set_config_value(self, key: str, value: Any):
+        """Sets a config key-value pair."""
+        # Store as JSON string to preserve type information
+        str_value = json.dumps(value) if isinstance(value, (dict, list, bool)) else str(value)
+        
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)",
+            (key, str_value)
+        )
+        conn.commit()
+        return True
+
+    def get_config_value(self, key: str, default: Any = None) -> Any:
+        """Retrieves a config value by key."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT value FROM config WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        if row:
+            val = row["value"]
+            # Try to parse as JSON, fallback to string
+            try:
+                return json.loads(val)
+            except:
+                return val
+        return default
+
+    def get_all_config(self) -> Dict[str, Any]:
+        """Retrieves all config settings as a dictionary."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT key, value FROM config")
+        result = {}
+        for row in cursor.fetchall():
+            key = row["key"]
+            val = row["value"]
+            try:
+                result[key] = json.loads(val)
+            except:
+                result[key] = val
+        return result
+
+    def save_all_config(self, config_dict: Dict[str, Any]):
+        """Bulk saves a config dictionary to the database."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        for key, value in config_dict.items():
+            str_value = json.dumps(value) if isinstance(value, (dict, list, bool)) else str(value)
+            cursor.execute(
+                "INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)",
+                (key, str_value)
+            )
+        conn.commit()
+        return True
+
+    def has_config(self) -> bool:
+        """Checks if config data exists in the database."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM config")
+        return cursor.fetchone()[0] > 0
 
     def get_stats(self) -> Dict[str, int]:
         """Returns a summary of database contents for synchronization/backup comparison."""

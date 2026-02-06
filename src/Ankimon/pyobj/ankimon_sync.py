@@ -364,8 +364,8 @@ class AnkimonDataSync:
 
     # Files to sync and their locations
     SYNC_FILES = {
-        "ankimon.db": "user_files",
-        "config.obf": "user_files"
+        "ankimon.db": "user_files"
+        # config.obf removed - now stored in ankimon.db
     }
 
     def __init__(self, addon_name: str = None):

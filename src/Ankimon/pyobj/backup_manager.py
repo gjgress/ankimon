@@ -19,7 +19,7 @@ class BackupManager:
     _OBFUSCATION_KEY = "H0tP-!s-N0t-4-C@tG!rL_v2"
     FILES_TO_BACKUP = [
         "ankimon.db",
-        "config.obf",
+        # config.obf removed - now stored in ankimon.db
     ]
     MAX_BACKUPS = 5
     MAX_BACKUP_AGE_DAYS = 14
