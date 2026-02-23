@@ -787,22 +787,24 @@ Reviewer._shortcutKeys = wrap(Reviewer._shortcutKeys, _shortcutKeys_wrap, 'aroun
 
 def _get_cards_per_round() -> int:
     cards_per_round = settings_obj.get("battle.cards_per_round")
-    
+
     if isinstance(cards_per_round, int):
-        logger.log("info", f"_get_cards_per_round: Returning integer value {cards_per_round}")
         return cards_per_round
-    
-    # If it's a string in "number-number" format, return random value between bounds
-    if isinstance(cards_per_round, str) and "-" in cards_per_round:
+
+    if isinstance(cards_per_round, str):
         try:
-            min_val, max_val = map(int, cards_per_round.split("-"))
-            random_value = random.randint(min_val, max_val)
-            return random_value
-        except (ValueError, IndexError) as e:
+            if "-" in cards_per_round:
+                min_val, max_val = map(int, cards_per_round.split("-"))
+                if min_val > max_val:
+                    min_val, max_val = max_val, min_val
+                return random.randint(min_val, max_val)
+            return int(cards_per_round)
+        except ValueError:
+            logger.log("warning", f"Invalid value for cards_per_round: '{cards_per_round}'. Defaulting to 2.")
             return 2
-    
-    fallback_value = int(cards_per_round) if cards_per_round else 2
-    return fallback_value
+
+    logger.log("warning", f"Unexpected type for cards_per_round: {type(cards_per_round)}. Defaulting to 2.")
+    return 2
 
 if reviewer_buttons is True:
     #// Choosing styling for review other buttons in reviewer bottombar based on chosen style
