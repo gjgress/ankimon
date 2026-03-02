@@ -288,6 +288,7 @@ class EvoWindow(QWidget):
                     for pokemon_data in captured_pokemon_data:
                         if pokemon_data['individual_id'] != individual_id:
                             continue
+
                         pokemon = pokemon_data
                         pokemon["name"] = evo_name.capitalize()
                         pokemon["id"] = evo_id
@@ -349,7 +350,7 @@ class EvoWindow(QWidget):
                             mypokemondata = json.load(output_file)
                             # Find and replace the specified Pokémon's data in mypokemondata
                             for index, pokemon_data in enumerate(mypokemondata):
-                                if pokemon_data["individual_id"] == individual_id:
+                                if pokemon["individual_id"] == individual_id:
                                     mypokemondata[index] = pokemon
                                     break
                                     # Save the modified data to the output JSON file
@@ -364,23 +365,24 @@ class EvoWindow(QWidget):
                             self.reviewer_obj.main_pokemon = main_pokemon_obj
                         else:
                             self.logger("warning", self.translator.translate("missing_mainpokemon_data"))
+
+                    # Update UI as before
+                    class Container(object):
+                        pass
+                    reviewer = Container()
+                    reviewer.web = mw.reviewer.web
+                    self.reviewer_obj.update_life_bar(reviewer, 0, 0)
+                    if self.test_window.isVisible() is True:
+                        self.test_window.display_first_encounter()
+
+                    self.display_evo_complete(prevo_id, evo_id)
+                    check = check_for_badge(self.achievements, 16)
+                    if check is False:
+                        receive_badge(16, self.achievements)
+
         except Exception as e:
             show_warning_with_traceback(parent=mw, exception=e, message=f"Error occured in evolving pokemon")
             self.logger.log(f"{e}")
-
-        # Update UI as before
-        class Container(object):
-            pass
-        reviewer = Container()
-        reviewer.web = mw.reviewer.web
-        self.reviewer_obj.update_life_bar(reviewer, 0, 0)
-        if self.test_window.isVisible() is True:
-            self.test_window.display_first_encounter()
-
-        self.display_evo_complete(prevo_id, evo_id)
-        check = check_for_badge(self.achievements, 16)
-        if check is False:
-            receive_badge(16, self.achievements)
 
     def cancel_evolution(self, individual_id, prevo_name):
         try:
