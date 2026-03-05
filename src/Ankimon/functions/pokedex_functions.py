@@ -311,13 +311,22 @@ def find_details_move(move_name: str):
                 move = moves_data.get("tackle")
                 showWarning(f"Move '{move_name}' not found. Returning default move 'tackle'.")
                 return move
+                
+    except FileNotFoundError as f:
+        show_warning_with_traceback(
+            parent=mw,
+            exception=f,
+            message="The is an issue finding moves.json."
+        )
+        return None
+        
     except Exception as e:
         show_warning_with_traceback(
             parent=mw,
             exception=e,
-            message=f"There is an issue in find_details_move for move: {move_name}",
+            message=f"There is an issue in find_details_move for move: {move_name}. Returning to default move 'tackle'."
         )
-        return None
+        return moves_data.get("tackle")
 
 
 def get_pokemon_evolution_data_all(pokemon_id, file_path=poke_evo_path):
