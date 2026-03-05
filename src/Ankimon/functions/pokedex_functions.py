@@ -290,7 +290,18 @@ def get_all_pokemon_moves(pk_name, level):
     return attacks
 
 
-def find_details_move(move_name: str):
+def find_details_move(move_name: str) -> dict:
+    """
+    Retrieve the move details for the given move.
+    Due to the JSON objects structure it attempts various normalization steps to improve matching.
+
+    Args:
+        move_name (str): The name of the move to search for.
+
+    Returns:
+        dict: A dictionary containing information about the given move if found. If not it tries falling back to 
+        either tackle (preferred) or None.
+    """
     try:
         with open(moves_file_path, "r", encoding="utf-8") as json_file:
             moves_data = json.load(json_file)
