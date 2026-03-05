@@ -792,19 +792,8 @@ def _get_cards_per_round() -> int:
         return cards_per_round
 
     if isinstance(cards_per_round, str):
-        try:
-            if "-" in cards_per_round:
-                min_val, max_val = map(int, cards_per_round.split("-"))
-                if min_val > max_val:
-                    min_val, max_val = max_val, min_val
-                return random.randint(min_val, max_val)
-            return int(cards_per_round)
-        except ValueError:
-            logger.log("warning", f"Invalid value for cards_per_round: '{cards_per_round}'. Defaulting to 2.")
-            return 2
-
-    logger.log("warning", f"Unexpected type for cards_per_round: {type(cards_per_round)}. Defaulting to 2.")
-    return 2
+        min_val, max_val = map(int, cards_per_round.split("-"))
+        return random.randint(min_val, max_val)
 
 if reviewer_buttons is True:
     #// Choosing styling for review other buttons in reviewer bottombar based on chosen style
