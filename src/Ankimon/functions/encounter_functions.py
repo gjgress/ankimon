@@ -41,6 +41,7 @@ from ..singletons import (
     trainer_card,
     settings_obj,
     translator,
+    pokemon_pc
 )
 from ..resources import (
     pokemon_species_baby_path,
@@ -510,8 +511,20 @@ def save_main_pokemon_progress(
             mainpkmndata["is_favorite"] = main_pokemon.is_favorite
     mypkmndata = mainpkmndata
     mainpkmndata = [mainpkmndata]
-    
-    #Save the caught Pokémon's data to a JSON file
+
+    #Save my Pokemon Progess
+    with open(mypokemon_path, "r", encoding="utf-8") as myPkmnFile:
+        mypokemondata = json.load(myPkmnFile)
+
+    for index, pokemon_data in enumerate(mypokemondata):
+        if pokemon_data["individual_id"] == mypkmndata["individual_id"]:
+            mypokemondata[index] = mypkmndata
+            break
+
+    with open(mypokemon_path, "w", encoding="utf-8") as myPkmnFile:
+        json.dump(mypokemondata, myPkmnFile, indent=2)
+
+    #Save main Pokemon Progess
     with open(str(mainpokemon_path), "w") as json_file:
         json.dump(mainpkmndata, json_file, indent=2)
 
@@ -660,6 +673,8 @@ def catch_pokemon(
     except Exception as e:
         if logger is not None:
             show_warning_with_traceback(parent=mw, exception=e, message="Error while catching Pokemon:") # Display a message when the Pokémon is caught
+
+    pokemon_pc.refresh_pokemon_grid()
 
 def handle_enemy_faint(
         main_pokemon: PokemonObject,
