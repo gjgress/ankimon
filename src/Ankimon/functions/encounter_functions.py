@@ -608,8 +608,13 @@ def kill_pokemon(
     if xp_share_individual_id:
         exp = xp_share_gain_exp(logger, settings_obj, evo_window, main_pokemon.id, exp, xp_share_individual_id)
     
+    msg = ""
+
     if main_pokemon.held_item == "lucky-egg":
         exp = int(exp * 1.5)
+        msg += f"{main_pokemon.name}'s Lucky Egg boosts its XP gained!\n"
+
+    logger.log("info", msg)
 
     # Save main Pokémon's progress
     main_pokemon.level = save_main_pokemon_progress(
