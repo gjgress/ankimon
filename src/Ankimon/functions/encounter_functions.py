@@ -103,6 +103,8 @@ def modify_percentages(total_reviews, daily_average, player_level):
         percentages[tier] = (percentages[tier] / total) * 100 if total > 0 else 0
     # this function gets called maybe 10 times per battle round, which is concerning.
     # it could be rewritten to run ONLY when the change in review ratio is detected.
+
+    mw.logger.log("info", f"Modified encounter percentages: {percentages}")
     return percentages
 
 
@@ -163,8 +165,10 @@ def choose_random_pkmn_from_tier():
     try:
         tier = get_tier(total_reviews, trainer_level)
         id = get_random_pokemon_in_tier(tier)
+        mw.logger.game_log(f"Selected tier: {tier}, Resulting Pokemon ID: {id}")
         return id, tier
     except Exception as e:
+        mw.logger.log("error", f"Error in choose_random_pkmn_from_tier: {str(e)}")
         show_warning_with_traceback(parent=mw, exception=e, message="Error occurred")
 
 def check_min_generate_level(name):
@@ -408,8 +412,10 @@ def save_main_pokemon_progress(
             with open(mainpokemon_path, "r", encoding="utf-8") as json_file:
                 main_pokemon_data = json.load(json_file)
         else:
+            mw.logger.log("warning", f"Main pokemon data file not found at {mainpokemon_path}")
             showWarning(translator.translate("missing_mainpokemon_data"))
     except Exception as e:
+        mw.logger.log("error", f"Error loading main pokemon data: {str(e)}")
         show_warning_with_traceback(parent=mw, exception=e, message="Error loading main pokemon data.")
         return
     while int(find_experience_for_level(main_pokemon.growth_rate, main_pokemon.level, settings_obj.get("misc.remove_level_cap"))) < int(main_pokemon.xp) and (level_cap is None or main_pokemon.level < level_cap):
@@ -421,6 +427,7 @@ def save_main_pokemon_progress(
         if check is False:
             achievements = receive_badge(5,achievements)
         try:
+            mw.logger.game_log(f"Level Up: {msg}")
             tooltipWithColour(msg, color)
         except:
             pass
@@ -512,24 +519,28 @@ def save_main_pokemon_progress(
     mypkmndata = mainpkmndata
     mainpkmndata = [mainpkmndata]
     # Save the caught Pokémon's data to a JSON file
-    with open(str(mainpokemon_path), "w") as json_file:
-        json.dump(mainpkmndata, json_file, indent=2)
+    try:
+        with open(str(mainpokemon_path), "w") as json_file:
+            json.dump(mainpkmndata, json_file, indent=2)
 
-    # Load data from the output JSON file
-    with open(str(mypokemon_path), "r", encoding="utf-8") as output_file:
-        mypokemondata = json.load(output_file)
+        # Load data from the output JSON file
+        with open(str(mypokemon_path), "r", encoding="utf-8") as output_file:
+            mypokemondata = json.load(output_file)
 
-        # Find and replace the specified Pokémon's data in mypokemondata
-        for index, pokemon_data in enumerate(mypokemondata):
-            if pokemon_data.get("individual_id") == main_pokemon.individual_id:  # Match by individual_id
-                mypokemondata[index] = mypkmndata  # Replace with new data
-                break
+            # Find and replace the specified Pokémon's data in mypokemondata
+            for index, pokemon_data in enumerate(mypokemondata):
+                if pokemon_data.get("individual_id") == main_pokemon.individual_id:  # Match by individual_id
+                    mypokemondata[index] = mypkmndata  # Replace with new data
+                    break
 
-        # Save the modified data to the output JSON file
-        with open(str(mypokemon_path), "w") as output_file:
-            json.dump(mypokemondata, output_file, indent=2)
+            # Save the modified data to the output JSON file
+            with open(str(mypokemon_path), "w") as output_file:
+                json.dump(mypokemondata, output_file, indent=2)
 
-    sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path)
+        sync_mainpokemon_to_mypokemon(main_pokemon, mainpokemon_path, mypokemon_path)
+        mw.logger.log("info", f"Successfully saved progress for {main_pokemon.name}")
+    except Exception as e:
+        mw.logger.log("error", f"Failed to save pokemon progress: {str(e)}")
 
     return main_pokemon.level
 

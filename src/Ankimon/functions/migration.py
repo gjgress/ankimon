@@ -1,4 +1,5 @@
 import json
+from aqt import mw
 from aqt.utils import showWarning
 from ..resources import mainpokemon_path, mypokemon_path
 
@@ -45,7 +46,9 @@ def migrate_starter_individual_id():
     This function is now triggered only when the main pokemon is changed and
     is a starter or an evolution of a starter.
     """
+    mw.logger.log("info", "Starting starter individual_id migration check...")
     if not mainpokemon_path.is_file() or not mypokemon_path.is_file():
+        mw.logger.log("info", "Migration skipped: One or more data files missing.")
         return
 
     try:
@@ -53,7 +56,8 @@ def migrate_starter_individual_id():
             main_pokemon_data = json.load(f)
         with open(mypokemon_path, "r", encoding="utf-8") as f:
             my_pokemon_data = json.load(f)
-    except (json.JSONDecodeError, IOError):
+    except (json.JSONDecodeError, IOError) as e:
+        mw.logger.log("error", f"Migration failed: Error reading data files: {str(e)}")
         # Files might be empty or corrupted, so we can't proceed.
         return
 
@@ -70,6 +74,7 @@ def migrate_starter_individual_id():
 
     # Check if the individual_id from mainpokemon exists in mypokemon
     if any(p.get("individual_id") == main_individual_id for p in my_pokemon_data):
+        mw.logger.log("info", "Migration skipped: individual_id already synchronized.")
         # The ID already matches, so no migration is needed.
         return
 
@@ -79,6 +84,7 @@ def migrate_starter_individual_id():
         all_starter_evolution_ids.extend(get_starter_evolution_ids(starter_id))
 
     if main_pokemon_id not in all_starter_evolution_ids:
+        mw.logger.log("info", f"Migration skipped: Main Pokemon (ID: {main_pokemon_id}) is not a starter or evolution.")
         # The main Pokemon is not a starter or its evolution, so we don't apply the fix.
         return
 
@@ -96,6 +102,7 @@ def migrate_starter_individual_id():
 
     if potential_match:
         # We found the starter. Now, update its individual_id.
+        mw.logger.log("info", f"Starter match found in mypokemon.json. Syncing individual_id: {main_individual_id}")
         showWarning(
             "Ankimon has detected and fixed an issue with your starter Pokémon's data. "
             "Your starter's unique ID has been synchronized. No action is needed from you."
@@ -105,8 +112,12 @@ def migrate_starter_individual_id():
         try:
             with open(mypokemon_path, "w", encoding="utf-8") as f:
                 json.dump(my_pokemon_data, f, indent=4)
-        except IOError:
+            mw.logger.log("info", "Starter migration successful: mypokemon.json updated.")
+        except IOError as e:
+            mw.logger.log("error", f"Starter migration failed: Could not write mypokemon.json: {str(e)}")
             showWarning(
                 "Ankimon could not save the fix for your starter Pokémon. "
                 "Please check file permissions for the Ankimon addon folder."
             )
+    else:
+        mw.logger.log("warning", "Migration failed: No matching starter found in mypokemon.json despite ID check.")
