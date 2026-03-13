@@ -27,12 +27,14 @@ def _path_format(back: bool, id: int, gif: bool, shiny: bool, female: bool):
 def _try_gendered(back: bool, id: int, gif: bool, shiny: bool, female: bool):
     path = _path_format(back, id, gif, shiny, female)
     if os.path.exists(path):
+        mw.logger.log("debug", f"Sprite found: {path}")
         return path
 
     if female:
         # requested gendered gif but not found, try non-gendered
         path = _path_format(back, id, gif, shiny, False)
         if os.path.exists(path):
+            mw.logger.log("debug", f"Sprite found (gender fallback): {path}")
             return path
 
 
@@ -48,6 +50,7 @@ def _try_back(back: bool, id: int, gif: bool, shiny: bool, female: bool):
         if not gif:
             path = f"sprites/missing_back/{id}.png"
             if os.path.exists(path):
+                mw.logger.log("debug", f"Sprite found (back fallback): {path}")
                 return path
 
         path = _try_gendered(False, id, gif, shiny, False)

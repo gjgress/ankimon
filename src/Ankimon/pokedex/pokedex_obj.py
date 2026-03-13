@@ -63,12 +63,12 @@ class Pokedex(QDialog):
             try:
                 with open(mypokemon_path, "r", encoding="utf-8") as file:
                     pokemon_list = json.load(file)
-                    print("POKEDEX_DEBUG: Loaded pokemon_list!")
+                    mw.logger.log("info", "POKEDEX_DEBUG: Loaded pokemon_list!")
 
             except json.JSONDecodeError:
-                print("POKEDEX_DEBUG: Invalid JSON in mypokemon.json at", mypokemon_path)
+                mw.logger.log("error", f"POKEDEX_DEBUG: Invalid JSON in mypokemon.json at {mypokemon_path}")
             except Exception as e:
-                print("POKEDEX_DEBUG: Error reading mypokemon.json at", mypokemon_path, ":", str(e))
+                mw.logger.log("error", f"POKEDEX_DEBUG: Error reading mypokemon.json at {mypokemon_path}: {str(e)}")
 
         if pokemon_list:
             for pokemon in pokemon_list:
@@ -78,9 +78,9 @@ class Pokedex(QDialog):
                     defeated_count += defeated_num
                     #print(f"POKEDEX_DEBUG: Pokemon ID {pokemon.get('id', 'unknown')}: pokemon_defeated = {defeated_num}")
                 except (TypeError, ValueError):
-                    print(f"POKEDEX_DEBUG: Invalid pokemon_defeated for ID {pokemon.get('id', 'unknown')}: {defeated}")
+                    mw.logger.log("warning", f"POKEDEX_DEBUG: Invalid pokemon_defeated for ID {pokemon.get('id', 'unknown')}: {defeated}")
         else:
-            print("POKEDEX_DEBUG: No valid mypokemon.json found")
+            mw.logger.log("warning", "POKEDEX_DEBUG: No valid mypokemon.json found")
 
         #print("POKEDEX_DEBUG: Total defeated_count =", defeated_count)
 
