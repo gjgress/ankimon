@@ -787,7 +787,7 @@ Reviewer._shortcutKeys = wrap(Reviewer._shortcutKeys, _shortcutKeys_wrap, 'aroun
 
 def _get_cards_per_round() -> int:
     cards_per_round = settings_obj.get("battle.cards_per_round")
-    
+
     if isinstance(cards_per_round, int):
         return cards_per_round
     
