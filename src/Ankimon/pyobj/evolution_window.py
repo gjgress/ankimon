@@ -286,7 +286,7 @@ class EvoWindow(QWidget):
                 if captured_pokemon_data:
                     # Match individual_id in myPokemon file via linear search
                     for pokemon_data in captured_pokemon_data:
-                        if pokemon_data['individual_id'] != individual_id:
+                        if pokemon_data.get("individual_id") != individual_id:
                             continue
 
                         pokemon = pokemon_data
@@ -351,7 +351,7 @@ class EvoWindow(QWidget):
                             mypokemondata = json.load(output_file)
                             # Find and replace the specified Pokémon's data in mypokemondata
                             for index, pokemon_data in enumerate(mypokemondata):
-                                 if pokemon_data["individual_id"] == individual_id:
+                                 if pokemon_data.get("individual_id") == individual_id:
                                     mypokemondata[index] = pokemon
                                     break
                                     # Save the modified data to the output JSON file

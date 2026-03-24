@@ -508,7 +508,6 @@ def save_main_pokemon_progress(
             mainpkmndata["tier"] = main_pokemon.tier
         if hasattr(main_pokemon, "is_favorite"):
             mainpkmndata["is_favorite"] = main_pokemon.is_favorite
-    mypkmndata = mainpkmndata
     mainpkmndata = [mainpkmndata]
 
     #Save my Pokemon Progess
@@ -516,8 +515,8 @@ def save_main_pokemon_progress(
         mypokemondata = json.load(myPkmnFile)
 
     for index, pokemon_data in enumerate(mypokemondata):
-        if pokemon_data["individual_id"] == mypkmndata["individual_id"]:
-            mypokemondata[index] = mypkmndata
+        if pokemon_data.get("individual_id") == mainpkmndata[0].get("individual_id"):
+            mypokemondata[index] = mainpkmndata[0]
             break
 
     with open(mypokemon_path, "w", encoding="utf-8") as myPkmnFile:
