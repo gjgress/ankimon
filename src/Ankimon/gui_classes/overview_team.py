@@ -31,7 +31,7 @@ from typing import Any
 from aqt import gui_hooks, mw
 
 from ..functions.sprite_functions import get_sprite_path
-from ..resources import mypokemon_path, pokeball_path, team_pokemon_path
+from ..resources import mypokemon_path, icon_path as pokeball_path, team_pokemon_path
 from ..utils import png_to_base64
 
 # ---------------------------------------------------------------------------
