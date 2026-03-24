@@ -26,7 +26,7 @@ def test_ankimon_initialization(qapp):
     real PyQt6 widgets to be instantiated without crashing.
     """
     import aqt
-    from PyQt6.QtWidgets import QMainWindow, QWidget
+    from PyQt6.QtWidgets import QMainWindow
 
     # Instead of a MagicMock which Qt rejects for parent classes, use a real QWidget
     # as the mock main window.
@@ -36,8 +36,18 @@ def test_ankimon_initialization(qapp):
             self.pm = MagicMock()
             self.pm.name = "test_profile"
             self.form = MagicMock()
+            self.addonManager = MagicMock()
+
+        def _increase_background_ops(self):
+            pass
+
+        def _decrease_background_ops(self):
+            pass
 
     aqt.mw = MockMainWindow()
+
+    # Mocking QThreadPool and query execution because we don't want background threads to actually run in the test
+    aqt.mw.taskman = MagicMock()
 
     # Track errors
     errors = []
@@ -55,8 +65,12 @@ def test_ankimon_initialization(qapp):
     package = Ankimon
     prefix = package.__name__ + "."
 
+    # The poke_engine/data/scripts are standalone scripts meant to be run directly by
+    # node or python individually rather than imported as python packages in Anki.
+    ignore_modules = ["pypresence", "Ankimon.poke_engine.data.scripts", "Ankimon.poke_engine.data.mods"]
+
     for importer, modname, ispkg in pkgutil.walk_packages(package.__path__, prefix):
-        if "pypresence" in modname:
+        if any(ignored in modname for ignored in ignore_modules):
             continue
 
         try:
