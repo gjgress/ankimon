@@ -3,7 +3,7 @@ import importlib
 import sys
 import types
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -15,21 +15,38 @@ actual_learnset_path = _src / "Ankimon" / "user_files" / "data_files" / "learnse
 with open(actual_learnset_path, "r", encoding="utf-8") as file:
     LEARNSETS_DATA = json.load(file)
 
-# Stub resources module with the actual learnset_path
-_resources = types.ModuleType("Ankimon.resources")
-_resources.learnset_path = str(actual_learnset_path)
-sys.modules["Ankimon.resources"] = _resources
+# Mock modules
+mock_aqt = MagicMock()
+sys.modules['aqt'] = mock_aqt
+sys.modules['aqt.utils'] = mock_aqt.utils
+sys.modules['Anki'] = MagicMock()
+sys.modules['aqt.qt'] = MagicMock()
 
-# Now load learnset_retrieval from its file
+class MockResources:
+    learnset_path = str(actual_learnset_path)
+    def __getattr__(self, name):
+        return "dummy"
+
+sys.modules["Ankimon.resources"] = MockResources()
+
+# Also mock singletons if needed
+sys.modules["Ankimon.singletons"] = MagicMock()
+sys.modules["Ankimon.utils"] = MagicMock()
+mock_pyobj = MagicMock()
+sys.modules["Ankimon.pyobj"] = mock_pyobj
+sys.modules["Ankimon.pyobj.error_handler"] = mock_pyobj.error_handler
+sys.modules["Ankimon.pyobj.QProgressIndicator"] = MagicMock()
+
+# Now load pokedex_functions from its file
 _spec = importlib.util.spec_from_file_location(
-    "Ankimon.functions.learnset_retrieval",
-    _src / "Ankimon" / "functions" / "learnset_retrieval.py",
+    "Ankimon.functions.pokedex_functions",
+    _src / "Ankimon" / "functions" / "pokedex_functions.py",
 )
-_lr = importlib.util.module_from_spec(_spec)
-sys.modules[_spec.name] = _lr
-_spec.loader.exec_module(_lr)
+_pf = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = _pf
+_spec.loader.exec_module(_pf)
 
-from Ankimon.functions.learnset_retrieval import _get_learnset_moves
+from Ankimon.functions.pokedex_functions import get_all_pokemon_moves
 
 def test_all_pokemon_learnsets_are_valid():
     """
@@ -38,20 +55,13 @@ def test_all_pokemon_learnsets_are_valid():
     """
     pokemon_names = list(LEARNSETS_DATA.keys())
 
-    # We patch json.load using the absolute path to prevent it resolving Ankimon and importing aqt
-    # Or even better, we patch builtins.open but since that was slow with mock_open, we patch json.load directly on the module object
-
-    # Actually, the simplest way is to patch json.load specifically in that module
-    with patch.object(_lr.json, 'load', return_value=LEARNSETS_DATA):
-        # Also need to mock open to return something dummy so json.load isn't passed a real file object
+    with patch.object(_pf.json, 'load', return_value=LEARNSETS_DATA):
         with patch("builtins.open"):
-            # Iterate over all Pokemon and all generations to ensure no exceptions are raised
             for pokemon_name in pokemon_names:
-                for gen in range(1, 10):
-                    try:
-                        # Level 100 ensures we try to parse as many valid levels as possible
-                        _get_learnset_moves(pokemon_name, 100, generation=gen)
-                    except ValueError as e:
-                        pytest.fail(f"ValueError raised for pokemon {pokemon_name} in gen {gen}: {e}")
-                    except Exception as e:
-                        pytest.fail(f"Unexpected exception for pokemon {pokemon_name} in gen {gen}: {e}")
+                try:
+                    # Level 100 ensures we try to parse as many valid levels as possible
+                    get_all_pokemon_moves(pokemon_name, 100)
+                except ValueError as e:
+                    pytest.fail(f"ValueError raised for pokemon {pokemon_name}: {e}")
+                except Exception as e:
+                    pytest.fail(f"Unexpected exception for pokemon {pokemon_name}: {e}")
