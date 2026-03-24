@@ -137,7 +137,7 @@ mw.settings_obj = settings_obj
 
 from .gui_classes import overview_team
 
-overview_team.init_hooks()
+# overview_team.init_hooks() was removed because gui_hooks registration happens at import time in overview_team.py
 
 # Log an startup message
 logger.log_and_showinfo('game', translator.translate("startup"))
