@@ -706,6 +706,7 @@ def catch_pokemon(
     if ankimon_tracker_obj.caught > 1:
         if settings_obj.get('gui.pop_up_dialog_message_on_defeat') is True:
             logger.log_and_showinfo("info",translator.translate("already_caught_pokemon")) # Display a message when the Pokémon is caught
+            return
 
     # If we arrive here, this means that ankimon_tracker_obj.caught == 1
     if nickname is not None or not nickname:
