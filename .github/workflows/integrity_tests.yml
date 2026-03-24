@@ -34,4 +34,4 @@ jobs:
 
     - name: Run tests with xvfb
       run: |
-        xvfb-run -a pytest tests/
+        xvfb-run -a env QT_QPA_PLATFORM=offscreen pytest tests/
