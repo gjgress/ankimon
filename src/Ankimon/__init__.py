@@ -82,6 +82,7 @@ from .functions.encounter_functions import (
     handle_enemy_faint,
     handle_main_pokemon_faint
 )
+from .functions.battle_handler import on_review_card
 from .gui_entities import UpdateNotificationWindow, CheckFiles
 from .pyobj.download_sprites import show_agreement_and_download_dialog
 from .pyobj.help_window import HelpWindow
@@ -89,8 +90,6 @@ from .pyobj.backup_files import run_backup
 from .pyobj.backup_manager import BackupManager
 from .pyobj.ankimon_sync import setup_ankimon_sync_hooks, check_and_sync_pokemon_data
 from .pyobj.tip_of_the_day import show_tip_of_the_day
-from .classes.choose_move_dialog import MoveSelectionDialog
-from .poke_engine.ankimon_hooks_to_poke_engine import simulate_battle_with_poke_engine
 from .singletons import (
     reviewer_obj,
     logger,
@@ -122,12 +121,6 @@ from .singletons import (
 
 from .pyobj.pokemon_trade import check_and_award_monthly_pokemon
 
-from .functions.battle_functions import (
-    update_pokemon_battle_status,
-    validate_pokemon_status,
-    process_battle_data,
-)
-
 from .pyobj.error_handler import show_warning_with_traceback
 
 mw.settings_ankimon = settings_window
@@ -153,14 +146,6 @@ backup_manager = BackupManager(logger, settings_obj)
 
 if settings_obj.get("misc.developer_mode"):
     backup_manager.create_backup(manual=False)
-
-# Initialize mutator and mutator_full_reset
-global new_state
-global mutator_full_reset
-global user_hp_after
-global opponent_hp_after
-global dmg_from_enemy_move
-global dmg_from_user_move
 
 # Initialize collected IDs cache
 # Call this during addon initialization
@@ -299,7 +284,6 @@ def answerCard_before(filter, reviewer, card):
 
 def answerCard_after(rev, card, ease):
     maxEase = rev.mw.col.sched.answerButtons(card)
-    aw = aqt.mw.app.activeWindow() or aqt.mw
     # Aktualisieren Sie die Zählung basierend auf der Bewertung
     if ease == 1:
         ankimon_tracker_obj.review("again")
@@ -353,275 +337,6 @@ if database_complete:
     enemy_pokemon.hp = max_hp
     enemy_pokemon.max_hp = max_hp
     ankimon_tracker_obj.randomize_battle_scene()
-
-cry_counter = 0
-
-# How many cards need to be done before receiving an item
-item_receive_value = random.randint(3, 385)
-
-# Hook into Anki's card review event
-def on_review_card(*args):
-    try:
-        multiplier = ankimon_tracker_obj.multiplier
-        mainpokemon_type = main_pokemon.type
-        mainpokemon_name = main_pokemon.name
-        if main_pokemon.attacks:
-            user_attack = random.choice(main_pokemon.attacks)
-        else:
-            user_attack = "splash"
-        if enemy_pokemon.attacks:
-            enemy_attack = random.choice(enemy_pokemon.attacks)
-        else:
-            enemy_attack = "splash"
-
-        global mutator_full_reset
-
-        battle_sounds = settings_obj.get("audio.battle_sounds")
-        global achievements
-        global new_state
-        global user_hp_after
-        global opponent_hp_after
-        global dmg_from_enemy_move
-        global dmg_from_user_move
-
-        global item_receive_value
-
-        # Increment the counter when a card is reviewed
-        attack_counter = ankimon_tracker_obj.attack_counter
-        ankimon_tracker_obj.cards_battle_round += 1
-        ankimon_tracker_obj.cry_counter += 1
-        cry_counter = ankimon_tracker_obj.cry_counter
-        total_reviews = ankimon_tracker_obj.total_reviews
-        reviewer_obj.seconds = 0
-        reviewer_obj.myseconds = 0
-        ankimon_tracker_obj.general_card_count_for_battle += 1
-                
-        color = "#F0B27A" # Initialize with a default color
-
-        # Handle achievements based on total reviews
-        achievements = handle_review_count_achievement(total_reviews, achievements)
-
-        item_receive_value -= 1
-        if item_receive_value <= 0:
-            item_receive_value = random.randint(3, 385)
-
-            test_window.display_item()
-
-            # Give them a badge for getting an item
-            if not check_for_badge(achievements,6):
-                receive_badge(6, achievements)
-
-        if total_reviews == settings_obj.get("battle.daily_average"):
-            settings_obj.set("trainer.cash", settings_obj.get("trainer.cash") + 200)
-            trainer_card.cash = settings_obj.get("trainer.cash")
-
-        try:
-             mutator_full_reset
-        except:
-            mutator_full_reset = 1
-
-        if battle_sounds == True and ankimon_tracker_obj.general_card_count_for_battle == 1:
-            play_sound(enemy_pokemon.id, settings_obj)
-
-        if ankimon_tracker_obj.cards_battle_round >= _get_cards_per_round():
-            ankimon_tracker_obj.cards_battle_round = 0
-            ankimon_tracker_obj.attack_counter = 0
-            slp_counter = 0
-            ankimon_tracker_obj.pokemon_encouter += 1
-            multiplier = ankimon_tracker_obj.multiplier
-
-            if ankimon_tracker_obj.pokemon_encouter > 0 and enemy_pokemon.hp > 0 and multiplier < 1:
-                enemy_move = safe_get_random_move(enemy_pokemon.attacks, logger=logger)
-                enemy_move_category = enemy_move.get("category")
-
-                if enemy_move_category == "Status":
-                    color = "#F7DC6F"
-                elif enemy_move_category == "Special":
-                    color = "#D2B4DE"
-                else:
-                    color = "#F0B27A"
-
-            else:
-                enemy_attack = "splash" # if enemy will NOT attack, it uses SPLASH
-
-            move = safe_get_random_move(main_pokemon.attacks, logger=logger)
-            category = move.get("category")
-
-            if ankimon_tracker_obj.pokemon_encouter > 0 and main_pokemon.hp > 0 and enemy_pokemon.hp > 0:
-
-                if settings_obj.get("controls.allow_to_choose_moves") == True:
-                    dialog = MoveSelectionDialog(main_pokemon.attacks)
-                    if dialog.exec() == QDialog.DialogCode.Accepted:
-                        if dialog.selected_move:
-                            user_attack = dialog.selected_move
-
-                if category == "Status":
-                    color = "#F7DC6F"
-
-                elif category == "Special":
-                    color = "#D2B4DE"
-
-                else:
-                    color = "#F0B27A"
-
-            try:
-                new_state
-                mutator_full_reset
-
-                user_hp_after
-                opponent_hp_after
-                dmg_from_enemy_move
-                dmg_from_user_move
-            except:
-                new_state = None
-                mutator_full_reset = 1
-                user_hp_after = 0
-                opponent_hp_after = 0
-                dmg_from_enemy_move = 0
-                dmg_from_user_move = 0
-
-            '''
-            To the devs,
-            below is the MOST IMPORTANT function for the new engine.
-            This runs our current Pokemon stats through the SirSkaro Poke-Engine.
-            The "results" can then be used to access battle outcomes.
-            '''
-
-            results = simulate_battle_with_poke_engine(
-                main_pokemon,
-                enemy_pokemon,
-                user_attack,
-                enemy_attack,
-                mutator_full_reset,
-                new_state,
-            )
-
-            # 2. Unpack results from the simulation
-            battle_info = results[0]
-            new_state = copy.deepcopy(results[1])
-            dmg_from_enemy_move = results[2]  # NOTE : This is ACTUALLY the sum of all damages and heals that occured to the user during the turn
-            dmg_from_user_move = results[3]
-            mutator_full_reset = results[4]
-            current_battle_info_changes = results[5]
-            instructions = results[0]["instructions"]
-            heals_to_user = sum([inst[2] for inst in instructions if inst[0:2] == ['heal', 'user']])
-            heals_to_opponent = sum([inst[2] for inst in instructions if inst[0:2] == ['heal', 'opponent']])
-            true_dmg_from_enemy_move = sum([inst[2] for inst in instructions if inst[0:2] == ['damage', 'user']])
-            true_dmg_from_user_move = sum([inst[2] for inst in instructions if inst[0:2] == ['damage', 'opponent']])
-
-            # workaround for the DAMAGE being negative in some cases
-            if true_dmg_from_enemy_move < 0:
-                true_dmg_from_enemy_move = 0
-                heals_to_user += abs(true_dmg_from_enemy_move)  # Add the negative damage as a heal
-            if true_dmg_from_user_move < 0:
-                true_dmg_from_user_move = 0
-                heals_to_opponent += abs(true_dmg_from_user_move)
-
-            # 3. --- IMMEDIATE STATE SYNCHRONIZATION (THE FIX) ---
-            # Update Pokémon objects with the new state from the engine BEFORE any other processing.
-            # This ensures all subsequent functions have the correct HP and status.
-            main_pokemon.hp = new_state.user.active.hp
-            main_pokemon.current_hp = new_state.user.active.hp
-            enemy_pokemon.hp = new_state.opponent.active.hp
-            enemy_pokemon.current_hp = new_state.opponent.active.hp
-
-            # Update statuses based on instructions, now that HP is correct.
-            enemy_status_changed, main_status_changed = update_pokemon_battle_status(
-                battle_info, enemy_pokemon, main_pokemon
-            )
-
-            # Final validation to ensure consistency
-            enemy_pokemon.battle_status = validate_pokemon_status(enemy_pokemon)
-            main_pokemon.battle_status = validate_pokemon_status(main_pokemon)
-
-            # 4. Generate the battle log message using the now-correct Pokémon states
-            formatted_battle_log = process_battle_data(
-                battle_info=battle_info,
-                multiplier=multiplier,
-                main_pokemon=main_pokemon,
-                enemy_pokemon=enemy_pokemon,
-                user_attack=user_attack,
-                enemy_attack=enemy_attack,
-                dmg_from_user_move=true_dmg_from_user_move,
-                dmg_from_enemy_move=true_dmg_from_enemy_move,
-                user_hp_after=main_pokemon.hp, # Use the already updated HP
-                opponent_hp_after=enemy_pokemon.hp, # Use the already updated HP
-                battle_status=main_pokemon.battle_status,
-                pokemon_encounter=ankimon_tracker_obj.pokemon_encouter,
-                translator=translator,
-                changes=current_battle_info_changes,
-            )
-
-            # Display the complete message
-            tooltipWithColour(formatted_battle_log, color)
-
-            # Handle sound effects and animations (existing code)
-            if true_dmg_from_enemy_move > 0 and multiplier < 1:
-                reviewer_obj.myseconds = settings_obj.compute_special_variable("animate_time")
-                tooltipWithColour(f" -{true_dmg_from_enemy_move} HP ", "#F06060", x=-200)
-                play_effect_sound(settings_obj, "HurtNormal")
-
-            if true_dmg_from_user_move > 0:
-                reviewer_obj.seconds = settings_obj.compute_special_variable("animate_time")
-                tooltipWithColour(f" -{true_dmg_from_user_move} HP ", "#F06060", x=200)
-                if multiplier == 1:
-                    play_effect_sound(settings_obj, "HurtNormal")
-                elif multiplier < 1:
-                    play_effect_sound(settings_obj, "HurtNotEffective")
-                elif multiplier > 1:
-                    play_effect_sound(settings_obj, "HurtSuper")
-            else:
-                reviewer_obj.seconds = 0
-
-            if int(heals_to_user) != 0:
-                # "Negative heal" can happen sometimes. That's how the Life Orb item deals its damage for instance
-                heal_color = "#68FA94" if heals_to_user > 0 else "#F06060"
-                sign = "+" if heals_to_user > 0 else ""
-                tooltipWithColour(f" {sign}{int(heals_to_user)} HP ", heal_color, x=-250)
-
-            if int(heals_to_opponent) != 0:
-                # "Negative heal" can happen sometimes. That's how the Life Orb item deals its damage for instance
-                heal_color = "#68FA94" if heals_to_opponent > 0 else "#F06060"
-                sign = "+" if heals_to_opponent > 0 else ""
-                tooltipWithColour(f" {sign}{int(heals_to_opponent)} HP ", heal_color, x=250)
-
-            # if enemy pokemon faints, this handles AUTOMATIC BATTLE
-            if enemy_pokemon.hp < 1:
-                enemy_pokemon.hp = 0
-                test_window.display_battle()
-                handle_enemy_faint(
-                    main_pokemon,
-                    enemy_pokemon,
-                    collected_pokemon_ids,
-                    test_window,
-                    evo_window,
-                    reviewer_obj,
-                    logger,
-                    achievements
-                    )
-
-                mutator_full_reset = 1 # reset opponent state
-
-        if cry_counter == 10 and battle_sounds is True:
-            cry_counter = 0
-            play_sound(enemy_pokemon.id, settings_obj)
-
-        # user pokemon faints
-        if main_pokemon.hp < 1:
-            handle_main_pokemon_faint(main_pokemon, enemy_pokemon, test_window, reviewer_obj, translator)
-            mutator_full_reset = 1 # fully reset battle state
-
-        class Container(object):
-            pass
-
-        reviewer = Container()
-        reviewer.web = mw.reviewer.web
-        reviewer_obj.update_life_bar(reviewer, 0, 0)
-        if test_window is not None:
-            if enemy_pokemon.hp > 0:
-                test_window.display_battle()
-    except Exception as e:
-        show_warning_with_traceback(parent=mw, exception=e, message="An error occurred in reviewer:")
 
 # Connect the hook to Anki's review event
 gui_hooks.reviewer_did_answer_card.append(on_review_card)
@@ -789,23 +504,6 @@ def _shortcutKeys_wrap(self, _old):
 
 Reviewer._shortcutKeys = wrap(Reviewer._shortcutKeys, _shortcutKeys_wrap, 'around')
 
-def _get_cards_per_round() -> int:
-    cards_per_round = settings_obj.get("battle.cards_per_round")
-
-    if isinstance(cards_per_round, int):
-        return cards_per_round
-    
-    # If it's a string in "number-number" format, return random value between bounds
-    if isinstance(cards_per_round, str) and "-" in cards_per_round:
-        try:
-            min_val, max_val = map(int, cards_per_round.split("-"))
-            random_value = random.randint(min_val, max_val)
-            return random_value
-        except (ValueError, IndexError) as e:
-            return 2
-    
-    return 2
-
 if reviewer_buttons is True:
     #// Choosing styling for review other buttons in reviewer bottombar based on chosen style
     Review_linkHandelr_Original = Reviewer._linkHandler
@@ -839,7 +537,7 @@ if reviewer_buttons is True:
     # Replace the original link handler function with the modified one
     Reviewer._linkHandler = linkHandler_wrap
 
-if settings_obj.get("misc.discord_rich_presence") == True:
+if settings_obj.get("misc.discord_rich_presence"):
     client_id = '1319014423876075541'  # Replace with your actual client ID
     large_image_url = "https://raw.githubusercontent.com/Unlucky-Life/ankimon/refs/heads/main/src/Ankimon/ankimon_logo.png"  # URL for the large image
     mw.ankimon_presence = DiscordPresence(client_id, large_image_url, ankimon_tracker_obj, logger, settings_obj)  # Establish connection and get the presence instance
