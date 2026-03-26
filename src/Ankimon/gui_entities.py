@@ -92,8 +92,11 @@ class AgreementDialog(QDialog):
 
 class Version_Dialog(QDialog):
     """Custom Dialog class"""
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent=None, **kwargs):
+        if parent is not None:
+            super().__init__(parent)
+        else:
+            super().__init__()
         self.setWindowTitle("Ankimon Notifications")
         self.setGeometry(100, 100, 600, 400)
         layout = QVBoxLayout()
