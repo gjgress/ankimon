@@ -4,9 +4,10 @@ import uuid
 
 from aqt.utils import showInfo, showWarning
 from ..pyobj.error_handler import show_warning_with_traceback
-from PyQt6.QtWidgets import *
-from PyQt6.QtGui import *
-from PyQt6.QtCore import *
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QGridLayout, QScrollArea, QWidget, QSizePolicy, QSpacerItem, QFrame
+from PyQt6.QtGui import QIcon, QPixmap, QMovie
+from PyQt6.QtCore import Qt, QSize
+from aqt.qt import QDialog
 from aqt import mw
 import re
 
