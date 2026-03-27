@@ -24,6 +24,7 @@ class AnkimonDB:
         self.logger = logger
         self.db_path = user_path / self.DB_FILENAME
         self._connection: Optional[sqlite3.Connection] = None
+        self._all_pokemon_cache: Optional[List[Dict[str, Any]]] = None
         self._setup_database()
 
     def _log(self, level: str, message: str):
@@ -203,6 +204,7 @@ class AnkimonDB:
                 (individual_id, obfuscated_data)
             )
         conn.commit()
+        self._all_pokemon_cache = None
         return True
 
     def get_pokemon(self, individual_id: str) -> Optional[Dict[str, Any]]:
@@ -219,7 +221,10 @@ class AnkimonDB:
         return None
 
     def get_all_pokemon(self) -> List[Dict[str, Any]]:
-        """Retrieves all captured pokemon."""
+        """Retrieves all captured pokemon. Uses cache to avoid repeated DB/Deobfuscation overhead."""
+        if self._all_pokemon_cache is not None:
+            return self._all_pokemon_cache
+
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT data FROM captured_pokemon")
@@ -228,18 +233,24 @@ class AnkimonDB:
             pokemon = self._deobfuscate(row["data"])
             if pokemon:
                 results.append(pokemon)
+
+        self._all_pokemon_cache = results
         return results
 
     def has_pokemon_by_name(self, name: str) -> bool:
         """
         Efficiently checks if a pokemon with the given name exists in the collection.
-        Uses a direct SQL query instead of loading all pokemon data.
+        Uses cache if available, otherwise queries the database stopping at first match.
         """
+        name_lower = name.lower()
+
+        if self._all_pokemon_cache is not None:
+            return any(p.get('name', '').lower() == name_lower for p in self._all_pokemon_cache)
+
         conn = self._get_connection()
         cursor = conn.cursor()
         # We need to check deobfuscated data, so we iterate but stop at first match
         cursor.execute("SELECT data FROM captured_pokemon")
-        name_lower = name.lower()
         for row in cursor.fetchall():
             pokemon = self._deobfuscate(row["data"])
             if pokemon and pokemon.get('name', '').lower() == name_lower:
@@ -255,7 +266,10 @@ class AnkimonDB:
             (individual_id,)
         )
         conn.commit()
-        return cursor.rowcount > 0
+        if cursor.rowcount > 0:
+            self._all_pokemon_cache = None
+            return True
+        return False
 
     def get_pokemon_count(self) -> int:
         """Returns the count of captured pokemon."""
@@ -291,6 +305,7 @@ class AnkimonDB:
             (individual_id, obfuscated_data)
         )
         conn.commit()
+        self._all_pokemon_cache = None
         return True
 
     def get_main_pokemon(self) -> Optional[Dict[str, Any]]:
@@ -318,6 +333,7 @@ class AnkimonDB:
         # Set new main
         cursor.execute("UPDATE captured_pokemon SET is_main = 1 WHERE individual_id = ?", (individual_id,))
         conn.commit()
+        self._all_pokemon_cache = None
         return True
 
     # --- Item Operations ---
