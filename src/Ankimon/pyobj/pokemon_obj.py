@@ -9,7 +9,7 @@ from ..functions.sprite_functions import get_sprite_path
 
 from ..poke_engine.objects import Pokemon
 from ..resources import pkmnimgfolder, mainpokemon_path, mypokemon_path
-from ..utils import substract_item_from_itembag, give_item
+from ..utils import give_item
 
 class PokemonObject:
     def __init__(
@@ -380,7 +380,7 @@ class PokemonObject:
         if self.held_item:
             self.remove_held_item()
 
-        substract_item_from_itembag(held_item, quantity=1)
+        db.update_item_quantity(held_item, -1)
         self.held_item = held_item
 
         # Save to captured_pokemon in database

@@ -5,7 +5,6 @@ This module provides a SQLite-based storage solution for all Ankimon game data,
 replacing multiple JSON files with a single, obfuscated database file.
 """
 
-import base64
 import json
 import sqlite3
 from pathlib import Path
@@ -387,14 +386,52 @@ class AnkimonDB:
 
     # --- Item Operations ---
 
+    def add_item(self, item_name: str, quantity: int = 1, extra_data: Optional[Dict] = None, commit: bool = True) -> bool:
+        """
+        Adds a new item to the database with metadata discovery from items.csv.
+        Use this for the first time an item is introduced (e.g. migration, looting).
+        """
+        item_id = None
+        category_id = None
+        cost = None
+        fling_power = None
+        fling_effect_id = None
+
+        # Look up metadata from items.csv
+        if Path(csv_file_items_cost).is_file():
+            try:
+                with open(csv_file_items_cost, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for r in reader:
+                        if r['identifier'] == item_name:
+                            item_id = int(r['id'])
+                            if r.get('category_id'): category_id = int(r['category_id'])
+                            if r.get('cost'): cost = int(r['cost'])
+                            if r.get('fling_power'): fling_power = int(r['fling_power'])
+                            if r.get('fling_effect_id'): fling_effect_id = int(r['fling_effect_id'])
+                            break
+            except Exception as e:
+                self._log("error", f"Failed to look up item '{item_name}' in items.csv: {e}")
+
+        return self.save_item(
+            item_id, item_name, quantity, extra_data,
+            category_id=category_id, cost=cost,
+            fling_power=fling_power, fling_effect_id=fling_effect_id,
+            commit=commit
+        )
+
     def save_item(self, item_id: Optional[int], item_name: str, quantity: int, extra_data: Optional[Dict] = None,
-                  category_id: int = None, cost: int = None, 
-                  fling_power: int = None, fling_effect_id: int = None):
-        """Saves or updates an item with metadata. item_id is preferred but will be looked up if missing."""
+                  category_id: Optional[int] = None, cost: Optional[int] = None, 
+                  fling_power: Optional[int] = None, fling_effect_id: Optional[int] = None,
+                  commit: bool = True) -> bool:
+        """
+        Low-level upsert for items. Lenient with metadata: if missing, tries to fetch from 
+        existing DB records but DOES NOT perform CSV lookups.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
-        # Try to fetch existing metadata from DB if NOT provided in the call
+        # Lenient metadata resolution: try to fetch existing metadata from DB if NOT provided
         if item_name and (item_id is None or cost is None or category_id is None):
             cursor.execute("SELECT id, category_id, cost, fling_power, fling_effect_id FROM items WHERE item_name = ?", (item_name,))
             row = cursor.fetchone()
@@ -405,35 +442,10 @@ class AnkimonDB:
                 if fling_power is None: fling_power = row["fling_power"]
                 if fling_effect_id is None: fling_effect_id = row["fling_effect_id"]
 
-        # If metadata is STILL missing but name is present, try to find it in items.csv
-        if item_name and (item_id is None or cost is None or category_id is None):
-            if Path(csv_file_items_cost).is_file():
-                try:
-                    self._log("warning", f"Item metadata for '{item_name}' not provided; falling back to items.csv lookup. In future versions, providing an explicit item_id will be required.")
-                    with open(csv_file_items_cost, 'r', encoding='utf-8') as f:
-                        reader = csv.DictReader(f)
-                        for r in reader:
-                            if r['identifier'] == item_name:
-                                if item_id is None:
-                                    item_id = int(r['id'])
-                                if category_id is None and r.get('category_id'):
-                                    category_id = int(r['category_id'])
-                                if cost is None and r.get('cost'):
-                                    cost = int(r['cost'])
-                                if fling_power is None and r.get('fling_power'):
-                                    fling_power = int(r['fling_power'])
-                                if fling_effect_id is None and r.get('fling_effect_id'):
-                                    fling_effect_id = int(r['fling_effect_id'])
-                                break
-                except Exception as e:
-                    self._log("error", f"Failed to fallback on items.csv: {e}")
-
-        # If it's a TM (category 37), ensure type: "TM" is in extra_data for UI filtering
+        # Ensure type: "TM" for UI filtering if applicable
         if category_id == 37:
-            if extra_data is None:
-                extra_data = {}
-            if extra_data.get("type") != "TM":
-                extra_data["type"] = "TM"
+            if extra_data is None: extra_data = {}
+            if extra_data.get("type") != "TM": extra_data["type"] = "TM"
 
         obfuscated_data = self._obfuscate(extra_data) if extra_data else None
         cursor.execute(
@@ -442,7 +454,8 @@ class AnkimonDB:
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (item_id, item_name, quantity, obfuscated_data, category_id, cost, fling_power, fling_effect_id)
         )
-        conn.commit()
+        if commit:
+            conn.commit()
         return True
 
     def get_item(self, identifier: Any) -> Optional[Dict[str, Any]]:
@@ -496,7 +509,13 @@ class AnkimonDB:
         cursor.execute("SELECT quantity FROM items WHERE item_name = ?", (item_name,))
         row = cursor.fetchone()
         current_qty = row["quantity"] if row else 0
-        new_qty = max(0, current_qty + delta)
+        if current_qty == 0:
+            self._log("warning", f"Item '{item_name}' not found in inventory.")
+            return 0
+        new_qty = current_qty + delta
+        if new_qty < 0:
+            self._log("warning", f"Item '{item_name}' has insufficient quantity.")
+            return current_qty
 
         if new_qty > 0:
             cursor.execute(
@@ -785,48 +804,22 @@ class AnkimonDB:
                 except Exception as e:
                     self._log("error", f"Failed to migrate mainpokemon.json: {e}")
 
-            # Migrate items.json joined with items.csv metadata
+            # Migrate items.json
             if items_path.is_file():
                 try:
-                    # Load items.csv for metadata (cost, category, etc.)
-                    item_metadata = {}
-                    if Path(csv_file_items_cost).is_file():
-                        with open(csv_file_items_cost, 'r', encoding='utf-8') as f:
-                            reader = csv.DictReader(f)
-                            for row in reader:
-                                item_metadata[row['identifier']] = {
-                                    'id': int(row['id']),
-                                    'category_id': int(row['category_id']) if row.get('category_id') else None,
-                                    'cost': int(row['cost']) if row.get('cost') else None,
-                                    'fling_power': int(row['fling_power']) if row.get('fling_power') else None,
-                                    'fling_effect_id': int(row['fling_effect_id']) if row.get('fling_effect_id') else None
-                                }
-                    else:
-                        self._log("error", "items.csv not found")
-
                     with open(items_path, 'r', encoding='utf-8') as f:
                         items_list = json.load(f)
+                    
                     for item in items_list:
-                        # items.json uses 'item' key, but also support 'name' and 'item_name'
+                        if not item: continue
+                        # Support multiple legacy keys for item name
                         item_name = item.get("item") or item.get("name") or item.get("item_name")
                         quantity = item.get("quantity", item.get("amount", 1))
                         if item_name:
-                            # Look up metadata from CSV
-                            meta = item_metadata.get(item_name, {})
-                            if meta is not None:
-                                self.save_item(
-                                    meta.get('id'),
-                                    item_name, 
-                                    quantity, 
-                                    extra_data={"type": item.get("type")} if item.get("type") else None,
-                                    category_id=meta.get('category_id'),
-                                    cost=meta.get('cost'),
-                                    fling_power=meta.get('fling_power'),
-                                    fling_effect_id=meta.get('fling_effect_id')
-                                )
+                            if self.add_item(item_name, quantity, extra_data=item, commit=False):
                                 stats["items"] += 1
-                            else:
-                                self._log("error", f"Item {item_name} not found in items.csv")
+                    
+                    self._get_connection().commit()
                     self._log("info", f"Migrated {stats['items']} items from items.json")
                 except Exception as e:
                     self._log("error", f"Failed to migrate items.json: {e}")

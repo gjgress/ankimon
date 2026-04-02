@@ -393,19 +393,17 @@ def daily_item_list():
 
 # Function to give an item to the player
 def give_item(item_name: str, item_type: Optional[str] = None):
-    """Adds an item to the player's inventory using the database."""
+    """Gives an item to the user."""
     db = mw.ankimon_db
     
     # Get current item or create new
     existing = db.get_item(item_name)
     if existing:
-        new_qty = existing["quantity"] + 1
-    else:
-        new_qty = 1
+        db.update_item_quantity(item_name, 1)
+        return
     
     extra_data = {"type": item_type} if item_type else None
-    item_id = existing["id"] if existing else None
-    db.save_item(item_id, item_name, new_qty, extra_data)
+    db.add_item(item_name, 1, extra_data)
 
 
 # Function to return a cost of an item
@@ -919,47 +917,6 @@ def safe_get_random_move(
             f"Could not parse a single move in the following moveset : {str(pokemon_moves)}",
         )
     return find_details_move(format_move_name("splash"))
-
-
-def substract_item_from_itembag(item: str, quantity: int = 1) -> None:
-    """
-    Removes a specified quantity of an item from the item bag.
-
-    This function reads the item bag from a JSON file located at `itembag_path`,
-    checks for the presence of the given item, and attempts to subtract the specified
-    quantity. If the item's quantity reaches zero, it is removed from the bag.
-    Logs and displays warnings or errors using ShowInfoLogger if the operation
-    cannot be completed (e.g., item not found or insufficient quantity).
-
-    Args:
-        item (str): The name of the item to remove from the item bag.
-        quantity (int, optional): The number of items to remove. Defaults to 1.
-
-    Returns:
-        None
-
-    Raises:
-        This function does not raise exceptions directly, but logs and shows errors
-        using ShowInfoLogger in cases such as:
-            - Item not found in the item bag.
-            - Item does not have a 'quantity' field.
-            - Insufficient quantity to subtract.
-    """
-    db = mw.ankimon_db
-    
-    existing = db.get_item(item)
-    if not existing:
-        mw.logger.log_and_showinfo("error", f"Could not find {item} in the item bag.")
-        return
-    
-    current_qty = existing["quantity"]
-    if current_qty < quantity:
-        mw.logger.log_and_showinfo("error", f"There are {current_qty} instances of {item} in the item bag, but you are trying to remove {quantity}.")
-        return
-    
-    # Use negative delta to decrease quantity
-    db.update_item_quantity(item, -quantity)
-
 
 def png_to_base64(path: str) -> str:
     """Convert a PNG file to a base64 data URI for embedding into HTML.
