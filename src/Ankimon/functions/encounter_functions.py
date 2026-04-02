@@ -60,15 +60,25 @@ def modify_percentages(total_reviews, daily_average, trainer_level):
     Modify Pokémon encounter percentages based on total reviews, trainer level, and main Pokémon level.
     """
     # Start with the base percentages
-    percentages = {"Baby": 2, "Legendary": 0.5, "Mythical": 0.2, "Normal": 92.3, "Ultra": 5}
+    percentages = {
+        "Baby": 2,
+        "Legendary": 0.5,
+        "Mythical": 0.2,
+        "Normal": 92.3,
+        "Ultra": 5,
+    }
 
     # Adjust percentages based on total reviews relative to the daily average
     review_ratio = total_reviews / daily_average if daily_average > 0 else 0
 
     # Adjust for review progress
     if review_ratio < 0.4:
-        percentages["Normal"] += percentages.pop("Baby", 0) + percentages.pop("Legendary", 0) + \
-                                 percentages.pop("Mythical", 0) + percentages.pop("Ultra", 0)
+        percentages["Normal"] += (
+            percentages.pop("Baby", 0)
+            + percentages.pop("Legendary", 0)
+            + percentages.pop("Mythical", 0)
+            + percentages.pop("Ultra", 0)
+        )
     elif review_ratio < 0.6:
         percentages["Baby"] += 2
         percentages["Normal"] -= 2
@@ -109,6 +119,8 @@ def modify_percentages(total_reviews, daily_average, trainer_level):
         percentages[tier] = (percentages[tier] / total) * 100 if total > 0 else 0
     # this function gets called maybe 10 times per battle round, which is concerning.
     # it could be rewritten to run ONLY when the change in review ratio is detected.
+
+    mw.logger.log("info", f"Modified encounter percentages: {percentages}")
     return percentages
 
 
@@ -648,7 +660,14 @@ def kill_pokemon(
     # Handle XP share logic
     xp_share_individual_id = settings_obj.get("trainer.xp_share")
     if xp_share_individual_id:
-        exp = xp_share_gain_exp(logger, settings_obj, evo_window, main_pokemon.id, exp, xp_share_individual_id)
+        exp = xp_share_gain_exp(
+            logger,
+            settings_obj,
+            evo_window,
+            main_pokemon.id,
+            exp,
+            xp_share_individual_id,
+        )
     
     msg = ""
 
