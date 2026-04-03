@@ -966,8 +966,8 @@ def defeat_shortcut_function():
         tooltip("Wild pokemon has to be fainted to defeat it!")
 
 
-catch_shortcut = catch_shortcut.lower()
-defeat_shortcut = defeat_shortcut.lower()
+catch_shortcut = str(catch_shortcut).lower()
+defeat_shortcut = str(defeat_shortcut).lower()
 
 
 # // adding shortcuts to _shortcutKeys function in anki
