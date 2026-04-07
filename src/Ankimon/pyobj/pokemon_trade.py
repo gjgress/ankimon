@@ -585,11 +585,10 @@ class PokemonTrade:
         try:
             db = mw.ankimon_db
             
-            # Delete the old pokemon
-            db.delete_pokemon(self.individual_id)
-            
-            # Save the new pokemon
-            db.save_pokemon(new_pokemon)
+            try:
+                db.replace_pokemon(new_pokemon, self.individual_id)
+            except Exception as e:
+                show_warning_with_traceback(parent=self.parent_window, exception=e, message=f"An error occurred during trade: {e}")
 
             self.logger.log_and_showinfo("warning",f"Successfully traded for {new_pokemon['name']}!")
             self.refresh_callback()
